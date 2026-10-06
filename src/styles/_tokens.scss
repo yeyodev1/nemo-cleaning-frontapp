@@ -1,0 +1,78 @@
+// Paleta de Nemo Cleaning: azul marino de confianza + aqua de "recién limpio".
+// Semántica primero: los componentes hablan de tinta, superficie y acento.
+
+// Marca
+$navy: #0b4f8a; // primario
+$navy-deep: #073763; // hero, sidebar, footer
+$navy-ink: #052a4c; // fondos más profundos
+$navy-soft: #e7f0fa;
+$aqua: #19c3b8; // acento
+$aqua-deep: #0e9a91; // aqua con contraste AA sobre blanco para texto grande/iconos
+$aqua-ink: #087a73; // aqua para texto sobre blanco (AA)
+$aqua-soft: #e3f8f6;
+$sky: #f2f8fd; // fondo suave
+$sky-2: #e8f2fb;
+$whatsapp: #1fb855;
+
+// Superficies
+$paper: #f6f9fc;
+$surface: #ffffff;
+$line: #dfe8f1;
+$line-strong: #c5d4e3;
+
+// Texto
+$ink: #0d2236;
+$ink-soft: #3f5468;
+$ink-muted: #6b7f92;
+$on-dark: #f1f7fd;
+$on-dark-soft: rgba(#f1f7fd, 0.74);
+$overlay: rgba(#04192e, 0.55);
+
+// Estados
+$success: #14915f;
+$warning: #b97300;
+$danger: #d13a4a;
+$info: #2a6fd6;
+$success-bg: #e4f5ed;
+$warning-bg: #fdf1dc;
+$danger-bg: #fce8ea;
+$info-bg: #e6effc;
+
+// Sombras con tinte azul
+$shadow-sm: 0 1px 2px rgba($navy-ink, 0.05), 0 4px 14px rgba($navy-ink, 0.06);
+$shadow-md: 0 2px 6px rgba($navy-ink, 0.05), 0 16px 36px rgba($navy-ink, 0.1);
+$shadow-lg: 0 30px 70px rgba($navy-ink, 0.2);
+$shadow-aqua: 0 10px 28px rgba($aqua, 0.35);
+$shadow-navy: 0 10px 28px rgba($navy, 0.3);
+
+// Tipografía
+$font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+$font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+$text-xs: clamp(0.74rem, 0.72rem + 0.1vw, 0.8rem);
+$text-sm: clamp(0.85rem, 0.82rem + 0.15vw, 0.92rem);
+$text-base: clamp(0.97rem, 0.93rem + 0.2vw, 1.05rem);
+$text-lg: clamp(1.1rem, 1rem + 0.45vw, 1.28rem);
+$text-xl: clamp(1.3rem, 1.12rem + 0.85vw, 1.65rem);
+$display-sm: clamp(1.65rem, 1.3rem + 1.7vw, 2.3rem);
+$display-md: clamp(2rem, 1.45rem + 2.7vw, 3.2rem);
+$display-lg: clamp(2.35rem, 1.5rem + 4.2vw, 4.4rem);
+
+// Espaciado
+$space-xs: 0.5rem;
+$space-sm: 0.85rem;
+$space-md: 1.5rem;
+$space-lg: 2.5rem;
+$space-section: clamp(3.5rem, 8vw, 7rem);
+
+// Radios y curvas
+$radius-sm: 12px;
+$radius-md: 18px;
+$radius-lg: 26px;
+$radius-pill: 999px;
+$ease: cubic-bezier(0.22, 1, 0.36, 1);
+$ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// Alturas táctiles
+$tap: 44px;
+$tap-lg: 54px;

@@ -1,0 +1,103 @@
+@use 'sass:map';
+@use 'tokens' as *;
+
+// Breakpoints mobile-first. Uso: @include from('md') { ... }
+$breakpoints: (
+  'sm': 480px,
+  'md': 768px,
+  'lg': 1024px,
+  'xl': 1280px,
+);
+
+@mixin from($name) {
+  $value: map.get($breakpoints, $name);
+  @if $value == null {
+    @error "Breakpoint desconocido: #{$name}";
+  }
+  @media (min-width: $value) {
+    @content;
+  }
+}
+
+@mixin until($name) {
+  $value: map.get($breakpoints, $name);
+  @media (max-width: $value - 1px) {
+    @content;
+  }
+}
+
+@mixin container($max: 1160px) {
+  width: 100%;
+  max-width: $max;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @include from('md') {
+    padding-inline: 2rem;
+  }
+}
+
+@mixin flex($dir: row, $align: center, $justify: flex-start, $gap: 0) {
+  display: flex;
+  flex-direction: $dir;
+  align-items: $align;
+  justify-content: $justify;
+  @if $gap != 0 {
+    gap: $gap;
+  }
+}
+
+// "Grilla" de tarjetas con flex-wrap.
+@mixin flex-cards($basis: 280px, $gap: 1.25rem) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $gap;
+
+  > * {
+    flex: 1 1 $basis;
+    min-width: 0;
+  }
+}
+
+@mixin card($pad: 1.1rem) {
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: $radius-md;
+  padding: $pad;
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+@mixin focus-ring($color: $aqua-deep) {
+  &:focus-visible {
+    outline: 2.5px solid $color;
+    outline-offset: 3px;
+  }
+}
+
+@mixin eyebrow {
+  font-size: $text-xs;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: $aqua-ink;
+}
+
+@mixin display($size: $display-md, $weight: 800) {
+  font-family: $font-display;
+  font-size: $size;
+  font-weight: $weight;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

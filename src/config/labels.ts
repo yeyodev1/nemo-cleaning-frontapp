@@ -1,0 +1,113 @@
+// Etiquetas en español para los enums del contrato y su tono de badge.
+import type {
+  BookingStatus,
+  ExpenseCategory,
+  OfficeFrequency,
+  OfficeQuoteStatus,
+  PaidFrom,
+  PaymentMethod,
+  PaymentRecordStatus,
+  PaymentStatus,
+  Role,
+  ServiceCategory,
+  ServiceUnit,
+} from '@/types/api'
+
+export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'navy' | 'aqua' | ''
+
+interface Label {
+  label: string
+  tone: Tone
+}
+
+export const bookingStatus: Record<BookingStatus, Label> = {
+  pending: { label: 'Pendiente', tone: 'warning' },
+  confirmed: { label: 'Confirmado', tone: 'info' },
+  on_the_way: { label: 'En camino', tone: 'aqua' },
+  in_progress: { label: 'En curso', tone: 'navy' },
+  completed: { label: 'Terminado', tone: 'success' },
+  cancelled: { label: 'Cancelado', tone: 'danger' },
+  no_show: { label: 'No se presentó', tone: 'danger' },
+}
+
+export const paymentStatus: Record<PaymentStatus, Label> = {
+  pending: { label: 'Por pagar', tone: 'warning' },
+  review: { label: 'En revisión', tone: 'info' },
+  partial: { label: 'Abono parcial', tone: 'aqua' },
+  paid: { label: 'Pagado', tone: 'success' },
+  refunded: { label: 'Reembolsado', tone: '' },
+}
+
+export const paymentRecordStatus: Record<PaymentRecordStatus, Label> = {
+  pending: { label: 'Pendiente', tone: 'warning' },
+  review: { label: 'Por revisar', tone: 'info' },
+  approved: { label: 'Aprobado', tone: 'success' },
+  rejected: { label: 'Rechazado', tone: 'danger' },
+  refunded: { label: 'Reembolsado', tone: '' },
+}
+
+export const paymentMethod: Record<PaymentMethod, string> = {
+  card: 'Tarjeta',
+  cash: 'Efectivo',
+  transfer: 'Transferencia',
+}
+
+export const serviceCategory: Record<ServiceCategory, string> = {
+  vehiculos: 'Vehículos',
+  colchones: 'Colchones',
+  muebles: 'Muebles',
+  hogar: 'Hogar',
+  alfombras: 'Alfombras y cortinas',
+  oficinas: 'Oficinas',
+  otros: 'Otros',
+}
+
+export const serviceUnit: Record<ServiceUnit, string> = {
+  unidad: 'c/u',
+  m2: 'por m²',
+  servicio: 'por servicio',
+}
+
+export const expenseCategory: Record<ExpenseCategory, string> = {
+  insumos: 'Insumos',
+  sueldos: 'Sueldos',
+  transporte: 'Transporte',
+  servicios_basicos: 'Servicios básicos',
+  arriendo: 'Arriendo',
+  mantenimiento: 'Mantenimiento',
+  marketing: 'Marketing',
+  impuestos: 'Impuestos',
+  otros: 'Otros',
+}
+
+export const paidFrom: Record<PaidFrom, string> = {
+  petty_cash: 'Caja menor',
+  management: 'Gerencia',
+}
+
+export const officeFrequency: Record<OfficeFrequency, string> = {
+  unica: 'Única vez',
+  semanal: 'Semanal',
+  quincenal: 'Quincenal',
+  mensual: 'Mensual',
+}
+
+export const officeQuoteStatus: Record<OfficeQuoteStatus, Label> = {
+  new: { label: 'Nueva', tone: 'info' },
+  contacted: { label: 'Contactada', tone: 'aqua' },
+  won: { label: 'Ganada', tone: 'success' },
+  lost: { label: 'Perdida', tone: 'danger' },
+}
+
+export const roleLabel: Record<Role, string> = {
+  admin: 'Gerencia',
+  manager: 'Administrador',
+  operator: 'Operador',
+}
+
+export function options<K extends string>(map: Record<K, string | Label>): { value: K; label: string }[] {
+  return (Object.keys(map) as K[]).map((value) => {
+    const v = map[value]
+    return { value, label: typeof v === 'string' ? v : v.label }
+  })
+}

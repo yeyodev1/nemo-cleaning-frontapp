@@ -1,0 +1,5 @@
+// Se inyecta al inicio de CADA <style lang="scss"> (vite.config.ts, additionalData).
+// Solo variables, funciones y mixins: cualquier selector aquí se duplicaría
+// en todos los componentes. El CSS base vive en global.scss.
+@forward 'tokens';
+@forward 'mixins';
