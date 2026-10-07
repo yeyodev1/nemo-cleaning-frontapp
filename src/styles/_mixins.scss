@@ -1,4 +1,5 @@
 @use 'sass:map';
+@use 'sass:color';
 @use 'tokens' as *;
 
 // Breakpoints mobile-first. Uso: @include from('md') { ... }
@@ -72,7 +73,7 @@ $breakpoints: (
   }
 }
 
-@mixin focus-ring($color: $aqua-deep) {
+@mixin focus-ring($color: $orange-deep) {
   &:focus-visible {
     outline: 2.5px solid $color;
     outline-offset: 3px;
@@ -81,19 +82,51 @@ $breakpoints: (
 
 @mixin eyebrow {
   font-size: $text-xs;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: $aqua-ink;
+  color: $orange-ink;
 }
 
-@mixin display($size: $display-md, $weight: 800) {
+// Titulares como los posts de Instagram: Fraunces bold, sin mayúsculas forzadas.
+@mixin display($size: $display-md, $weight: 700) {
   font-family: $font-display;
   font-size: $size;
   font-weight: $weight;
   line-height: 1.08;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  font-optical-sizing: auto;
   text-wrap: balance;
+}
+
+// Subrayado naranja corto (va bajo el logo / eyebrow en los posts).
+@mixin orange-underline($w: 44px) {
+  &::after {
+    content: '';
+    display: block;
+    width: $w;
+    height: 3px;
+    margin-top: 0.6rem;
+    border-radius: 2px;
+    background: $orange;
+  }
+}
+
+// Fondo marino con degradado sutil (estilo de los posts). $base permite el carbón secundario.
+@mixin dark-pattern($base: $navy) {
+  background-color: $base;
+  background-image:
+    radial-gradient(1100px 520px at 85% -10%, rgba($sky-blue, 0.16), transparent 65%),
+    linear-gradient(180deg, $base 0%, color.mix(#000, $base, 22%) 100%);
+}
+
+// Foto real recortada con bordes redondeados (sin marco grueso: el acento naranja va en detalles).
+@mixin photo-frame($radius: $radius-md) {
+  border-radius: $radius;
+  overflow: hidden;
+  background: $navy-deep;
+  box-shadow: 0 0 0 1px rgba(#fff, 0.08);
 }
 
 @mixin truncate {

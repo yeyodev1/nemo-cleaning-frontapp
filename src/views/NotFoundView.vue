@@ -5,12 +5,12 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 <template>
   <section class="nf">
     <svg class="nf__art" viewBox="0 0 200 160" aria-hidden="true">
-      <circle cx="100" cy="80" r="70" fill="#E3F8F6" />
-      <circle cx="58" cy="44" r="12" fill="#fff" stroke="#19C3B8" stroke-opacity=".5" />
-      <circle cx="150" cy="120" r="9" fill="#fff" stroke="#19C3B8" stroke-opacity=".5" />
-      <text x="100" y="98" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="52" font-weight="800" fill="#0B4F8A">404</text>
+      <circle cx="100" cy="80" r="70" fill="#FFF1E9" />
+      <circle cx="58" cy="44" r="12" fill="#fff" stroke="#F05E23" stroke-opacity=".5" />
+      <circle cx="150" cy="120" r="9" fill="#fff" stroke="#F05E23" stroke-opacity=".5" />
+      <text x="100" y="98" text-anchor="middle" font-family="Poppins, sans-serif" font-size="52" font-weight="700" fill="#1E2D3A">404</text>
     </svg>
-    <h1>Esta página ya quedó tan limpia que desapareció</h1>
+    <h1>Página no encontrada</h1>
     <p>El enlace no existe o cambió. Te llevamos a donde necesitas.</p>
     <div class="nf__actions">
       <RouterLink to="/" class="btn btn--primary btn--lg"><AppIcon name="home" /> Ir al inicio</RouterLink>

@@ -150,7 +150,7 @@ const methods = options(paymentMethod)
     }
 
     &:focus-within {
-      outline: 2.5px solid $aqua-deep;
+      outline: 2.5px solid $orange-deep;
       outline-offset: 2px;
     }
   }
@@ -194,7 +194,7 @@ const methods = options(paymentMethod)
   }
 
   &__bar .btn--primary {
-    background: $aqua;
+    background: $orange;
     color: $navy-ink;
     box-shadow: none;
   }

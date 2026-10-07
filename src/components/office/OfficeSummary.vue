@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { money } from '@/utils/format'
+import { money, whatsappUrl } from '@/utils/format'
+import { site } from '@/config/site'
 import type { OfficeEstimate } from '@/composables/office/officePricing'
 
 /** Resumen de la cotización: tarjeta lateral en escritorio, barra fija inferior en móvil. */
@@ -15,7 +16,7 @@ const expanded = ref(false)
     <button type="button" class="sum__toggle" :aria-expanded="expanded" @click="expanded = !expanded">
       <span>
         <small>Estimado</small>
-        <strong class="money">{{ preview ? money(preview.estimate) : '—' }}</strong>
+        <strong class="money">{{ !preview ? '—' : preview.estimate === null ? 'Tarifa especial' : money(preview.estimate) }}</strong>
       </span>
       <AppIcon name="chevron-down" class="sum__chev" />
     </button>
@@ -23,6 +24,14 @@ const expanded = ref(false)
     <div class="sum__body">
       <h2 class="sum__title">Tu estimado</h2>
       <p v-if="!preview" class="sum__empty">Calcularemos tu estimado al cargar las tarifas.</p>
+      <template v-else-if="preview.estimate === null">
+        <p class="sum__special">
+          El <strong>plan mensual</strong> tiene tarifa especial. Envía tu solicitud y nuestro equipo te contacta para cotizarlo.
+        </p>
+        <a :href="whatsappUrl(site.whatsapp, 'Hola, quiero cotizar el plan mensual de limpieza de oficinas')" target="_blank" rel="noopener" class="btn btn--whatsapp btn--block">
+          <AppIcon name="whatsapp" :size="18" /> Cotizar por WhatsApp
+        </a>
+      </template>
       <template v-else>
         <ul class="sum__lines">
           <li v-for="l in preview.breakdown" :key="l.label">
@@ -32,18 +41,24 @@ const expanded = ref(false)
           <li v-if="!preview.breakdown.length" class="sum__empty">Completa los datos de tu oficina.</li>
         </ul>
         <p class="sum__total"><span>Total estimado</span><strong class="money">{{ money(preview.estimate) }}</strong></p>
-        <p class="sum__note">Valor referencial por visita. Te confirmamos el precio final al enviar.</p>
+        <p class="sum__note">Calculado con las tarifas del catálogo. Te contactamos para confirmar los detalles.</p>
       </template>
     </div>
 
     <button type="button" class="btn btn--primary btn--lg btn--block sum__cta" :disabled="sending" @click="emit('submit')">
-      {{ sending ? 'Enviando…' : 'Enviar cotización' }}
+      {{ sending ? 'Enviando…' : preview?.estimate === null ? 'Enviar solicitud' : 'Enviar cotización' }}
       <AppIcon v-if="!sending" name="arrow-right" />
     </button>
   </aside>
 </template>
 
 <style scoped lang="scss">
+.sum__special {
+  font-size: $text-sm;
+  color: $ink-soft;
+  margin-bottom: 0.75rem;
+}
+
 .sum {
   position: fixed;
   inset: auto 0 0;

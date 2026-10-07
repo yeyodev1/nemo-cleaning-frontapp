@@ -5,7 +5,7 @@ import AdminSidebar from './AdminSidebar.vue'
 import AdminTabBar from './AdminTabBar.vue'
 import AdminDrawer from './AdminDrawer.vue'
 import BranchSelect from '../common/BranchSelect.vue'
-import BrandLogo from '@/components/brand/BrandLogo.vue'
+import NemoLogo from '@/components/brand/NemoLogo.vue'
 import { useAdminScope } from '@/stores/adminScope'
 import { useUserStore } from '@/stores/user'
 
@@ -28,7 +28,7 @@ watch(() => route.path, () => (drawer.value = false))
     <div class="admin__main">
       <header class="admin__top">
         <RouterLink :to="user.home" class="admin__logo" aria-label="Inicio del panel">
-          <BrandLogo compact :height="32" />
+          <NemoLogo variant="dark" :height="38" />
         </RouterLink>
         <h1 class="admin__title">{{ title }}</h1>
         <BranchSelect v-if="!user.isOperator" class="admin__branch" />
@@ -71,9 +71,9 @@ watch(() => route.path, () => (drawer.value = false))
     gap: 0.75rem;
     padding: 0.55rem 1rem;
     padding-top: calc(0.55rem + env(safe-area-inset-top));
-    background: rgba(#fff, 0.94);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid $line;
+    background: $navy;
+    color: #fff;
+    border-bottom: 3px solid $orange;
 
     @include from('lg') {
       padding: 0.9rem 2rem;
@@ -89,6 +89,9 @@ watch(() => route.path, () => (drawer.value = false))
   &__title {
     flex: 1;
     min-width: 0;
+    color: #fff;
+    font-family: $font-ui;
+    font-weight: 600;
     font-size: $text-base;
     @include truncate;
 

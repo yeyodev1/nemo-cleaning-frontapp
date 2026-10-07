@@ -45,8 +45,30 @@ export interface User {
   createdAt?: string
 }
 
-export type ServiceCategory = 'vehiculos' | 'colchones' | 'muebles' | 'hogar' | 'alfombras' | 'oficinas' | 'otros'
+/** "autos" = línea NEMO CAR; el resto = NEMO HOME & OFFICE. */
+export type ServiceCategory =
+  | 'autos'
+  | 'alfombras'
+  | 'muebles'
+  | 'colchones'
+  | 'especializados'
+  | 'oficinas'
+  | 'infantiles'
 export type ServiceUnit = 'unidad' | 'm2' | 'servicio'
+
+/** Opción de precio: tamaño de vehículo, medida, plan por m²… `priceMax` > 0 = rango (se cobra `price`). */
+export interface ServiceVariant {
+  label: string
+  price: number
+  priceMax: number
+  durationMinutes: number
+}
+
+/** Tramo por cantidad: el precio del tramo alcanzado aplica a todas las unidades. */
+export interface PriceTier {
+  minQty: number
+  unitPrice: number
+}
 
 export interface Service {
   _id: ID
@@ -55,9 +77,19 @@ export interface Service {
   category: ServiceCategory
   description: string
   imageUrl?: string
+  /** Precio base; con variantes o tramos es el menor ("desde"). */
   price: number
+  priceMax: number
   unit: ServiceUnit
+  /** Solo agenda interna: no mostrar en la web. */
   durationMinutes: number
+  durationLabel: string
+  deliveryNote: string
+  priceNote: string
+  features: string[]
+  variants: ServiceVariant[]
+  priceTiers: PriceTier[]
+  minQty: number
   isExtra: boolean
   active: boolean
   order: number
@@ -104,11 +136,16 @@ export type PaymentMethod = 'card' | 'cash' | 'transfer'
 export type PaymentStatus = 'pending' | 'review' | 'partial' | 'paid' | 'refunded'
 
 export interface BookingItem {
-  service: ID
+  service: ID | null
   name: string
+  variant?: string
   unitPrice: number
+  /** Tope del rango (solo informativo); 0 = precio fijo. */
+  unitPriceMax?: number
+  unit?: ServiceUnit
   quantity: number
   subtotal: number
+  isExtra?: boolean
 }
 
 export interface InvoiceData {
@@ -174,7 +211,7 @@ export interface CustomerBooking {
   code: string
   branch: ID
   branchName: string
-  items: { name: string; quantity: number }[]
+  items: { name: string; variant?: string; unit?: ServiceUnit; quantity: number }[]
   total: number
   amountPaid: number
   balance: number
@@ -249,7 +286,8 @@ export interface Expense {
 }
 
 // ---------- Oficinas ----------
-export type OfficeFrequency = 'unica' | 'semanal' | 'quincenal' | 'mensual'
+/** Básico / Profundo por m²; mensual = tarifa especial (sin estimado). */
+export type OfficePlan = 'basico' | 'profundo' | 'mensual'
 export type OfficeQuoteStatus = 'new' | 'contacted' | 'won' | 'lost'
 
 export interface OfficeContact {
@@ -270,12 +308,14 @@ export interface OfficeQuote {
   branch: ID
   contact: OfficeContact
   squareMeters: number
-  chairs: number
-  desks: number
+  plan: OfficePlan
+  chairsFabric: number
+  chairsMixed: number
+  windows: number
   bathrooms: number
-  frequency: OfficeFrequency
   notes?: string
-  estimate: number
+  /** null = plan mensual: el equipo cotiza y contacta. */
+  estimate: number | null
   breakdown: BreakdownLine[]
   status: OfficeQuoteStatus
   booking?: ID | null
@@ -292,12 +332,12 @@ export interface BankAccount {
 }
 
 export interface OfficePricing {
-  pricePerM2: number
-  pricePerChair: number
-  pricePerDesk: number
-  pricePerBathroom: number
-  minimum: number
-  frequencyDiscounts: { semanal: number; quincenal: number; mensual: number }
+  basicPerM2: number
+  deepPerM2: number
+  chairFabric: number
+  chairMixed: number
+  windowTiers: PriceTier[]
+  bathroomTiers: PriceTier[]
 }
 
 export interface Settings {
@@ -329,6 +369,7 @@ export interface Availability {
 
 export interface QuoteItemInput {
   service: ID
+  variant?: string
   quantity: number
 }
 
@@ -397,10 +438,11 @@ export interface OfficeQuoteInput {
   branch: ID
   contact: OfficeContact
   squareMeters: number
-  chairs: number
-  desks: number
+  plan: OfficePlan
+  chairsFabric: number
+  chairsMixed: number
+  windows: number
   bathrooms: number
-  frequency: OfficeFrequency
   notes?: string
 }
 

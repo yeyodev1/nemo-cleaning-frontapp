@@ -47,9 +47,9 @@ export function useAgenda() {
     const ops: OperatorRef[] = (data.value?.operators || []).map((o) => ({ _id: o._id, name: o.name, color: o.color }))
     // Operadores asignados que no vinieron en la lista (otra sucursal) igual tienen columna.
     for (const b of bookings.value) for (const o of b.operators) if (!ops.some((x) => x._id === o._id)) ops.push(o)
-    const cols = ops.map((o) => ({ id: o._id, name: o.name, color: o.color || '#0B4F8A', items: bookings.value.filter((b) => b.operators.some((x) => x._id === o._id)) }))
+    const cols = ops.map((o) => ({ id: o._id, name: o.name, color: o.color || '#1E2D3A', items: bookings.value.filter((b) => b.operators.some((x) => x._id === o._id)) }))
     const none = bookings.value.filter((b) => !b.operators.length)
-    return [{ id: UNASSIGNED, name: 'Sin asignar', color: '#6b7f92', items: none }, ...cols]
+    return [{ id: UNASSIGNED, name: 'Sin asignar', color: '#5F6B77', items: none }, ...cols]
   })
 
   function replace(b: Booking) {

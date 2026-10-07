@@ -71,8 +71,8 @@ const alerts = computed(() =>
     color: $warning;
   }
   &--aqua {
-    background: $aqua-soft;
-    color: $aqua-ink;
+    background: $orange-soft;
+    color: $orange-ink;
   }
 }
 </style>

@@ -55,7 +55,7 @@ const pct = computed(() => (props.max > 0 ? Math.max(2, Math.round((props.value 
     transition: width 0.5s $ease;
 
     &--aqua {
-      background: $aqua;
+      background: $orange;
     }
     &--danger {
       background: $danger;

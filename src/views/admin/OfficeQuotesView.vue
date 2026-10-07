@@ -8,7 +8,7 @@ import QuoteSheet from '@/components/admin/quotes/QuoteSheet.vue'
 import { usePagedList } from '@/composables/admin/usePagedList'
 import { managementService } from '@/services/management.service'
 import { useAdminScope } from '@/stores/adminScope'
-import { officeFrequency, officeQuoteStatus } from '@/config/labels'
+import { officePlan, officeQuoteStatus } from '@/config/labels'
 import { dateTime, money } from '@/utils/format'
 import type { OfficeQuote, OfficeQuoteStatus } from '@/types/api'
 
@@ -43,11 +43,11 @@ function onChanged(q: OfficeQuote) {
           <span class="qc__icon" aria-hidden="true"><AppIcon name="building" /></span>
           <span class="qc__main">
             <strong>{{ q.contact.company || q.contact.name }}</strong>
-            <span class="qc__meta">{{ q.code }} · {{ q.squareMeters }} m² · {{ q.chairs }} sillas · {{ officeFrequency[q.frequency] }}</span>
+            <span class="qc__meta">{{ q.code }} · {{ q.squareMeters }} m² · {{ officePlan[q.plan] }}</span>
             <span class="qc__meta">{{ dateTime(q.createdAt) }}</span>
           </span>
           <span class="qc__end">
-            <strong class="money">{{ money(q.estimate) }}</strong>
+            <strong class="money">{{ q.estimate === null ? 'Tarifa especial' : money(q.estimate) }}</strong>
             <StatusBadge :tone="officeQuoteStatus[q.status].tone" :label="officeQuoteStatus[q.status].label" />
           </span>
         </button>

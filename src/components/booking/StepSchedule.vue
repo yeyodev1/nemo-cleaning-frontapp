@@ -215,8 +215,8 @@ const freeCount = computed(() => slots.value.filter((s) => s.available).length)
   }
 
   &.is-on {
-    background: $aqua;
-    border-color: $aqua;
+    background: $orange;
+    border-color: $orange;
     color: $navy-ink;
   }
 }

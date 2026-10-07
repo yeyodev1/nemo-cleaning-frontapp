@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { money } from '@/utils/format'
-import { officeFrequency } from '@/config/labels'
+import { money, whatsappUrl } from '@/utils/format'
+import { officePlan } from '@/config/labels'
+import { site } from '@/config/site'
 import type { OfficeQuote } from '@/types/api'
 
 defineProps<{ quote: OfficeQuote }>()
@@ -12,22 +13,35 @@ const emit = defineEmits<{ again: [] }>()
   <section class="ok" aria-live="polite">
     <span class="ok__check"><AppIcon name="check" :size="34" /></span>
     <h1>¡Recibimos tu cotización!</h1>
-    <p>Te contactaremos en breve a <strong>{{ quote.contact.email }}</strong> para coordinar la visita.</p>
+    <p v-if="quote.estimate === null">
+      Elegiste el <strong>plan mensual</strong>, que tiene tarifa especial: nuestro equipo te contactará para cotizarlo.
+    </p>
+    <p v-else>Te enviamos el estimado a <strong>{{ quote.contact.email }}</strong>. Te contactaremos para coordinar.</p>
     <p class="ok__code">{{ quote.code }}</p>
 
     <div class="ok__card">
       <p class="ok__meta">
-        {{ quote.squareMeters }} m² · {{ officeFrequency[quote.frequency] }}
+        {{ quote.squareMeters }} m² · {{ officePlan[quote.plan] }}
       </p>
       <ul>
         <li v-for="l in quote.breakdown" :key="l.label">
           <span>{{ l.label }}</span><span class="money">{{ money(l.amount) }}</span>
         </li>
       </ul>
-      <p class="ok__total"><span>Estimado</span><strong class="money">{{ money(quote.estimate) }}</strong></p>
+      <p v-if="quote.estimate !== null" class="ok__total"><span>Estimado</span><strong class="money">{{ money(quote.estimate) }}</strong></p>
+      <p v-else class="ok__total"><span>Valor</span><strong>Tarifa especial</strong></p>
     </div>
 
     <div class="ok__actions">
+      <a
+        v-if="quote.estimate === null"
+        :href="whatsappUrl(site.whatsapp, `Hola, envié la solicitud ${quote.code} para el plan mensual de oficinas`)"
+        target="_blank"
+        rel="noopener"
+        class="btn btn--whatsapp btn--lg"
+      >
+        <AppIcon name="whatsapp" :size="18" /> Escribir por WhatsApp
+      </a>
       <RouterLink to="/" class="btn btn--primary btn--lg">Volver al inicio</RouterLink>
       <button type="button" class="btn btn--ghost btn--lg" @click="emit('again')">Nueva cotización</button>
     </div>
@@ -51,9 +65,9 @@ const emit = defineEmits<{ again: [] }>()
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, $aqua, $navy);
-    color: #fff;
-    box-shadow: $shadow-aqua;
+    background: $orange;
+    color: $charcoal;
+    box-shadow: $shadow-orange;
     animation: pop 0.5s $ease-spring both;
   }
 

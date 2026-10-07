@@ -73,8 +73,8 @@ function onChange(e: Event) {
 
   &--done &__zone {
     border-style: solid;
-    border-color: $aqua;
-    background: $aqua-soft;
+    border-color: $orange;
+    background: $orange-soft;
   }
 
   &__icon {
@@ -90,7 +90,7 @@ function onChange(e: Event) {
   }
 
   &--done &__icon {
-    color: $aqua-ink;
+    color: $orange-ink;
   }
 
   &__text {

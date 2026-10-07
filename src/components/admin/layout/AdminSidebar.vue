@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BrandLogo from '@/components/brand/BrandLogo.vue'
+import NemoLogo from '@/components/brand/NemoLogo.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { roleLabel } from '@/config/labels'
 import { useAdminNav } from './useAdminNav'
@@ -9,7 +9,10 @@ const { items, isActive, logout, user } = useAdminNav()
 
 <template>
   <aside class="side" aria-label="Menú del panel">
-    <RouterLink :to="user.home" class="side__brand"><BrandLogo light :height="34" /></RouterLink>
+    <RouterLink :to="user.home" class="side__brand" aria-label="Inicio del panel">
+      <NemoLogo variant="dark" :height="58" />
+      <span class="side__tag">Panel</span>
+    </RouterLink>
     <nav class="side__nav">
       <RouterLink
         v-for="i in items"
@@ -47,13 +50,27 @@ const { items, isActive, logout, user } = useAdminNav()
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, $navy-deep, $navy-ink);
+    @include dark-pattern;
+    border-right: 1px solid $dark-line;
     color: $on-dark-soft;
     padding: 1.25rem 0.85rem;
   }
 
   &__brand {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.6rem;
     padding: 0.25rem 0.6rem 1.25rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(#fff, 0.08);
+  }
+
+  &__tag {
+    font-size: $text-xs;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $orange;
   }
 
   &__nav {
@@ -81,11 +98,12 @@ const { items, isActive, logout, user } = useAdminNav()
     }
 
     &.is-active {
-      background: rgba($aqua, 0.16);
+      background: rgba($orange, 0.16);
       color: #fff;
+      box-shadow: inset 3px 0 0 $orange;
 
       svg {
-        color: $aqua;
+        color: $orange;
       }
     }
   }
@@ -103,7 +121,7 @@ const { items, isActive, logout, user } = useAdminNav()
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: $aqua;
+    background: $orange;
     color: $navy-ink;
     font-weight: 800;
     display: inline-flex;

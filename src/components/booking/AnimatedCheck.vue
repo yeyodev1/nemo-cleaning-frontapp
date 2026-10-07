@@ -12,10 +12,10 @@ withDefaults(defineProps<{ size?: number }>(), { size: 88 })
 <style scoped lang="scss">
 .check {
   border-radius: 50%;
-  background: $aqua-soft;
+  background: $orange-soft;
 
   &__ring {
-    stroke: $aqua;
+    stroke: $orange;
     stroke-width: 3;
     stroke-dasharray: 152;
     stroke-dashoffset: 152;

@@ -27,7 +27,7 @@ defineProps<{ step: number }>()
   &__count {
     font-size: $text-xs;
     font-weight: 700;
-    color: $aqua-ink;
+    color: $orange-ink;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0.5rem;
@@ -54,7 +54,7 @@ defineProps<{ step: number }>()
   }
 
   .is-done &__bar {
-    background: $aqua;
+    background: $orange;
   }
 
   .is-on &__bar {

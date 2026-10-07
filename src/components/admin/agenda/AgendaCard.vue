@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { itemLabel } from '@/utils/pricing'
 import { computed } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import BookingBadges from '@/components/admin/common/BookingBadges.vue'
@@ -6,7 +7,7 @@ import type { Booking } from '@/types/api'
 
 const props = defineProps<{ booking: Booking; showTime?: boolean }>()
 defineEmits<{ open: [b: Booking] }>()
-const color = computed(() => props.booking.operators[0]?.color || '#c5d4e3')
+const color = computed(() => props.booking.operators[0]?.color || '#C8CDD4')
 </script>
 
 <template>
@@ -15,7 +16,7 @@ const color = computed(() => props.booking.operators[0]?.color || '#c5d4e3')
       <strong v-if="showTime" class="acard__time">{{ booking.time }}</strong>
       <span class="acard__name">{{ booking.customer?.name }}</span>
     </span>
-    <span class="acard__items">{{ booking.items.map((i) => `${i.quantity}× ${i.name}`).join(', ') }}</span>
+    <span class="acard__items">{{ booking.items.map(itemLabel).join(', ') }}</span>
     <span class="acard__addr"><AppIcon name="pin" :size="14" /> {{ booking.address }}</span>
     <span class="acard__foot">
       <BookingBadges :status="booking.status" :payment="booking.paymentStatus" />

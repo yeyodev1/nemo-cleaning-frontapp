@@ -16,9 +16,9 @@ const { catalog, form, errors, sending, result, preview, submit, reset } = useOf
 
       <template v-else>
         <header class="office__head">
-          <p class="office__eyebrow"><AppIcon name="building" :size="16" /> Empresas y oficinas</p>
-          <h1>Cotiza la limpieza de tu oficina al instante</h1>
-          <p>Cuéntanos el tamaño de tu espacio y te mostramos un estimado en tiempo real. Sin compromiso.</p>
+          <p class="office__eyebrow"><AppIcon name="building" :size="16" /> NEMO HOME &amp; OFFICE</p>
+          <h1>Cotiza la limpieza de tu oficina</h1>
+          <p>Limpieza general, aspirado, desinfección de sanitarios, ozonificación, limpieza de ventanales y aromatización. Indica los m² y el plan para ver el estimado con las tarifas del catálogo.</p>
         </header>
 
         <div class="office__layout">
@@ -28,7 +28,7 @@ const { catalog, form, errors, sending, result, preview, submit, reset } = useOf
                 :form="form"
                 :branches="catalog.branches"
                 :errors="errors"
-                :discounts="catalog.settings?.officePricing.frequencyDiscounts"
+                :pricing="catalog.settings?.officePricing || null"
               />
             </section>
             <section class="office__card">

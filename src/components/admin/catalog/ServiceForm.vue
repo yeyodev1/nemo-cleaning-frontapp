@@ -2,6 +2,8 @@
 import { reactive, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
+import VariantsEditor from './VariantsEditor.vue'
+import TiersEditor from './TiersEditor.vue'
 import { managementService, type ServiceInput } from '@/services/management.service'
 import { useToastStore } from '@/stores/toast'
 import { slugify } from '@/composables/admin/useCrudList'
@@ -14,16 +16,26 @@ const emit = defineEmits<{ close: []; saved: [] }>()
 const toast = useToastStore()
 const saving = ref(false)
 const slugTouched = ref(false)
+// "Qué incluye": una viñeta por línea.
+const featuresText = ref('')
 
 const blank = (): ServiceInput => ({
   name: '',
   slug: '',
-  category: 'vehiculos',
+  category: 'autos',
   description: '',
   imageUrl: '',
   price: 0,
+  priceMax: 0,
   unit: 'unidad',
   durationMinutes: 60,
+  durationLabel: '',
+  deliveryNote: '',
+  priceNote: '',
+  features: [],
+  variants: [],
+  priceTiers: [],
+  minQty: 1,
   isExtra: false,
   active: true,
   order: props.nextOrder,
@@ -35,7 +47,9 @@ watch(
   (o) => {
     if (!o) return
     const s = props.service
-    Object.assign(form, s ? { ...blank(), ...s } : blank())
+    // Copias profundas: editar una opción no debe tocar la lista hasta guardar.
+    Object.assign(form, s ? { ...blank(), ...JSON.parse(JSON.stringify(s)) } : blank())
+    featuresText.value = (form.features || []).join('\n')
     slugTouched.value = Boolean(s)
   },
 )
@@ -49,8 +63,13 @@ watch(
 async function save() {
   saving.value = true
   try {
-    const body: ServiceInput = { ...form }
+    const body: ServiceInput = {
+      ...form,
+      features: featuresText.value.split('\n').map((f) => f.trim()).filter(Boolean),
+    }
     delete (body as Partial<Service>)._id
+    delete (body as Partial<Service> & { createdAt?: string }).createdAt
+    delete (body as Partial<Service> & { updatedAt?: string }).updatedAt
     if (props.service) await managementService.updateService(props.service._id, body)
     else await managementService.createService(body)
     toast.success('Servicio guardado')
@@ -87,12 +106,47 @@ async function save() {
         </label>
       </div>
       <div class="form-row">
-        <MoneyField v-model="form.price" label="Precio" required />
-        <label class="field"><span class="field__label">Duración (min)</span><input v-model.number="form.durationMinutes" type="number" min="0" step="5" /></label>
+        <MoneyField
+          v-model="form.price"
+          label="Precio base"
+          :hint="form.variants.length || form.priceTiers.length ? 'Se calcula con las opciones o tramos' : ''"
+          required
+        />
+        <label class="field">
+          <span class="field__label">Duración interna (min)</span>
+          <input v-model.number="form.durationMinutes" type="number" min="0" step="5" />
+        </label>
         <label class="field"><span class="field__label">Orden</span><input v-model.number="form.order" type="number" min="0" /></label>
       </div>
-      <label class="field"><span class="field__label">Descripción</span><textarea v-model="form.description" maxlength="300"></textarea></label>
-      <label class="field"><span class="field__label">URL de imagen (opcional)</span><input v-model="form.imageUrl" type="url" /></label>
+      <VariantsEditor v-model="form.variants" />
+      <TiersEditor v-model="form.priceTiers" />
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Cantidad mínima</span>
+          <input v-model.number="form.minQty" type="number" min="1" step="1" />
+        </label>
+        <label class="field">
+          <span class="field__label">Tiempo visible (opcional)</span>
+          <input v-model="form.durationLabel" type="text" maxlength="80" placeholder="aprox. 1 hora" />
+        </label>
+      </div>
+      <label class="field">
+        <span class="field__label">Nota de entrega (opcional)</span>
+        <input v-model="form.deliveryNote" type="text" maxlength="120" placeholder="Tiempo de entrega: 24 – 48 horas" />
+      </label>
+      <label class="field">
+        <span class="field__label">Nota de precio (opcional)</span>
+        <input v-model="form.priceNote" type="text" maxlength="200" />
+      </label>
+      <label class="field"><span class="field__label">Descripción</span><textarea v-model="form.description" maxlength="1000"></textarea></label>
+      <label class="field">
+        <span class="field__label">Qué incluye (una línea por punto)</span>
+        <textarea v-model="featuresText" rows="5"></textarea>
+      </label>
+      <label class="field">
+        <span class="field__label">Imagen (URL o ruta /fotos/…)</span>
+        <input v-model="form.imageUrl" type="text" maxlength="500" />
+      </label>
       <label class="check"><input v-model="form.active" type="checkbox" /> Activo (visible en la web)</label>
     </form>
     <template #footer>

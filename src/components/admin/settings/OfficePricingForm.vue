@@ -1,30 +1,26 @@
 <script setup lang="ts">
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
+import TiersEditor from '@/components/admin/catalog/TiersEditor.vue'
 import type { OfficePricing } from '@/types/api'
 
 // Se edita el objeto reactivo del padre directamente (es parte del mismo formulario).
+// Tarifas del catálogo Home & Office; el plan mensual es tarifa especial y no tiene precio aquí.
 defineProps<{ pricing: OfficePricing }>()
 </script>
 
 <template>
   <div class="op">
     <div class="form-row">
-      <MoneyField v-model="pricing.pricePerM2" label="Precio por m²" />
-      <MoneyField v-model="pricing.pricePerChair" label="Por silla" />
+      <MoneyField v-model="pricing.basicPerM2" label="Plan Básico (por m²)" />
+      <MoneyField v-model="pricing.deepPerM2" label="Plan Profundo (por m²)" />
     </div>
     <div class="form-row">
-      <MoneyField v-model="pricing.pricePerDesk" label="Por escritorio" />
-      <MoneyField v-model="pricing.pricePerBathroom" label="Por baño" />
+      <MoneyField v-model="pricing.chairFabric" label="Silla de tela (c/u)" />
+      <MoneyField v-model="pricing.chairMixed" label="Silla mixta (c/u)" />
     </div>
-    <MoneyField v-model="pricing.minimum" label="Mínimo por servicio" hint="Si el cálculo da menos, se cobra este valor." />
-    <fieldset class="field">
-      <legend class="field__label">Descuento por frecuencia (%)</legend>
-      <div class="form-row">
-        <label class="field"><span class="field__hint">Semanal</span><input v-model.number="pricing.frequencyDiscounts.semanal" type="number" min="0" max="100" /></label>
-        <label class="field"><span class="field__hint">Quincenal</span><input v-model.number="pricing.frequencyDiscounts.quincenal" type="number" min="0" max="100" /></label>
-        <label class="field"><span class="field__hint">Mensual</span><input v-model.number="pricing.frequencyDiscounts.mensual" type="number" min="0" max="100" /></label>
-      </div>
-    </fieldset>
+    <TiersEditor v-model="pricing.windowTiers" legend="Ventanales" />
+    <TiersEditor v-model="pricing.bathroomTiers" legend="Desinfección de sanitarios" />
+    <p class="muted op__hint">Plan mensual: tarifa especial. La cotización queda sin valor y el equipo contacta al cliente.</p>
   </div>
 </template>
 
@@ -33,13 +29,9 @@ defineProps<{ pricing: OfficePricing }>()
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-}
 
-fieldset {
-  border: 0;
-}
-
-.form-row > .field {
-  flex-basis: 90px;
+  &__hint {
+    font-size: $text-xs;
+  }
 }
 </style>

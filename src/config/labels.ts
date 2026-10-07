@@ -2,7 +2,7 @@
 import type {
   BookingStatus,
   ExpenseCategory,
-  OfficeFrequency,
+  OfficePlan,
   OfficeQuoteStatus,
   PaidFrom,
   PaymentMethod,
@@ -53,19 +53,19 @@ export const paymentMethod: Record<PaymentMethod, string> = {
 }
 
 export const serviceCategory: Record<ServiceCategory, string> = {
-  vehiculos: 'Vehículos',
-  colchones: 'Colchones',
+  autos: 'Autos',
+  alfombras: 'Alfombras',
   muebles: 'Muebles',
-  hogar: 'Hogar',
-  alfombras: 'Alfombras y cortinas',
+  colchones: 'Colchones',
+  especializados: 'Especializados',
   oficinas: 'Oficinas',
-  otros: 'Otros',
+  infantiles: 'Accesorios infantiles',
 }
 
 export const serviceUnit: Record<ServiceUnit, string> = {
   unidad: 'c/u',
   m2: 'por m²',
-  servicio: 'por servicio',
+  servicio: 'por vehículo',
 }
 
 export const expenseCategory: Record<ExpenseCategory, string> = {
@@ -85,11 +85,10 @@ export const paidFrom: Record<PaidFrom, string> = {
   management: 'Gerencia',
 }
 
-export const officeFrequency: Record<OfficeFrequency, string> = {
-  unica: 'Única vez',
-  semanal: 'Semanal',
-  quincenal: 'Quincenal',
-  mensual: 'Mensual',
+export const officePlan: Record<OfficePlan, string> = {
+  basico: 'Básico',
+  profundo: 'Profundo',
+  mensual: 'Plan mensual',
 }
 
 export const officeQuoteStatus: Record<OfficeQuoteStatus, Label> = {

@@ -11,11 +11,15 @@ const { total, count, calculating } = useQuote()
 
 <template>
   <div class="bar">
-    <div class="bar__info" aria-live="polite">
-      <span class="bar__count">{{ count }} {{ count === 1 ? 'ítem' : 'ítems' }}</span>
-      <strong class="bar__total money">{{ money(total) }}</strong>
-      <span v-if="calculating" class="bar__calc">calculando…</span>
-    </div>
+    <!-- El resumen aparece al agregar el primer servicio; el total "rebota" cada vez que cambia. -->
+    <Transition name="fade-up" mode="out-in">
+      <div v-if="count > 0" key="info" class="bar__info" aria-live="polite">
+        <span class="bar__count">{{ count }} {{ count === 1 ? 'servicio' : 'servicios' }}</span>
+        <strong :key="total" class="bar__total money bump">{{ money(total) }}</strong>
+        <span v-if="calculating" class="bar__calc">calculando…</span>
+      </div>
+      <p v-else key="empty" class="bar__empty">Arma tu pedido</p>
+    </Transition>
     <button
       type="button"
       class="btn btn--primary btn--lg bar__btn"
@@ -28,6 +32,12 @@ const { total, count, calculating } = useQuote()
 </template>
 
 <style scoped lang="scss">
+.bar__empty {
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $ink-muted;
+}
+
 .bar {
   position: fixed;
   inset: auto 0 0;

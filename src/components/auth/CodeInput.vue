@@ -109,8 +109,8 @@ defineExpose({ focus })
     }
 
     &--active {
-      border-color: $aqua-deep;
-      box-shadow: 0 0 0 3px rgba($aqua, 0.3);
+      border-color: $orange-deep;
+      box-shadow: 0 0 0 3px rgba($orange, 0.3);
     }
   }
 

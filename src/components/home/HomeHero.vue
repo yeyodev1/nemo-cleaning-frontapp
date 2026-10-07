@@ -1,161 +1,170 @@
 <script setup lang="ts">
 import AppIcon from '@/components/ui/AppIcon.vue'
-import HeroArt from './HeroArt.vue'
-import { heroChips } from '@/config/landing'
+import { site } from '@/config/site'
+import { lines } from '@/config/landing'
+import { whatsappUrl } from '@/utils/format'
+
+const wa = whatsappUrl(site.whatsapp, 'Hola Nemo, quiero información de sus servicios')
 </script>
 
 <template>
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero__glow" aria-hidden="true"></div>
     <div class="hero__inner">
       <div class="hero__copy">
-        <p class="hero__eyebrow"><AppIcon name="sparkles" :size="16" /> Guayaquil · Samborondón · Vía a la Costa</p>
-        <h1 id="hero-title" class="hero__title">
-          Tu hogar, tu auto y tu oficina, <span>impecables</span> sin moverte de casa.
-        </h1>
-        <p class="hero__lead">
-          Limpieza profesional de tapicería, colchones, muebles, alfombras, hogares y oficinas. Arma tu pedido, ve el
-          precio al instante y elige tu horario.
-        </p>
+        <p class="hero__eyebrow">{{ site.bio }}</p>
+        <h1 id="hero-title" class="hero__title">Más que limpieza, restauramos valor</h1>
+        <p class="hero__lead">Autos · Muebles · Colchones · Oficinas · Alfombras</p>
         <div class="hero__ctas">
-          <RouterLink to="/reservar" class="btn btn--primary btn--lg">
-            Reserva tu limpieza <AppIcon name="arrow-right" />
-          </RouterLink>
-          <RouterLink to="/cotizar-oficina" class="btn btn--ghost btn--lg">
-            <AppIcon name="building" /> Cotizar oficina
-          </RouterLink>
+          <RouterLink to="/reservar" class="btn btn--accent btn--lg">Reservar <AppIcon name="arrow-right" /></RouterLink>
+          <a :href="wa" target="_blank" rel="noopener" class="btn btn--outline-light btn--lg">
+            <AppIcon name="whatsapp" /> WhatsApp
+          </a>
         </div>
-        <ul class="hero__chips">
-          <li v-for="c in heroChips" :key="c.label"><AppIcon :name="c.icon" :size="16" /> {{ c.label }}</li>
-        </ul>
+        <nav class="hero__lines" aria-label="Líneas de servicio">
+          <a v-for="l in lines" :key="l.id" :href="`#nemo-${l.id}`" class="hero__line">
+            {{ l.title }} <AppIcon name="arrow-right" :size="18" />
+          </a>
+        </nav>
       </div>
-      <div class="hero__art"><HeroArt /></div>
+
+      <div v-reveal="120" class="hero__photos">
+        <figure class="hero__photo hero__photo--main">
+          <img src="/fotos/auto-detailing-pro.webp" alt="Detailing de una camioneta negra" width="735" height="1102" fetchpriority="high" />
+        </figure>
+        <figure class="hero__photo hero__photo--side">
+          <img src="/fotos/auto-interior.webp" alt="Limpieza al detalle del panel de un vehículo" width="736" height="736" />
+        </figure>
+        <figure class="hero__photo hero__photo--small">
+          <img src="/fotos/antes-despues/sofa-despues.webp" alt="Sofá después de la limpieza" width="972" height="484" />
+        </figure>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped lang="scss">
 .hero {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, $sky 0%, #fff 100%);
-  padding: 2rem 0 3rem;
+  @include dark-pattern;
+  color: $on-dark;
+  padding: calc(var(--header-h) + 2rem) 0 3rem;
+  margin-top: calc(-1 * var(--header-h));
 
   @include from('lg') {
-    padding: 4rem 0 5rem;
-  }
-
-  &__glow {
-    position: absolute;
-    width: 520px;
-    height: 520px;
-    right: -180px;
-    top: -160px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba($aqua, 0.22), transparent 65%);
-    pointer-events: none;
+    padding: calc(var(--header-h) + 4.5rem) 0 5rem;
   }
 
   &__inner {
     @include container;
-    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.5rem;
 
     @include from('lg') {
       flex-direction: row;
       align-items: center;
-      gap: 3rem;
+      gap: 4rem;
     }
   }
 
   &__copy {
-    flex: 1.1;
-    animation: rise 0.7s $ease both;
+    flex: 1 1 52%;
   }
 
   &__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.8rem;
-    border-radius: $radius-pill;
-    background: $aqua-soft;
-    color: $aqua-ink;
-    font-size: $text-xs;
-    font-weight: 700;
-    margin-bottom: 1.1rem;
+    @include eyebrow;
+    color: $sky-blue;
+    margin-bottom: 1rem;
+    @include orange-underline(36px);
   }
 
   &__title {
     @include display($display-lg);
-
-    span {
-      background: linear-gradient(90deg, $navy, $aqua-deep);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
+    color: #fff;
   }
 
   &__lead {
     margin-top: 1rem;
-    color: $ink-soft;
     font-size: $text-lg;
-    max-width: 52ch;
+    font-weight: 500;
+    color: $on-dark-soft;
   }
 
   &__ctas {
-    margin-top: 1.6rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-
-    @include from('sm') {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-  }
-
-  &__chips {
-    list-style: none;
-    margin-top: 1.5rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
 
-    li {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.4rem 0.75rem;
-      border-radius: $radius-pill;
-      background: #fff;
-      border: 1px solid $line;
-      font-size: $text-xs;
-      font-weight: 600;
-      color: $ink-soft;
+    .btn {
+      flex: 1 1 160px;
 
-      svg {
-        color: $aqua-ink;
+      @include from('sm') {
+        flex: 0 0 auto;
       }
     }
   }
 
-  &__art {
-    flex: 0.9;
-    max-width: 480px;
-    width: 100%;
-    margin-inline: auto;
-    animation: rise 0.9s 0.1s $ease both;
+  &__lines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 2rem;
   }
-}
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+  // Como el "Desliza →" de los posts: texto blanco con flecha naranja.
+  &__line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: $tap;
+    padding-right: 1rem;
+    font-size: $text-sm;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #fff;
+
+    svg {
+      color: $orange;
+      transition: transform 0.2s $ease;
+    }
+
+    &:hover svg {
+      transform: translateX(3px);
+    }
+  }
+
+  &__photos {
+    flex: 1 1 48%;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.75rem;
+  }
+
+  &__photo {
+    @include photo-frame;
+    box-shadow: $shadow-lg;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &--main {
+      grid-row: 1 / span 2;
+      aspect-ratio: 3 / 4;
+    }
+
+    &--side {
+      aspect-ratio: 1;
+    }
+
+    &--small {
+      aspect-ratio: 972 / 484;
+      align-self: start;
+    }
   }
 }
 </style>

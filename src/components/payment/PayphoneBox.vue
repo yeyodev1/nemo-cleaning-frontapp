@@ -108,8 +108,8 @@ onMounted(() => (props.init ? box.render(props.init, props.code, props.token) : 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: $aqua-soft;
-    color: $aqua-ink;
+    background: $orange-soft;
+    color: $orange-ink;
   }
 
   &__state {

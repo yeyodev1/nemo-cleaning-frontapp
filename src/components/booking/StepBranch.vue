@@ -34,7 +34,7 @@ function pick(id: string) {
       <span class="branch__info">
         <strong>{{ b.name }}</strong>
         <small v-if="b.address">{{ b.address }}</small>
-        <small v-if="b.openingTime">Atendemos de {{ b.openingTime }} a {{ b.closingTime }}</small>
+        <small v-if="b.openingTime">Horario de reservas: {{ b.openingTime }} a {{ b.closingTime }}</small>
       </span>
       <span class="branch__check" aria-hidden="true"><AppIcon name="check" :size="16" /></span>
     </button>
@@ -107,7 +107,7 @@ function pick(id: string) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, $aqua, $navy);
+    background: linear-gradient(135deg, $orange, $navy);
     color: #fff;
   }
 

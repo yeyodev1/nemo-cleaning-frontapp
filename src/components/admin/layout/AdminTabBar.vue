@@ -65,7 +65,7 @@ const { tabs, isActive } = useAdminNav()
         width: 28px;
         height: 3px;
         border-radius: 0 0 3px 3px;
-        background: $aqua;
+        background: $orange;
       }
     }
   }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { itemLabel } from '@/utils/pricing'
 import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
@@ -48,7 +49,7 @@ function send(status: JobStatus) {
     </div>
 
     <ul class="job__items">
-      <li v-for="i in job.items" :key="i.service"><strong>{{ i.quantity }}×</strong> {{ i.name }}</li>
+      <li v-for="(i, n) in job.items" :key="n">{{ itemLabel(i) }}</li>
     </ul>
     <p v-if="job.notes" class="job__notes"><AppIcon name="info" :size="16" /> {{ job.notes }}</p>
     <p v-if="job.balance > 0" class="job__due">Cobrar {{ money(job.balance) }} · {{ paymentMethod[job.paymentMethod] }}</p>

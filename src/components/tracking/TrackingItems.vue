@@ -3,10 +3,12 @@ import { computed } from 'vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { paymentMethod, paymentStatus } from '@/config/labels'
 import { money } from '@/utils/format'
+import { itemLabel } from '@/utils/pricing'
 import type { Booking } from '@/types/api'
 
 const props = defineProps<{ booking: Booking }>()
 // Un pedido cancelado o no realizado ya no se cobra: no mostramos saldo ni "Por pagar".
+const hasRange = computed(() => props.booking.items.some((i) => (i.unitPriceMax || 0) > i.unitPrice))
 const closed = computed(() => ['cancelled', 'no_show'].includes(props.booking.status))
 </script>
 
@@ -14,11 +16,12 @@ const closed = computed(() => ['cancelled', 'no_show'].includes(props.booking.st
   <section class="items card" aria-labelledby="items-title">
     <h2 id="items-title" class="items__title">Detalle</h2>
     <ul class="items__list">
-      <li v-for="i in booking.items" :key="i.service + i.name">
-        <span>{{ i.quantity }} × {{ i.name }}</span>
+      <li v-for="(i, n) in booking.items" :key="n">
+        <span>{{ itemLabel(i) }}</span>
         <span class="money">{{ money(i.subtotal) }}</span>
       </li>
     </ul>
+    <p v-if="hasRange" class="items__note">El valor final de los muebles se confirma según el estado/material del mueble.</p>
     <dl class="items__totals">
       <div v-if="booking.discount">
         <dt>Descuento</dt>
@@ -49,6 +52,11 @@ const closed = computed(() => ['cancelled', 'no_show'].includes(props.booking.st
 </template>
 
 <style scoped lang="scss">
+.items__note {
+  font-size: $text-xs;
+  color: $ink-muted;
+}
+
 .items {
   display: flex;
   flex-direction: column;

@@ -62,7 +62,7 @@ function submit() {
     cursor: pointer;
 
     &:focus-within {
-      outline: 2.5px solid $aqua-deep;
+      outline: 2.5px solid $orange-deep;
       outline-offset: 2px;
     }
 

@@ -77,8 +77,8 @@ const dayList = (d: number[]) => [...(d || [])].sort().map((i) => days[i]).join(
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: $aqua-soft;
-    color: $aqua-ink;
+    background: $orange-soft;
+    color: $orange-ink;
     display: inline-flex;
     align-items: center;
     justify-content: center;

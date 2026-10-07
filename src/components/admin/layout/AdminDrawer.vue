@@ -16,9 +16,10 @@ const { rest, isActive, logout, user } = useAdminNav()
     </p>
     <nav class="drawer__grid">
       <RouterLink
-        v-for="i in rest"
+        v-for="(i, n) in rest"
         :key="i.to"
         :to="i.to"
+        :style="{ '--i': n }"
         class="drawer__item"
         :class="{ 'is-active': isActive(i.to) }"
         @click="emit('close')"
@@ -54,7 +55,10 @@ const { rest, isActive, logout, user } = useAdminNav()
     @include flex-cards(130px, 0.6rem);
   }
 
+  // Cascada al abrir (la hoja ya sube; los accesos aparecen detrás, 30 ms cada uno).
   &__item {
+    animation: drawer-in $dur $ease-out both;
+    animation-delay: calc(80ms + var(--i, 0) * 30ms);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -73,8 +77,8 @@ const { rest, isActive, logout, user } = useAdminNav()
     }
 
     &.is-active {
-      border-color: $aqua;
-      background: $aqua-soft;
+      border-color: $orange;
+      background: $orange-soft;
     }
   }
 
@@ -83,6 +87,13 @@ const { rest, isActive, logout, user } = useAdminNav()
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 }
 </style>

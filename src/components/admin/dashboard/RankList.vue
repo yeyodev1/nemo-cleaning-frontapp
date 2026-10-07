@@ -74,7 +74,7 @@ const max = computed(() => Math.max(1, ...props.rows.map((r) => r.amount)))
       display: block;
       height: 100%;
       border-radius: 6px;
-      background: linear-gradient(90deg, $navy, $aqua);
+      background: linear-gradient(90deg, $navy, $orange);
     }
   }
 }

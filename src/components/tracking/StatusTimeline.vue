@@ -80,7 +80,7 @@ const current = computed(() => FLOW.findIndex((f) => f.id === props.status))
     }
 
     &.is-done::before {
-      background: $aqua;
+      background: $orange;
     }
   }
 
@@ -98,7 +98,7 @@ const current = computed(() => FLOW.findIndex((f) => f.id === props.status))
   }
 
   .is-done &__dot {
-    background: $aqua;
+    background: $orange;
     color: $navy-ink;
   }
 

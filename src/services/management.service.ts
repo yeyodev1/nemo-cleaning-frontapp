@@ -81,7 +81,7 @@ class ManagementService extends APIBase {
   officeQuote(id: string) {
     return this.get<OfficeQuote>(`admin/office-quotes/${id}`)
   }
-  updateOfficeQuote(id: string, body: { status?: OfficeQuoteStatus; notes?: string }) {
+  updateOfficeQuote(id: string, body: { status?: OfficeQuoteStatus; notes?: string; estimate?: number }) {
     return this.patch<OfficeQuote>(`admin/office-quotes/${id}`, body)
   }
   convertOfficeQuote(id: string, body: { date: string; time: string; address?: string; operators?: string[] }) {

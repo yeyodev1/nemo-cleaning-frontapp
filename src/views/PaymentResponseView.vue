@@ -124,8 +124,8 @@ const wa = computed(() =>
       inset: -6px;
       border-radius: 50%;
       border: 3px solid transparent;
-      border-top-color: $aqua;
-      border-right-color: rgba($aqua, 0.3);
+      border-top-color: $orange;
+      border-right-color: rgba($orange, 0.3);
       animation: orbit 0.9s linear infinite;
     }
   }

@@ -1,23 +1,27 @@
 <script setup lang="ts">
 import AppIcon from '@/components/ui/AppIcon.vue'
+import NemoLogo from '@/components/brand/NemoLogo.vue'
+import { site } from '@/config/site'
+import { whatsappUrl } from '@/utils/format'
+
+const wa = whatsappUrl(site.whatsapp, 'Hola Nemo, quiero información de sus servicios')
 </script>
 
 <template>
   <section class="cta" aria-labelledby="cta-title">
-    <div v-reveal class="cta__card">
-      <svg class="cta__shape" viewBox="0 0 200 200" aria-hidden="true">
-        <circle cx="160" cy="40" r="60" fill="#19C3B8" opacity=".25" />
-        <circle cx="30" cy="180" r="40" fill="#fff" opacity=".08" />
-      </svg>
-      <h2 id="cta-title">¿Listo para ver todo como nuevo?</h2>
-      <p>Reserva hoy en menos de 2 minutos y elige el horario que mejor te quede.</p>
-      <div class="cta__actions">
-        <RouterLink to="/reservar" class="btn btn--accent btn--lg">
-          Reserva tu limpieza <AppIcon name="arrow-right" />
-        </RouterLink>
-        <RouterLink to="/cotizar-oficina" class="btn btn--lg cta__ghost">
-          <AppIcon name="building" /> Cotizar oficina
-        </RouterLink>
+    <div class="cta__inner">
+      <NemoLogo variant="light" :height="130" class="cta__logo" />
+      <div v-reveal class="cta__copy">
+        <h2 id="cta-title">{{ site.slogan }}</h2>
+        <div class="cta__actions">
+          <RouterLink to="/reservar" class="btn btn--accent btn--lg">Reservar <AppIcon name="arrow-right" /></RouterLink>
+          <a :href="wa" target="_blank" rel="noopener" class="btn btn--primary btn--lg">
+            <AppIcon name="whatsapp" /> {{ site.whatsappDisplay }}
+          </a>
+          <a :href="site.instagram" target="_blank" rel="noopener" class="btn btn--ghost btn--lg">
+            <AppIcon name="instagram" /> {{ site.instagramHandle }}
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -25,65 +29,35 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 
 <style scoped lang="scss">
 .cta {
-  @include container;
-  padding-block: $space-section;
+  background: $sky;
+  border-top: 1px solid $line;
+  padding: 3.5rem 0;
 
-  &__card {
-    position: relative;
-    overflow: hidden;
-    padding: 2.25rem 1.5rem;
-    border-radius: $radius-lg;
-    background: linear-gradient(135deg, $navy, $navy-deep 60%, $navy-ink);
-    color: $on-dark-soft;
-    text-align: center;
+  &__inner {
+    @include container;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
 
     @include from('md') {
-      padding: 3.5rem 2rem;
-    }
-
-    h2 {
-      position: relative;
-      color: #fff;
-      @include display($display-sm);
-    }
-
-    p {
-      position: relative;
-      margin: 0.75rem auto 0;
-      max-width: 46ch;
+      flex-direction: row;
+      align-items: center;
+      gap: 3rem;
     }
   }
 
-  &__shape {
-    position: absolute;
-    right: -40px;
-    top: -40px;
-    width: 280px;
-    height: 280px;
-    pointer-events: none;
+  h2 {
+    @include display($display-md);
+    color: $navy;
+    @include orange-underline;
   }
 
   &__actions {
-    position: relative;
-    margin-top: 1.6rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    align-items: stretch;
-
-    @include from('sm') {
-      flex-direction: row;
-      justify-content: center;
-    }
-  }
-
-  &__ghost {
-    color: #fff;
-    border-color: rgba(#fff, 0.35);
-
-    &:hover {
-      background: rgba(#fff, 0.08);
-    }
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
   }
 }
 </style>

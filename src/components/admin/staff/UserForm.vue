@@ -14,7 +14,7 @@ const scope = useAdminScope()
 const toast = useToastStore()
 const saving = ref(false)
 
-const blank = (): UserInput => ({ name: '', email: '', phone: '', role: 'operator', branches: [], active: true, color: '#19C3B8' })
+const blank = (): UserInput => ({ name: '', email: '', phone: '', role: 'operator', branches: [], active: true, color: '#F05E23' })
 const form = reactive<UserInput>(blank())
 
 watch(

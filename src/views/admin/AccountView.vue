@@ -48,7 +48,7 @@ const user = useUserStore()
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: $aqua;
+    background: $orange;
     color: $navy-ink;
     font-weight: 800;
     font-size: 1.3rem;

@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { draft } from './useBookingDraft'
+import { parseKey } from './cart'
 
 export const STEPS = [
   { title: '¿Qué sucursal te atiende?', short: 'Sucursal' },
@@ -19,9 +20,11 @@ export function useStepValidation() {
   function validate(step: number): string {
     if (step === 1 && !draft.branch) return 'Elige la sucursal más cercana a ti.'
     if (step === 2) {
-      const hasMain = Object.entries(draft.cart).some(
-        ([id, q]) => q > 0 && catalog.byId(id) && !catalog.byId(id)?.isExtra,
-      )
+      // Las claves del carrito pueden ser "id::opción": se compara por el id del servicio.
+      const hasMain = Object.entries(draft.cart).some(([key, q]) => {
+        const s = catalog.byId(parseKey(key).service)
+        return q > 0 && s && !s.isExtra
+      })
       if (!hasMain) return 'Agrega al menos un servicio (los adicionales van junto a un servicio).'
     }
     if (step === 3) {

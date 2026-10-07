@@ -6,7 +6,8 @@ import BaseSheet from '@/components/ui/BaseSheet.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { managementService } from '@/services/management.service'
 import { useToastStore } from '@/stores/toast'
-import { officeFrequency, officeQuoteStatus, options } from '@/config/labels'
+import MoneyField from '@/components/admin/finance/MoneyField.vue'
+import { officePlan, officeQuoteStatus, options } from '@/config/labels'
 import { addDays, dateTime, errorMessage, intlPhone, money, todayISO, whatsappUrl } from '@/utils/format'
 import type { OfficeQuote, OfficeQuoteStatus } from '@/types/api'
 
@@ -33,6 +34,28 @@ async function setStatus(status: OfficeQuoteStatus) {
     const q = await managementService.updateOfficeQuote(props.quote._id, { status })
     emit('changed', q)
     toast.success('Estado actualizado')
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    busy.value = false
+  }
+}
+
+// Plan mensual (tarifa especial) o valor negociado: gerencia fija el monto antes de convertir.
+const agreed = ref(0)
+watch(
+  () => props.quote,
+  (q) => (agreed.value = q?.estimate ?? 0),
+  { immediate: true },
+)
+
+async function saveEstimate() {
+  if (!props.quote || agreed.value <= 0) return
+  busy.value = true
+  try {
+    const q = await managementService.updateOfficeQuote(props.quote._id, { estimate: agreed.value })
+    emit('changed', q)
+    toast.success('Valor guardado')
   } catch (e) {
     toast.error(errorMessage(e))
   } finally {
@@ -79,10 +102,11 @@ async function convert() {
 
       <ul class="qs__facts">
         <li><span>Área</span><strong>{{ quote.squareMeters }} m²</strong></li>
-        <li><span>Sillas</span><strong>{{ quote.chairs }}</strong></li>
-        <li><span>Escritorios</span><strong>{{ quote.desks }}</strong></li>
-        <li><span>Baños</span><strong>{{ quote.bathrooms }}</strong></li>
-        <li><span>Frecuencia</span><strong>{{ officeFrequency[quote.frequency] }}</strong></li>
+        <li><span>Plan</span><strong>{{ officePlan[quote.plan] }}</strong></li>
+        <li v-if="quote.chairsFabric"><span>Sillas de tela</span><strong>{{ quote.chairsFabric }}</strong></li>
+        <li v-if="quote.chairsMixed"><span>Sillas mixtas</span><strong>{{ quote.chairsMixed }}</strong></li>
+        <li v-if="quote.windows"><span>Ventanales</span><strong>{{ quote.windows }}</strong></li>
+        <li v-if="quote.bathrooms"><span>Baños</span><strong>{{ quote.bathrooms }}</strong></li>
       </ul>
       <p v-if="quote.notes" class="qs__notes">{{ quote.notes }}</p>
 
@@ -90,7 +114,14 @@ async function convert() {
         <ul class="qs__breakdown">
           <li v-for="l in quote.breakdown" :key="l.label"><span>{{ l.label }}</span><span class="money">{{ money(l.amount) }}</span></li>
         </ul>
-        <p class="qs__total"><span>Estimado</span><strong class="money">{{ money(quote.estimate) }}</strong></p>
+        <p class="qs__total">
+          <span>{{ quote.plan === 'mensual' ? 'Valor acordado' : 'Estimado' }}</span>
+          <strong class="money">{{ quote.estimate === null ? 'Tarifa especial (por definir)' : money(quote.estimate) }}</strong>
+        </p>
+        <form v-if="!quote.booking" class="qs__price" @submit.prevent="saveEstimate">
+          <MoneyField v-model="agreed" label="Ajustar valor acordado" />
+          <button type="submit" class="btn btn--soft" :disabled="busy || agreed <= 0">Guardar valor</button>
+        </form>
       </section>
 
       <label class="field">
@@ -104,7 +135,8 @@ async function convert() {
         <AppIcon name="list" /> Ver pedido creado
       </RouterLink>
       <template v-else>
-        <button v-if="!converting" type="button" class="btn btn--primary btn--block" @click="converting = true">
+        <p v-if="quote.estimate === null" class="muted qs__hint">Define el valor acordado para convertirla en pedido.</p>
+        <button v-if="!converting" type="button" class="btn btn--primary btn--block" :disabled="quote.estimate === null" @click="converting = true">
           <AppIcon name="calendar" /> Convertir en pedido
         </button>
         <form v-else class="qs__conv" @submit.prevent="convert">
@@ -124,6 +156,21 @@ async function convert() {
 </template>
 
 <style scoped lang="scss">
+.qs__price {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+
+  > :first-child {
+    flex: 1;
+  }
+}
+
+.qs__hint {
+  font-size: $text-xs;
+}
+
 .qs {
   display: flex;
   flex-direction: column;

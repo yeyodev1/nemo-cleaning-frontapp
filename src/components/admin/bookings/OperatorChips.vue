@@ -25,7 +25,7 @@ function toggle(id: string) {
       type="button"
       class="ops__chip"
       :class="{ 'is-on': model.includes(o._id) }"
-      :style="{ '--c': o.color || '#0B4F8A' }"
+      :style="{ '--c': o.color || '#1E2D3A' }"
       :aria-pressed="model.includes(o._id)"
       @click="toggle(o._id)"
     >

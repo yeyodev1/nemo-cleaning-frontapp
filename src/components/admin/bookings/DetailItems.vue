@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import ServicePicker from '@/components/booking/ServicePicker.vue'
 import { managementService } from '@/services/management.service'
-import { cartItems, localSubtotal, type Cart } from '@/composables/booking/cart'
+import { cartItems, cartKey, localSubtotal, type Cart } from '@/composables/booking/cart'
+import { itemLabel } from '@/utils/pricing'
 import { fromCents, money, toCents } from '@/utils/format'
 import type { BookingDetail, QuoteItemInput, Service } from '@/types/api'
 
@@ -16,7 +17,9 @@ const cart = ref<Cart>({})
 const discount = ref('')
 
 async function startEdit() {
-  cart.value = Object.fromEntries(props.booking.items.map((i) => [i.service, i.quantity]))
+  cart.value = Object.fromEntries(
+    props.booking.items.filter((i) => i.service).map((i) => [cartKey(i.service!, i.variant), i.quantity]),
+  )
   discount.value = fromCents(props.booking.discount)
   editing.value = true
   if (!services.value.length) {
@@ -26,7 +29,11 @@ async function startEdit() {
 }
 
 function save() {
-  const items = cartItems(cart.value)
+  // Las líneas libres (p. ej. una cotización convertida) no están en el catálogo: se conservan tal cual.
+  const custom = props.booking.items
+    .filter((i) => !i.service)
+    .map((i) => ({ name: i.name, unitPrice: i.unitPrice, quantity: i.quantity }))
+  const items = [...cartItems(cart.value), ...custom] as QuoteItemInput[]
   if (!items.length) return
   emit('save', { items, discount: toCents(discount.value || 0) })
   editing.value = false
@@ -42,8 +49,8 @@ function save() {
 
     <template v-if="!editing">
       <ul class="items__list">
-        <li v-for="i in booking.items" :key="i.service">
-          <span>{{ i.quantity }}× {{ i.name }} <small class="muted money">({{ money(i.unitPrice) }})</small></span>
+        <li v-for="(i, n) in booking.items" :key="n">
+          <span>{{ itemLabel(i) }} <small class="muted money">({{ money(i.unitPrice) }})</small></span>
           <span class="money">{{ money(i.subtotal) }}</span>
         </li>
       </ul>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { itemLabel } from '@/utils/pricing'
 import { onMounted } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import BookingBadges from '@/components/admin/common/BookingBadges.vue'
@@ -10,7 +11,7 @@ const { items, total, page, pages, loading, error, load } = useMyBookings()
 onMounted(() => load())
 
 const summary = (b: CustomerBooking) =>
-  b.items.map((i) => (i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name)).join(', ')
+  b.items.map(itemLabel).join(', ')
 </script>
 
 <template>

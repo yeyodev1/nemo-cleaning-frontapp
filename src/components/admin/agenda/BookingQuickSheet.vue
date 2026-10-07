@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { itemLabel } from '@/utils/pricing'
 import { ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
@@ -50,7 +51,7 @@ async function save() {
       </div>
 
       <ul class="quick__items">
-        <li v-for="i in booking.items" :key="i.service"><span>{{ i.quantity }}× {{ i.name }}</span><span class="money">{{ money(i.subtotal) }}</span></li>
+        <li v-for="(i, n) in booking.items" :key="n"><span>{{ itemLabel(i) }}</span><span class="money">{{ money(i.subtotal) }}</span></li>
         <li class="quick__total"><span>Total · {{ paymentMethod[booking.paymentMethod] }}</span><span class="money">{{ money(booking.total) }}</span></li>
       </ul>
       <p v-if="booking.notes" class="quick__notes">{{ booking.notes }}</p>

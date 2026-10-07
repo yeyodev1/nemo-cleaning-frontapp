@@ -40,7 +40,7 @@ const bw = computed(() => (props.days.length ? W / props.days.length : W))
   }
 
   &__bar {
-    fill: $aqua;
+    fill: $orange;
 
     &:hover {
       fill: $navy;

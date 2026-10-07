@@ -24,10 +24,7 @@ const services = computed(() => catalog.services.filter((s) => s.category !== 'o
     <div v-if="catalog.loading && !catalog.services.length" class="services__loading">
       <span v-for="n in 4" :key="n" class="skeleton"></span>
     </div>
-    <ServicePicker v-else v-model="draft.cart" :services="services" :initial-category="initial" />
-    <RouterLink to="/cotizar-oficina" class="services__office">
-      ¿Es una oficina? <strong>Cotízala aquí en 1 minuto</strong>
-    </RouterLink>
+    <ServicePicker v-else v-model="draft.cart" :services="services" :initial-category="initial" office-link />
   </div>
 </template>
 
@@ -47,20 +44,5 @@ const services = computed(() => catalog.services.filter((s) => s.category !== 'o
     }
   }
 
-  &__office {
-    align-self: flex-start;
-    min-height: $tap;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: $text-sm;
-    color: $ink-soft;
-
-    strong {
-      color: $navy;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-  }
 }
 </style>

@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import BrandLogo from '@/components/brand/BrandLogo.vue'
+import NemoLogo from '@/components/brand/NemoLogo.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { useCatalogStore } from '@/stores/catalog'
-import { site } from '@/config/site'
+import { coverage, site } from '@/config/site'
 import { whatsappUrl } from '@/utils/format'
 
-const catalog = useCatalogStore()
-catalog.load()
 const year = new Date().getFullYear()
 </script>
 
@@ -14,34 +11,42 @@ const year = new Date().getFullYear()
   <footer class="footer">
     <div class="footer__inner">
       <div class="footer__brand">
-        <BrandLogo light :height="36" />
-        <p>Limpieza profesional a domicilio en Guayaquil, Samborondón y Vía a la Costa. Tapicería, colchones, muebles, alfombras, hogares y oficinas.</p>
+        <NemoLogo variant="dark" :height="104" />
+        <p class="footer__slogan">{{ site.slogan }}</p>
+        <p>{{ site.bio }} · Autos, muebles, colchones, oficinas y alfombras.</p>
       </div>
 
       <div class="footer__col">
-        <h3>Sucursales</h3>
-        <ul v-if="catalog.branches.length">
-          <li v-for="b in catalog.branches" :key="b._id">
-            <strong>{{ b.name }}</strong>
-            <span v-if="b.address">{{ b.address }}</span>
-            <a v-if="b.whatsapp" :href="whatsappUrl(b.whatsapp)" target="_blank" rel="noopener">
-              <AppIcon name="whatsapp" :size="16" /> WhatsApp
+        <h3>Contacto</h3>
+        <ul>
+          <li>
+            <a :href="whatsappUrl(site.whatsapp)" target="_blank" rel="noopener">
+              <AppIcon name="whatsapp" :size="16" /> WhatsApp {{ site.whatsappDisplay }}
+            </a>
+          </li>
+          <li>
+            <a :href="site.instagram" target="_blank" rel="noopener">
+              <AppIcon name="instagram" :size="16" /> Instagram {{ site.instagramHandle }}
             </a>
           </li>
         </ul>
-        <ul v-else>
-          <li><strong>Samborondón</strong></li>
-          <li><strong>Vía a la Costa</strong></li>
+      </div>
+
+      <div class="footer__col">
+        <h3>Cobertura</h3>
+        <ul>
+          <li v-for="c in coverage.catalog" :key="c"><span><AppIcon name="pin" :size="14" /> {{ c }}</span></li>
+          <li class="footer__also">También: {{ coverage.linktree }}</li>
         </ul>
       </div>
 
       <div class="footer__col">
         <h3>Enlaces</h3>
         <ul>
-          <li><RouterLink to="/reservar">Reservar limpieza</RouterLink></li>
+          <li><RouterLink to="/reservar">Reservar</RouterLink></li>
           <li><RouterLink to="/cotizar-oficina">Cotizar oficina</RouterLink></li>
           <li><RouterLink to="/#preguntas">Preguntas frecuentes</RouterLink></li>
-          <li><a :href="`mailto:${site.email}`">{{ site.email }}</a></li>
+          <li><RouterLink to="/ingresar">Mi cuenta</RouterLink></li>
         </ul>
       </div>
     </div>
@@ -54,7 +59,7 @@ const year = new Date().getFullYear()
 
 <style scoped lang="scss">
 .footer {
-  background: $navy-ink;
+  @include dark-pattern($navy-deep);
   color: $on-dark-soft;
   padding: 3rem 0 calc(1.5rem + env(safe-area-inset-bottom));
   font-size: $text-sm;
@@ -68,14 +73,34 @@ const year = new Date().getFullYear()
     flex-basis: 320px !important;
 
     p {
-      margin-top: 1rem;
+      margin-top: 0.75rem;
       max-width: 40ch;
     }
   }
 
+  &__slogan {
+    font-family: $font-display;
+    font-size: $text-xl;
+    line-height: 1.2;
+    color: #fff;
+    @include orange-underline;
+  }
+
+  &__also {
+    font-size: $text-xs;
+  }
+
+  li span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
   h3 {
     color: #fff;
-    font-size: $text-base;
+    font-size: $text-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     margin-bottom: 0.75rem;
   }
 
@@ -103,7 +128,7 @@ const year = new Date().getFullYear()
     min-height: 32px;
 
     &:hover {
-      color: $aqua;
+      color: $orange;
     }
   }
 

@@ -9,12 +9,12 @@ const blank = (): Settings => ({
   notifyEmails: [],
   bankAccounts: [],
   officePricing: {
-    pricePerM2: 0,
-    pricePerChair: 0,
-    pricePerDesk: 0,
-    pricePerBathroom: 0,
-    minimum: 0,
-    frequencyDiscounts: { semanal: 0, quincenal: 0, mensual: 0 },
+    basicPerM2: 0,
+    deepPerM2: 0,
+    chairFabric: 0,
+    chairMixed: 0,
+    windowTiers: [],
+    bathroomTiers: [],
   },
   bookingLeadHours: 12,
 })
@@ -34,7 +34,8 @@ export function useSettingsForm() {
       officePricing: {
         ...b.officePricing,
         ...s.officePricing,
-        frequencyDiscounts: { ...b.officePricing.frequencyDiscounts, ...s.officePricing?.frequencyDiscounts },
+        windowTiers: (s.officePricing?.windowTiers || []).map((t) => ({ ...t })),
+        bathroomTiers: (s.officePricing?.bathroomTiers || []).map((t) => ({ ...t })),
       },
       bookingLeadHours: s.bookingLeadHours ?? 12,
     })

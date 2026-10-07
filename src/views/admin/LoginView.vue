@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import BrandLogo from '@/components/brand/BrandLogo.vue'
+import NemoLogo from '@/components/brand/NemoLogo.vue'
+import { site } from '@/config/site'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import CodeLoginForm from '@/components/auth/CodeLoginForm.vue'
 import { authService } from '@/services/auth.service'
@@ -23,18 +24,13 @@ function done() {
 <template>
   <div class="login">
     <aside class="login__art" aria-hidden="true">
-      <BrandLogo light :height="40" />
-      <div class="login__pitch">
-        <h2>Tu operación de limpieza, en orden.</h2>
-        <p>Agenda por sucursal, pagos conciliados y el equipo en la calle, desde cualquier celular.</p>
-      </div>
-      <span class="login__bubble login__bubble--a"></span>
-      <span class="login__bubble login__bubble--b"></span>
+      <NemoLogo variant="dark" :height="230" />
+      <p class="login__slogan">{{ site.slogan }}</p>
     </aside>
 
     <section class="login__panel">
       <div class="login__form">
-        <RouterLink to="/" class="login__logo"><BrandLogo :height="38" /></RouterLink>
+        <RouterLink to="/" class="login__logo" aria-label="Ir al sitio"><NemoLogo variant="light" :height="72" /></RouterLink>
         <h1>Panel del personal</h1>
         <p class="login__sub">Ingresa con tu correo de Nemo Cleaning: te enviamos un código de acceso.</p>
         <CodeLoginForm
@@ -62,8 +58,10 @@ function done() {
     flex: 1 1 50%;
     padding: 3rem;
     flex-direction: column;
-    justify-content: space-between;
-    background: linear-gradient(150deg, $navy-deep, $navy 60%, $aqua-deep);
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    @include dark-pattern;
     color: #fff;
 
     @include from('lg') {
@@ -71,41 +69,11 @@ function done() {
     }
   }
 
-  &__pitch {
-    position: relative;
-    z-index: 1;
-    max-width: 30rem;
-
-    h2 {
-      color: #fff;
-      @include display($display-sm);
-    }
-
-    p {
-      margin-top: 1rem;
-      color: $on-dark-soft;
-    }
-  }
-
-  &__bubble {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba($aqua, 0.18);
-
-    &--a {
-      width: 420px;
-      height: 420px;
-      right: -120px;
-      top: -100px;
-    }
-
-    &--b {
-      width: 240px;
-      height: 240px;
-      right: 18%;
-      bottom: -80px;
-      background: rgba(#fff, 0.08);
-    }
+  &__slogan {
+    @include display($display-sm);
+    color: #fff;
+    text-align: center;
+    max-width: 18ch;
   }
 
   &__panel {

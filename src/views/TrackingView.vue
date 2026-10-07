@@ -217,7 +217,7 @@ onMounted(t.load)
     }
 
     svg {
-      color: $aqua-ink;
+      color: $orange-ink;
       margin-top: 2px;
     }
   }

@@ -53,7 +53,7 @@ const iconOf = { success: 'check-circle', error: 'alert', info: 'info' } as cons
   box-shadow: $shadow-lg;
 
   &--success svg {
-    color: $aqua;
+    color: $orange;
   }
 
   &--error {
@@ -63,12 +63,19 @@ const iconOf = { success: 'check-circle', error: 'alert', info: 'info' } as cons
 
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.3s $ease;
+  transition:
+    opacity $dur $ease-out,
+    transform $dur $ease-out;
+}
+
+// Los que quedan se reacomodan con suavidad cuando uno se va.
+.toast-move {
+  transition: transform $dur $ease-out;
 }
 
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translateY(-12px);
+  transform: translateY(-12px) scale(0.98);
 }
 </style>

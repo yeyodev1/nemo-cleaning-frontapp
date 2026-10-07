@@ -1,32 +1,40 @@
-// Paleta de Nemo Cleaning: azul marino de confianza + aqua de "recién limpio".
-// Semántica primero: los componentes hablan de tinta, superficie y acento.
+// Paleta REAL de Nemo = identidad de Instagram (ver recursos/MARCA.md): azul marino dominante,
+// naranja del logo como ACENTO (no dominante), celeste del logo y blanco. Carbón solo secundario.
+//
+// Contraste (WCAG): naranja sobre blanco = 3.0:1 → solo texto GRANDE. Texto pequeño naranja → $orange-ink.
+// Sobre marino el naranja pasa AA (5.1:1) y el celeste 6.6:1. Botón naranja → texto marino, nunca blanco.
 
 // Marca
-$navy: #0b4f8a; // primario
-$navy-deep: #073763; // hero, sidebar, footer
-$navy-ink: #052a4c; // fondos más profundos
-$navy-soft: #e7f0fa;
-$aqua: #19c3b8; // acento
-$aqua-deep: #0e9a91; // aqua con contraste AA sobre blanco para texto grande/iconos
-$aqua-ink: #087a73; // aqua para texto sobre blanco (AA)
-$aqua-soft: #e3f8f6;
-$sky: #f2f8fd; // fondo suave
-$sky-2: #e8f2fb;
+$navy: #12263f; // dominante: fondos, texto y botones
+$navy-deep: #0c1b2e; // degradados y fondos más profundos
+$navy-2: #1b3554; // superficie elevada sobre marino
+$navy-ink: #0a1626;
+$charcoal: #1a1b1e; // secundario
+$orange: #e8743b; // acento (arco del logo, subrayados, flechas)
+$orange-deep: #d4622b; // hover / foco
+$orange-ink: #b5521f; // naranja para texto pequeño sobre blanco (AA 5:1)
+$orange-soft: #fdf0e8;
+$sky-blue: #6fb1de; // celeste del logo (swoosh, destellos)
+$sky-blue-ink: #2b6e9e; // celeste para texto sobre blanco (AA)
+$navy-soft: #e9eef4;
+$sky: #f3f6f9; // fondo suave
+$sky-2: #e7edf3;
 $whatsapp: #1fb855;
 
 // Superficies
-$paper: #f6f9fc;
+$paper: #f7f7f8;
 $surface: #ffffff;
-$line: #dfe8f1;
-$line-strong: #c5d4e3;
+$line: #e1e7ee;
+$line-strong: #c8cdd4;
+$dark-line: rgba(#ffffff, 0.12);
 
 // Texto
-$ink: #0d2236;
-$ink-soft: #3f5468;
-$ink-muted: #6b7f92;
-$on-dark: #f1f7fd;
-$on-dark-soft: rgba(#f1f7fd, 0.74);
-$overlay: rgba(#04192e, 0.55);
+$ink: #12263f;
+$ink-soft: #3a4b60;
+$ink-muted: #5c6b7c;
+$on-dark: #f5f6f8;
+$on-dark-soft: rgba(#f5f6f8, 0.76);
+$overlay: rgba(#0d1015, 0.6);
 
 // Estados
 $success: #14915f;
@@ -38,40 +46,50 @@ $warning-bg: #fdf1dc;
 $danger-bg: #fce8ea;
 $info-bg: #e6effc;
 
-// Sombras con tinte azul
-$shadow-sm: 0 1px 2px rgba($navy-ink, 0.05), 0 4px 14px rgba($navy-ink, 0.06);
-$shadow-md: 0 2px 6px rgba($navy-ink, 0.05), 0 16px 36px rgba($navy-ink, 0.1);
-$shadow-lg: 0 30px 70px rgba($navy-ink, 0.2);
-$shadow-aqua: 0 10px 28px rgba($aqua, 0.35);
-$shadow-navy: 0 10px 28px rgba($navy, 0.3);
+// Sombras neutras
+$shadow-sm: 0 1px 2px rgba($navy, 0.06), 0 4px 14px rgba($navy, 0.06);
+$shadow-md: 0 2px 6px rgba($navy, 0.06), 0 16px 36px rgba($navy, 0.12);
+$shadow-lg: 0 30px 70px rgba($navy-ink, 0.35);
+$shadow-orange: 0 10px 28px rgba($orange, 0.28);
+$shadow-navy: 0 10px 28px rgba($navy, 0.28);
 
-// Tipografía
-$font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-$font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+// Tipografía: Fraunces (serif editorial de los titulares de Instagram) para títulos grandes;
+// Poppins para texto, botones y etiquetas.
+$font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+$font-ui: 'Poppins', system-ui, -apple-system, sans-serif;
+$font-body: 'Poppins', system-ui, -apple-system, sans-serif;
 
 $text-xs: clamp(0.74rem, 0.72rem + 0.1vw, 0.8rem);
 $text-sm: clamp(0.85rem, 0.82rem + 0.15vw, 0.92rem);
-$text-base: clamp(0.97rem, 0.93rem + 0.2vw, 1.05rem);
-$text-lg: clamp(1.1rem, 1rem + 0.45vw, 1.28rem);
-$text-xl: clamp(1.3rem, 1.12rem + 0.85vw, 1.65rem);
-$display-sm: clamp(1.65rem, 1.3rem + 1.7vw, 2.3rem);
-$display-md: clamp(2rem, 1.45rem + 2.7vw, 3.2rem);
-$display-lg: clamp(2.35rem, 1.5rem + 4.2vw, 4.4rem);
+$text-base: clamp(0.95rem, 0.92rem + 0.2vw, 1.02rem);
+$text-lg: clamp(1.08rem, 1rem + 0.45vw, 1.25rem);
+$text-xl: clamp(1.25rem, 1.1rem + 0.8vw, 1.6rem);
+$display-sm: clamp(1.45rem, 1.2rem + 1.4vw, 2.05rem);
+$display-md: clamp(1.75rem, 1.3rem + 2.3vw, 2.8rem);
+$display-lg: clamp(2.05rem, 1.4rem + 3.6vw, 3.9rem);
 
 // Espaciado
 $space-xs: 0.5rem;
 $space-sm: 0.85rem;
 $space-md: 1.5rem;
 $space-lg: 2.5rem;
-$space-section: clamp(3.5rem, 8vw, 7rem);
+$space-section: clamp(3.5rem, 8vw, 6.5rem);
 
 // Radios y curvas
-$radius-sm: 12px;
-$radius-md: 18px;
-$radius-lg: 26px;
+$radius-sm: 10px;
+$radius-md: 16px;
+$radius-lg: 22px;
 $radius-pill: 999px;
 $ease: cubic-bezier(0.22, 1, 0.36, 1);
 $ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+// Movimiento: premium, no llamativo. 200–350 ms con ease-out. Solo transform/opacity
+// (y el truco grid-template-rows para alturas). `prefers-reduced-motion` lo apaga en global.scss.
+$ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+// Salidas: curva más pareja para que cerrar se vea tan suave como abrir (no "desaparece").
+$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$dur-fast: 200ms;
+$dur: 280ms;
+$dur-slow: 350ms;
 
 // Alturas táctiles
 $tap: 44px;

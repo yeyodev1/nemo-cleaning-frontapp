@@ -1,51 +1,62 @@
 <script setup lang="ts">
 import AppIcon from '@/components/ui/AppIcon.vue'
 import SectionHead from './SectionHead.vue'
-import { steps } from '@/config/landing'
+import { paymentMethods, steps } from '@/config/landing'
 </script>
 
 <template>
-  <section id="como-funciona" class="steps" aria-labelledby="steps-title">
-    <div class="steps__inner">
-      <SectionHead
-        id="steps-title"
-        light
-        eyebrow="Cómo funciona"
-        title="Reservar es así de fácil"
-        text="Sin llamadas ni esperas: todo en línea y desde el celular."
-      />
-      <ol class="steps__list">
-        <li v-for="(s, i) in steps" :key="s.title" v-reveal="i * 90" class="step">
-          <span class="step__num">{{ i + 1 }}</span>
-          <span class="step__icon"><AppIcon :name="s.icon" :size="24" /></span>
-          <h3>{{ s.title }}</h3>
-          <p>{{ s.text }}</p>
+  <section id="como-funciona" class="how" aria-labelledby="how-title">
+    <div class="how__inner">
+      <SectionHead id="how-title" eyebrow="Reserva en línea" title="Cómo funciona" />
+      <ol class="how__steps">
+        <li v-for="(s, i) in steps" :key="s.title" v-reveal="i * 80" class="step">
+          <span class="step__n">{{ i + 1 }}</span>
+          <div>
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.text }}</p>
+          </div>
         </li>
       </ol>
-      <RouterLink to="/reservar" class="btn btn--accent btn--lg steps__cta">
-        Empezar mi reserva <AppIcon name="arrow-right" />
-      </RouterLink>
+
+      <h3 class="how__sub">Formas de pago</h3>
+      <ul class="how__pay">
+        <li v-for="m in paymentMethods" :key="m.title" class="pay">
+          <span class="pay__icon"><AppIcon :name="m.icon" :size="22" /></span>
+          <div>
+            <strong>{{ m.title }}</strong>
+            <p>{{ m.text }}</p>
+          </div>
+        </li>
+      </ul>
+      <RouterLink to="/reservar" class="btn btn--primary btn--lg how__cta">Reservar ahora <AppIcon name="arrow-right" /></RouterLink>
     </div>
   </section>
 </template>
 
 <style scoped lang="scss">
-.steps {
-  position: relative;
+.how {
+  background: $paper;
   padding: $space-section 0;
-  background:
-    radial-gradient(600px 300px at 90% 0%, rgba($aqua, 0.22), transparent 70%),
-    linear-gradient(160deg, $navy-deep, $navy-ink);
-  color: $on-dark-soft;
-  overflow: hidden;
 
   &__inner {
     @include container;
   }
 
-  &__list {
+  &__steps {
     list-style: none;
-    @include flex-cards(260px, 1rem);
+    @include flex-cards(240px, 1rem);
+  }
+
+  &__sub {
+    margin: 2.5rem 0 1rem;
+    font-family: $font-display;
+    font-size: $text-xl;
+    color: $navy;
+  }
+
+  &__pay {
+    list-style: none;
+    @include flex-cards(240px, 1rem);
   }
 
   &__cta {
@@ -54,43 +65,78 @@ import { steps } from '@/config/landing'
 }
 
 .step {
-  position: relative;
-  padding: 1.5rem;
-  border-radius: $radius-lg;
-  background: rgba(#fff, 0.06);
-  border: 1px solid rgba(#fff, 0.1);
-  backdrop-filter: blur(6px);
+  transition: border-color $dur $ease-out, box-shadow $dur $ease-out;
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: $radius-md;
+  background: $surface;
+  border: 1px solid $line;
 
-  &__num {
-    position: absolute;
-    right: 1.25rem;
-    top: 0.75rem;
-    font-size: 3.2rem;
-    font-weight: 800;
-    line-height: 1;
-    color: rgba(#fff, 0.08);
-  }
-
-  &__icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 15px;
+  &__n {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: $aqua;
-    color: $navy-ink;
-    margin-bottom: 1rem;
+    background: $navy;
+    color: #fff;
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: $text-lg;
+    box-shadow: inset 0 -3px 0 $orange;
   }
 
   h3 {
+    font-size: $text-base;
+    color: $navy;
+  }
+
+  p {
+    margin-top: 0.25rem;
+    font-size: $text-sm;
+    color: $ink-soft;
+  }
+}
+
+.pay {
+  transition: transform $dur $ease-out, box-shadow $dur $ease-out;
+  display: flex;
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: $shadow-md;
+    }
+  }
+
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: $radius-md;
+  background: $surface;
+  border: 1px solid $line;
+
+  &__icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: $navy;
     color: #fff;
-    font-size: $text-lg;
-    margin-bottom: 0.4rem;
+  }
+
+  strong {
+    color: $navy;
   }
 
   p {
     font-size: $text-sm;
+    color: $ink-soft;
   }
 }
 </style>

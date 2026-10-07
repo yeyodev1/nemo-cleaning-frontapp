@@ -48,10 +48,26 @@ No hay suite de tests: la verificación es `pnpm build` + revisión en navegador
 reexporta `_tokens.scss` (colores, tipografía, radios) y `_mixins.scss` (`from`, `container`, `flex`,
 `flex-cards`, `card`, `eyebrow`, `display`, `truncate`…): **nada que emita CSS**. Lo que emite CSS
 (reset, `.btn`, `.field`, `.badge`, `.card`, `.skeleton`, transiciones, `v-reveal`) está en `global.scss`,
-importado una vez desde `main.ts`. En componentes se usan `$navy`, `$aqua`, `@include from('md')` sin `@use`.
+importado una vez desde `main.ts`. En componentes se usan `$navy`, `$orange`, `@include from('md')` sin `@use`.
 
-Marca: primario `$navy #0B4F8A`, acento `$aqua #19C3B8` (para texto sobre blanco usar `$aqua-ink`),
-fondos `$paper` / `$sky`. Fuente: Plus Jakarta Sans (cargada con `<link>` en `index.html`).
+Marca REAL = identidad de Instagram (fuente de verdad: `../recursos/MARCA.md`; **no inventar copy, cifras, testimonios
+ni garantías**). Marino `$navy #12263F` dominante, naranja `$orange #E8743B` solo como acento (subrayados, flechas, CTA),
+celeste `$sky-blue #6FB1DE`, blanco; carbón `$charcoal` solo secundario. Naranja sobre blanco solo texto grande; texto
+pequeño naranja → `$orange-ink`. Botón naranja (`.btn--accent`) con texto marino. Fuentes: **Fraunces** para titulares
+(`$font-display`, `@include display`, sin mayúsculas forzadas) y **Poppins** para texto/botones/etiquetas (`$font-ui`).
+Mixins: `dark-pattern` (marino con degradado sutil), `orange-underline` (subrayado corto bajo títulos, como los posts),
+`photo-frame`. Logo: `components/brand/NemoLogo.vue` con los SVG oficiales de `public/brand/` (`dark` = sobre oscuro,
+`light` = sobre claro); nunca redibujarlo ni usar `recursos/logo/version-catalogo-anterior/`. Favicon/íconos/OG vienen
+tal cual de `recursos/logo/`. Fotos reales en `public/fotos/` (pares antes/después recortados en `public/fotos/antes-despues/`).
+Contacto y cobertura en `config/site.ts`; copy del landing, paquetes, tamaños de vehículo y FAQ en `config/landing.ts`.
+
+Movimiento: tokens `$ease-out` (cubic-bezier(.2,.8,.2,1)), `$dur-fast/$dur/$dur-slow` (200/280/350 ms); solo
+transform/opacity (y `grid-template-rows` para alturas, p. ej. el FAQ). Transiciones globales en `global.scss`
+(`page`, `step-next|prev`, `fade-up`, `.bump`, `v-reveal`); `prefers-reduced-motion` las apaga.
+
+Catálogo: variantes (tamaño/medida/plan), rangos (`priceMax`, se cobra el menor), tramos por cantidad y m² con decimales.
+`utils/pricing.ts` replica EXACTO `pricing.service.ts#priceLine` del back; el carrito usa claves `id::variante`
+(`composables/booking/cart.ts`). `composables/office/officePricing.ts` replica `computeEstimate` del back.
 
 ## Arquitectura
 
@@ -74,7 +90,7 @@ fondos `$paper` / `$sky`. Fuente: Plus Jakarta Sans (cargada con `<link>` en `in
 - **Stores** (Pinia): `user` (sesión/rol del personal), `customer` (Mi cuenta), `toast`, `catalog` (sucursales, servicios y settings públicos;
   se cargan una vez), `adminScope` (sucursal global del panel; `''` = todas, solo gerencia).
 - **Componentes**: `ui/` (AppIcon, BaseSheet, QuantityStepper, FileDrop, StatusBadge, ToastList),
-  `booking/` (asistente; `ServicePicker.vue` lo reutiliza el panel), `home/`, `office/`, `tracking/`,
+  `booking/` (asistente; `ServicePicker.vue` + `ServiceOption.vue` los reutiliza el panel), `home/`, `office/`, `tracking/`,
   `admin/layout` (sidebar escritorio, tab bar + drawer móvil, selector de sucursal), `admin/common`
   (KpiCard, Pagination, BookingBadges) y una carpeta por módulo del panel.
 - **Payphone (Cajita v2.0)**: `composables/booking/usePayphoneBox.ts` carga CSS+JS del CDN solo al pagar;

@@ -77,14 +77,14 @@ const { step, email, code, busy, error, remaining, canResend, sendCode, resend, 
     align-items: flex-start;
     padding: 0.8rem 0.9rem;
     border-radius: $radius-sm;
-    background: $aqua-soft;
+    background: $orange-soft;
     color: $ink-soft;
     font-size: $text-sm;
 
     svg {
       flex-shrink: 0;
       margin-top: 2px;
-      color: $aqua-ink;
+      color: $orange-ink;
     }
 
     strong {

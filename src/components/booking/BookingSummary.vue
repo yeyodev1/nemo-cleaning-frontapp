@@ -4,27 +4,18 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { draft } from '@/composables/booking/useBookingDraft'
 import { useQuote } from '@/composables/booking/useQuote'
-import { cartItems } from '@/composables/booking/cart'
+import { localLines } from '@/composables/booking/cart'
+import { itemLabel } from '@/utils/pricing'
 import { money, shortDate } from '@/utils/format'
 
 /** Resumen lateral (escritorio) del pedido en curso. El botón lo pone el padre por slot. */
 const catalog = useCatalogStore()
 const { total, calculating, failed, server } = useQuote()
 
-const lines = computed(() => {
-  if (server.value && !calculating.value) return server.value.items
-  return cartItems(draft.cart).map((i) => {
-    const s = catalog.byId(i.service)
-    const unitPrice = s?.price || 0
-    return {
-      service: i.service,
-      name: s?.name || 'Servicio',
-      unitPrice,
-      quantity: i.quantity,
-      subtotal: unitPrice * i.quantity,
-    }
-  })
-})
+const lines = computed(() =>
+  server.value && !calculating.value ? server.value.items : localLines(draft.cart, catalog.services),
+)
+const hasRange = computed(() => lines.value.some((l) => (l.unitPriceMax || 0) > l.unitPrice))
 const branch = computed(() => catalog.branchById(draft.branch))
 </script>
 
@@ -38,12 +29,13 @@ const branch = computed(() => catalog.branchById(draft.branch))
     </p>
 
     <ul v-if="lines.length" class="summary__lines">
-      <li v-for="l in lines" :key="l.service">
-        <span>{{ l.quantity }} × {{ l.name }}</span>
+      <li v-for="l in lines" :key="`${l.service}-${l.variant}`">
+        <span>{{ itemLabel(l) }}</span>
         <span class="money">{{ money(l.subtotal) }}</span>
       </li>
     </ul>
     <p v-else class="summary__empty">Aún no agregas servicios.</p>
+    <p v-if="hasRange" class="summary__hint">Muebles: se toma el valor menor; el valor final se confirma según el estado/material del mueble.</p>
 
     <div class="summary__total" aria-live="polite">
       <span>Total</span>
@@ -76,7 +68,7 @@ const branch = computed(() => catalog.branchById(draft.branch))
     text-transform: capitalize;
 
     svg {
-      color: $aqua-ink;
+      color: $orange-ink;
     }
   }
 

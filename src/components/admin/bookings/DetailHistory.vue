@@ -64,7 +64,7 @@ const who = (h: HistoryEntry) => (typeof h.by === 'string' ? h.by : h.by?.name |
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: $aqua;
+    background: $orange;
     box-shadow: 0 0 0 3px $surface;
   }
 

@@ -27,7 +27,7 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
     <ul v-else class="list">
       <li v-for="u in sorted" :key="u._id">
         <button type="button" class="person" :class="{ 'is-off': !u.active }" @click="open(u)">
-          <span class="person__avatar" :style="{ background: u.color || '#0B4F8A' }" aria-hidden="true">{{ u.name.charAt(0) }}</span>
+          <span class="person__avatar" :style="{ background: u.color || '#1E2D3A' }" aria-hidden="true">{{ u.name.charAt(0) }}</span>
           <span class="person__main">
             <strong>{{ u.name }}</strong>
             <span class="muted">{{ u.email }}<template v-if="u.branches?.length"> · {{ branchNames(u.branches) }}</template></span>

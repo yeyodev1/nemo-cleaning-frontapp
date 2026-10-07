@@ -60,7 +60,7 @@ const summary = computed(
     transition: fill 0.2s;
 
     &:hover {
-      fill: $aqua;
+      fill: $orange;
     }
 
     &.is-zero {

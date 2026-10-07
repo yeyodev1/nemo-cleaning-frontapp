@@ -80,8 +80,8 @@ onMounted(() => load(1))
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: $aqua-soft;
-    color: $aqua-ink;
+    background: $orange-soft;
+    color: $orange-ink;
     font-weight: 800;
     text-transform: uppercase;
     display: inline-flex;

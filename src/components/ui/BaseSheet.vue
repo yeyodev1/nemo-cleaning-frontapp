@@ -41,7 +41,8 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="sheet">
+    <!-- Se queda montado hasta que termina la salida (el panel baja y el fondo se desvanece). -->
+    <Transition name="sheet" :duration="{ enter: 350, leave: 300 }">
       <div v-if="open" class="sheet" :class="{ 'sheet--side': side }" @click.self="emit('close')">
         <section
           ref="panel"
@@ -163,12 +164,26 @@ onBeforeUnmount(() => {
   }
 }
 
+// Fondo: fundido. Panel: sube desde abajo en móvil, escala+fundido centrado en tablet/escritorio
+// y entra desde la derecha en modo `side`. Al cerrar, el recorrido inverso y algo más rápido.
 .sheet-enter-active,
 .sheet-leave-active {
-  transition: opacity 0.25s ease;
+  transition: opacity $dur $ease-out;
 
   .sheet__panel {
-    transition: transform 0.3s $ease;
+    transition:
+      transform $dur-slow $ease-out,
+      opacity $dur $ease-out;
+  }
+}
+
+.sheet-leave-active {
+  transition-duration: 300ms;
+  transition-timing-function: $ease-in-out;
+
+  .sheet__panel {
+    transition-duration: 300ms;
+    transition-timing-function: $ease-in-out;
   }
 }
 
@@ -177,7 +192,19 @@ onBeforeUnmount(() => {
   opacity: 0;
 
   .sheet__panel {
-    transform: translateY(40px);
+    transform: translateY(100%);
+  }
+
+  @include from('md') {
+    .sheet__panel {
+      opacity: 0;
+      transform: translateY(12px) scale(0.97);
+    }
+
+    &.sheet--side .sheet__panel {
+      opacity: 1;
+      transform: translateX(100%);
+    }
   }
 }
 </style>

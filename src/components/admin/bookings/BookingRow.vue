@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { itemLabel } from '@/utils/pricing'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import BookingBadges from '@/components/admin/common/BookingBadges.vue'
 import { money, shortDate } from '@/utils/format'
@@ -24,12 +25,12 @@ function branchName(b: Booking) {
         <strong class="row__name">{{ booking.customer?.name || 'Cliente' }}</strong>
         <span class="row__code">{{ booking.code }}</span>
       </span>
-      <span class="row__items">{{ booking.items.map((i) => `${i.quantity}× ${i.name}`).join(', ') }}</span>
+      <span class="row__items">{{ booking.items.map(itemLabel).join(', ') }}</span>
       <span class="row__meta">
         <BookingBadges :status="booking.status" :payment="booking.paymentStatus" />
         <span v-if="branchName(booking)" class="row__branch"><AppIcon name="store" :size="14" /> {{ branchName(booking) }}</span>
         <span v-for="o in booking.operators" :key="o._id" class="row__op">
-          <span class="row__dot" :style="{ background: o.color || '#0B4F8A' }"></span>{{ o.name }}
+          <span class="row__dot" :style="{ background: o.color || '#1E2D3A' }"></span>{{ o.name }}
         </span>
       </span>
     </span>

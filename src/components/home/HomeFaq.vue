@@ -11,8 +11,8 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
 <template>
   <section id="preguntas" class="faq" aria-labelledby="faq-title">
     <div class="faq__inner">
-      <SectionHead id="faq-title" eyebrow="Preguntas frecuentes" title="Resolvemos tus dudas" />
-      <ul class="faq__list">
+      <SectionHead id="faq-title" eyebrow="Dudas" title="Preguntas frecuentes" />
+      <ul v-reveal class="faq__list">
         <li v-for="(f, i) in faqs" :key="f.q" class="qa" :class="{ 'is-open': open === i }">
           <h3>
             <button
@@ -27,8 +27,16 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
               <AppIcon name="chevron-down" class="qa__chev" />
             </button>
           </h3>
-          <div :id="`faq-a-${i}`" class="qa__a" role="region" :aria-labelledby="`faq-q-${i}`" :hidden="open !== i">
-            <p>{{ f.a }}</p>
+          <!-- Altura animada con grid-template-rows 0fr → 1fr (sin medir ni tocar height). -->
+          <div
+            :id="`faq-a-${i}`"
+            class="qa__a"
+            role="region"
+            :aria-labelledby="`faq-q-${i}`"
+            :aria-hidden="open !== i"
+            :inert="open !== i"
+          >
+            <div class="qa__inner"><p>{{ f.a }}</p></div>
           </div>
         </li>
       </ul>
@@ -60,7 +68,7 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &.is-open {
-    border-color: rgba($aqua, 0.6);
+    border-color: rgba($orange, 0.6);
     box-shadow: $shadow-sm;
   }
 
@@ -84,8 +92,8 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
 
   &__chev {
     flex-shrink: 0;
-    color: $navy;
-    transition: transform 0.25s $ease;
+    color: $orange-ink;
+    transition: transform $dur $ease-out;
   }
 
   &.is-open &__chev {
@@ -93,9 +101,35 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
   }
 
   &__a {
-    padding: 0 1.1rem 1.1rem;
-    color: $ink-soft;
-    font-size: $text-sm;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows $dur $ease-out;
+  }
+
+  &.is-open &__a {
+    grid-template-rows: 1fr;
+  }
+
+  &__inner {
+    overflow: hidden;
+    min-height: 0;
+
+    p {
+      padding: 0 1.1rem 1.1rem;
+      color: $ink-soft;
+      font-size: $text-sm;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition:
+        opacity $dur-fast $ease-out,
+        transform $dur $ease-out;
+    }
+  }
+
+  &.is-open &__inner p {
+    opacity: 1;
+    transform: none;
+    transition-delay: 60ms;
   }
 }
 </style>

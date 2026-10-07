@@ -1,40 +1,46 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import QuantityStepper from '@/components/ui/QuantityStepper.vue'
-import { serviceCategory, serviceUnit } from '@/config/labels'
+import ServiceOption from './ServiceOption.vue'
+import { serviceCategory } from '@/config/labels'
 import { categoryIcon } from '@/config/categoryIcons'
-import { money } from '@/utils/format'
+import { parseKey, type Cart } from '@/composables/booking/cart'
 import type { Service, ServiceCategory } from '@/types/api'
-import type { Cart } from '@/composables/booking/cart'
 
 /**
- * Selector de servicios + adicionales con cantidades. Lo usan el asistente
- * público y el formulario de pedido del panel. v-model = { serviceId: qty }.
+ * Selector de servicios + adicionales con opciones y cantidades. Lo usan el asistente
+ * público y los formularios de pedido del panel. v-model = Cart ({ "id" | "id::opción": cantidad }).
+ * `officeLink`: en la web las oficinas se cotizan aparte (m² + plan), así que se enlaza al cotizador.
  */
 const props = defineProps<{
   services: Service[]
   modelValue: Cart
   compact?: boolean
   initialCategory?: ServiceCategory | ''
+  officeLink?: boolean
 }>()
 const emit = defineEmits<{ 'update:modelValue': [cart: Cart] }>()
 
-const active = ref<ServiceCategory | 'all'>(props.initialCategory || 'all')
-const main = computed(() => props.services.filter((s) => !s.isExtra && s.active !== false))
-const extras = computed(() => props.services.filter((s) => s.isExtra && s.active !== false))
+const pickable = computed(() =>
+  props.services.filter((s) => s.active !== false && !(props.officeLink && s.category === 'oficinas')),
+)
+const main = computed(() => pickable.value.filter((s) => !s.isExtra))
+const extras = computed(() => pickable.value.filter((s) => s.isExtra))
 const categories = computed(() => [...new Set(main.value.map((s) => s.category))])
+const active = ref<ServiceCategory | 'all'>(
+  props.initialCategory && props.initialCategory !== 'oficinas' ? props.initialCategory : 'all',
+)
 const visible = computed(() => (active.value === 'all' ? main.value : main.value.filter((s) => s.category === active.value)))
-const hasMain = computed(() => main.value.some((s) => (props.modelValue[s._id] || 0) > 0))
+// Los adicionales del catálogo son de NEMO CAR: se muestran con la categoría Autos (o con "Todos").
+const showExtras = computed(() => extras.value.length > 0 && (active.value === 'all' || active.value === 'autos'))
+const hasMain = computed(() =>
+  Object.entries(props.modelValue).some(([key, q]) => q > 0 && main.value.some((s) => s._id === parseKey(key).service)),
+)
 
-function qty(id: string) {
-  return props.modelValue[id] || 0
-}
-
-function set(id: string, value: number) {
+function set(key: string, value: number) {
   const next = { ...props.modelValue }
-  if (value > 0) next[id] = value
-  else delete next[id]
+  if (value > 0) next[key] = value
+  else delete next[key]
   emit('update:modelValue', next)
 }
 </script>
@@ -60,34 +66,25 @@ function set(id: string, value: number) {
     </div>
 
     <ul class="picker__list">
-      <li v-for="s in visible" :key="s._id" class="item" :class="{ 'is-on': qty(s._id) > 0 }">
-        <span class="item__icon" aria-hidden="true"><AppIcon :name="categoryIcon[s.category]" :size="22" /></span>
-        <div class="item__info">
-          <strong>{{ s.name }}</strong>
-          <small v-if="s.description && !compact">{{ s.description }}</small>
-          <span class="item__price money">{{ money(s.price) }} <em>{{ serviceUnit[s.unit] }}</em></span>
-        </div>
-        <QuantityStepper :model-value="qty(s._id)" :label="s.name" @update:model-value="set(s._id, $event)" />
-      </li>
+      <ServiceOption v-for="s in visible" :key="s._id" :service="s" :cart="modelValue" :compact="compact" @set="set" />
       <li v-if="!visible.length" class="empty">No hay servicios en esta categoría.</li>
     </ul>
 
-    <section v-if="extras.length" class="picker__extras" aria-labelledby="extras-title">
+    <section v-if="showExtras" class="picker__extras" aria-labelledby="extras-title">
       <h3 id="extras-title">
-        <AppIcon name="sparkles" :size="18" /> Adicionales
-        <small v-if="!hasMain">Elige primero un servicio</small>
+        <AppIcon name="sparkles" :size="18" /> Servicios adicionales de auto
+        <small v-if="!hasMain">Se agregan junto a un servicio principal</small>
       </h3>
       <ul class="picker__list">
-        <li v-for="s in extras" :key="s._id" class="item item--extra" :class="{ 'is-on': qty(s._id) > 0 }">
-          <div class="item__info">
-            <strong>{{ s.name }}</strong>
-            <small v-if="s.description && !compact">{{ s.description }}</small>
-            <span class="item__price money">+ {{ money(s.price) }} <em>{{ serviceUnit[s.unit] }}</em></span>
-          </div>
-          <QuantityStepper :model-value="qty(s._id)" :label="s.name" @update:model-value="set(s._id, $event)" />
-        </li>
+        <ServiceOption v-for="s in extras" :key="s._id" :service="s" :cart="modelValue" :compact="compact" @set="set" />
       </ul>
     </section>
+
+    <div v-if="officeLink && (active === 'all' || active === 'especializados')" class="office">
+      <AppIcon name="building" :size="22" />
+      <span><strong>¿Limpieza de oficinas?</strong>Se cotiza por m² y plan.</span>
+      <RouterLink to="/cotizar-oficina" class="btn btn--accent btn--sm">Cotizar</RouterLink>
+    </div>
   </div>
 </template>
 
@@ -156,72 +153,24 @@ function set(id: string, value: number) {
   }
 }
 
-.item {
+.office {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.85rem;
+  padding: 0.95rem;
   border-radius: $radius-md;
-  background: $surface;
-  border: 1.5px solid $line;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  background: $navy-deep;
+  color: $on-dark;
+  font-size: $text-sm;
 
-  &.is-on {
-    border-color: $aqua;
-    background: linear-gradient(0deg, rgba($aqua, 0.05), rgba($aqua, 0.05)), $surface;
-    box-shadow: 0 6px 18px rgba($aqua, 0.14);
+  strong {
+    display: block;
+    color: #fff;
   }
 
-  &--extra {
-    background: $sky;
-  }
-
-  &__icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
+  .btn {
+    margin-left: auto;
     flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: $navy-soft;
-    color: $navy;
   }
-
-  &__info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-
-    strong {
-      font-size: $text-sm;
-      line-height: 1.3;
-    }
-
-    small {
-      font-size: $text-xs;
-      color: $ink-muted;
-      line-height: 1.4;
-    }
-  }
-
-  &__price {
-    font-weight: 800;
-    color: $navy;
-    font-size: $text-sm;
-
-    em {
-      font-style: normal;
-      font-weight: 500;
-      color: $ink-muted;
-      font-size: $text-xs;
-    }
-  }
-}
-
-.picker--compact .item__icon {
-  display: none;
 }
 </style>

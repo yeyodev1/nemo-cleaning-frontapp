@@ -20,8 +20,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 <template>
   <Transition name="slide-up">
     <div v-if="visible" class="sticky">
-      <RouterLink to="/reservar" class="btn btn--primary btn--lg btn--block">
-        Reserva tu limpieza <AppIcon name="arrow-right" />
+      <RouterLink to="/reservar" class="btn btn--accent btn--lg btn--block">
+        Reservar <AppIcon name="arrow-right" />
       </RouterLink>
     </div>
   </Transition>

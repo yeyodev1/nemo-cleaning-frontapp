@@ -35,8 +35,8 @@ defineProps<{ label: string; value: string | number; icon?: IconName; hint?: str
   }
 
   &--aqua &__icon {
-    background: $aqua-soft;
-    color: $aqua-ink;
+    background: $orange-soft;
+    color: $orange-ink;
   }
   &--warning &__icon {
     background: $warning-bg;

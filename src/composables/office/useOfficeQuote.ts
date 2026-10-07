@@ -3,7 +3,8 @@ import { publicService } from '@/services/public.service'
 import { useCatalogStore } from '@/stores/catalog'
 import { useToastStore } from '@/stores/toast'
 import { errorMessage } from '@/utils/format'
-import type { OfficeFrequency, OfficeQuote } from '@/types/api'
+import type { OfficePlan, OfficeQuote } from '@/types/api'
+import { tierMinQty } from '@/utils/pricing'
 import { estimateOffice } from './officePricing'
 
 export function useOfficeQuote() {
@@ -13,11 +14,12 @@ export function useOfficeQuote() {
 
   const form = reactive({
     branch: '',
-    squareMeters: 100,
-    chairs: 0,
-    desks: 0,
-    bathrooms: 1,
-    frequency: 'unica' as OfficeFrequency,
+    squareMeters: 0,
+    plan: 'basico' as OfficePlan,
+    chairsFabric: 0,
+    chairsMixed: 0,
+    windows: 0,
+    bathrooms: 0,
     notes: '',
     contact: { name: '', email: '', phone: '', company: '' },
   })
@@ -41,6 +43,8 @@ export function useOfficeQuote() {
     for (const k of Object.keys(errors)) delete errors[k]
     if (!form.branch) errors.branch = 'Elige una sucursal'
     if (!(form.squareMeters > 0)) errors.squareMeters = 'Ingresa los m² aproximados'
+    const minWindows = pricing.value ? tierMinQty(pricing.value.windowTiers) : 2
+    if (form.windows > 0 && form.windows < minWindows) errors.windows = `La limpieza de ventanales es desde ${minWindows} unidades`
     if (form.contact.name.trim().length < 3) errors.name = 'Ingresa tu nombre'
     if (!/^\S+@\S+\.\S+$/.test(form.contact.email.trim())) errors.email = 'Ingresa un correo válido'
     if (form.contact.phone.replace(/\D/g, '').length < 9) errors.phone = 'Ingresa un teléfono válido'
@@ -56,11 +60,12 @@ export function useOfficeQuote() {
     try {
       result.value = await publicService.createOfficeQuote({
         branch: form.branch,
-        squareMeters: Math.round(form.squareMeters),
-        chairs: Math.max(0, Math.round(form.chairs)),
-        desks: Math.max(0, Math.round(form.desks)),
+        squareMeters: Math.round(form.squareMeters * 100) / 100,
+        plan: form.plan,
+        chairsFabric: Math.max(0, Math.round(form.chairsFabric)),
+        chairsMixed: Math.max(0, Math.round(form.chairsMixed)),
+        windows: Math.max(0, Math.round(form.windows)),
         bathrooms: Math.max(0, Math.round(form.bathrooms)),
-        frequency: form.frequency,
         notes: form.notes.trim() || undefined,
         contact: {
           name: form.contact.name.trim(),

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTemplateRef } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import StepProgress from '@/components/booking/StepProgress.vue'
 import StepBranch from '@/components/booking/StepBranch.vue'
@@ -16,6 +16,13 @@ import { useBookingWizard } from '@/composables/booking/useBookingWizard'
 const heading = useTemplateRef<HTMLElement>('step-heading')
 const { error, isLast, title, actionLabel, next, back, again, sending, result, canSubmit } =
   useBookingWizard(heading)
+
+// Dirección de la animación entre pasos: avanzar desliza desde la derecha, volver desde la izquierda.
+const stepDir = ref<'next' | 'prev'>('next')
+watch(
+  () => draft.step,
+  (now, before) => (stepDir.value = now >= before ? 'next' : 'prev'),
+)
 </script>
 
 <template>
@@ -33,7 +40,7 @@ const { error, isLast, title, actionLabel, next, back, again, sending, result, c
             <h1 ref="step-heading" tabindex="-1" class="wizard__title">{{ title }}</h1>
           </header>
 
-          <Transition name="page" mode="out-in">
+          <Transition :name="`step-${stepDir}`" mode="out-in">
             <StepBranch v-if="draft.step === 1" />
             <StepServices v-else-if="draft.step === 2" />
             <StepSchedule v-else-if="draft.step === 3" />

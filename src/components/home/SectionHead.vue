@@ -1,10 +1,11 @@
 <script setup lang="ts">
-defineProps<{ eyebrow: string; title: string; text?: string; id?: string; light?: boolean }>()
+/** Encabezado de sección al estilo del catálogo: eyebrow + título en MAYÚSCULAS. `light` = sobre fondo oscuro. */
+defineProps<{ eyebrow?: string; title: string; text?: string; id?: string; light?: boolean; center?: boolean }>()
 </script>
 
 <template>
-  <header class="head" :class="{ 'head--light': light }">
-    <p class="head__eyebrow">{{ eyebrow }}</p>
+  <header v-reveal class="head" :class="{ 'head--light': light, 'head--center': center }">
+    <p v-if="eyebrow" class="head__eyebrow">{{ eyebrow }}</p>
     <h2 :id="id" class="head__title">{{ title }}</h2>
     <p v-if="text" class="head__text">{{ text }}</p>
   </header>
@@ -12,16 +13,18 @@ defineProps<{ eyebrow: string; title: string; text?: string; id?: string; light?
 
 <style scoped lang="scss">
 .head {
-  max-width: 640px;
+  max-width: 680px;
   margin-bottom: 2rem;
 
   &__eyebrow {
     @include eyebrow;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
   }
 
   &__title {
-    @include display($display-sm);
+    @include display($display-md, 700);
+    color: $navy;
+    @include orange-underline;
   }
 
   &__text {
@@ -31,7 +34,7 @@ defineProps<{ eyebrow: string; title: string; text?: string; id?: string; light?
 
   &--light {
     .head__eyebrow {
-      color: $aqua;
+      color: $on-dark-soft;
     }
 
     .head__title {
@@ -40,6 +43,15 @@ defineProps<{ eyebrow: string; title: string; text?: string; id?: string; light?
 
     .head__text {
       color: $on-dark-soft;
+    }
+  }
+
+  &--center {
+    margin-inline: auto;
+    text-align: center;
+
+    .head__title::after {
+      margin-inline: auto;
     }
   }
 }

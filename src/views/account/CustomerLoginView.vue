@@ -108,7 +108,7 @@ const perks: { icon: IconName; text: string }[] = [
 
     svg {
       flex-shrink: 0;
-      color: $aqua-ink;
+      color: $orange-ink;
       margin-top: 2px;
     }
   }

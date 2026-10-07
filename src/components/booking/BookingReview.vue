@@ -60,7 +60,7 @@ const branch = computed(() => catalog.branchById(draft.branch))
     }
 
     > svg {
-      color: $aqua-ink;
+      color: $orange-ink;
       margin-top: 2px;
     }
   }

@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import HomeHero from '@/components/home/HomeHero.vue'
-import HomeCategories from '@/components/home/HomeCategories.vue'
+import HomeLine from '@/components/home/HomeLine.vue'
+import HomeBeforeAfter from '@/components/home/HomeBeforeAfter.vue'
+import HomePackages from '@/components/home/HomePackages.vue'
 import HomeSteps from '@/components/home/HomeSteps.vue'
-import HomeBranches from '@/components/home/HomeBranches.vue'
-import HomePayments from '@/components/home/HomePayments.vue'
+import HomeCoverage from '@/components/home/HomeCoverage.vue'
 import HomeFaq from '@/components/home/HomeFaq.vue'
 import HomeCta from '@/components/home/HomeCta.vue'
 import StickyCta from '@/components/home/StickyCta.vue'
+import { lines } from '@/config/landing'
 import { useCatalogStore } from '@/stores/catalog'
 
 useCatalogStore().load()
+const [car, home] = lines
 </script>
 
 <template>
   <div class="home">
     <HomeHero />
-    <HomeCategories />
+    <HomeLine v-if="car" :line="car" />
+    <HomeBeforeAfter />
+    <HomeLine v-if="home" :line="home" />
+    <HomePackages />
     <HomeSteps />
-    <HomeBranches />
-    <HomePayments />
+    <HomeCoverage />
     <HomeFaq />
     <HomeCta />
     <StickyCta />
