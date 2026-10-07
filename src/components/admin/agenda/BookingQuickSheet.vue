@@ -77,8 +77,11 @@ async function save() {
 
   &__when {
     font-weight: 700;
-    text-transform: capitalize;
     margin-top: -0.4rem;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
   }
 
   &__block {

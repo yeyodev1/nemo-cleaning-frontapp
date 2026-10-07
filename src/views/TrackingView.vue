@@ -223,7 +223,11 @@ onMounted(t.load)
   }
 
   &__cap {
-    text-transform: capitalize;
+    display: inline-block;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
   }
 
   &__notice {

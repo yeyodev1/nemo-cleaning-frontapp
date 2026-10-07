@@ -152,6 +152,12 @@ async function remove(e: Expense) {
     font-size: $text-xs;
     color: $ink-muted;
     font-weight: 700;
+    white-space: nowrap;
+
+    // En escritorio el grupo se encoge al contenido: sin mínimo, "Caja menor" se partía en dos líneas.
+    @include from('md') {
+      min-width: 7.5rem;
+    }
 
     strong {
       color: $ink;

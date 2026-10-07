@@ -19,7 +19,7 @@ async function copy(text: string) {
 
 <template>
   <div class="banks">
-    <p v-if="amount" class="banks__amount">
+    <p v-if="amount && accounts.length" class="banks__amount">
       Transfiere <strong class="money">{{ amount }}</strong> a una de estas cuentas:
     </p>
     <p v-if="!accounts.length" class="banks__empty">

@@ -97,8 +97,10 @@ class BookingsService extends APIBase {
     return this.patch<Payment>(`admin/payments/${id}/review`, { approved, note })
   }
 
-  receivables(branch?: string) {
-    return this.get<Booking[]>('admin/receivables', { branch })
+  /** El back responde `{ items, total, totalBalance }` (contrato); devolvemos solo los pedidos. */
+  async receivables(branch?: string): Promise<Booking[]> {
+    const res = await this.get<Booking[] | { items: Booking[] }>('admin/receivables', { branch })
+    return Array.isArray(res) ? res : res?.items || []
   }
 }
 

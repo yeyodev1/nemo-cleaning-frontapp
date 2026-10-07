@@ -69,7 +69,7 @@ async function save() {
       <label class="field"><span class="field__label">Nombre</span><input v-model="form.name" type="text" required /></label>
       <label class="field">
         <span class="field__label">Slug</span>
-        <input v-model="form.slug" type="text" required pattern="[a-z0-9-]+" @input="slugTouched = true" />
+        <input v-model="form.slug" type="text" required pattern="[a-z0-9\-]+" @input="slugTouched = true" />
       </label>
       <label class="check"><input v-model="form.isExtra" type="checkbox" /> Es un adicional (se suma a otro servicio)</label>
       <div class="form-row">

@@ -9,9 +9,9 @@ const props = defineProps<{ data: Dashboard }>()
 const alerts = computed(() =>
   (
     [
-      { n: props.data.pendingTransfers, label: 'transferencias por revisar', to: '/admin/pagos', icon: 'bank', tone: 'info' },
-      { n: props.data.receivables, label: 'pedidos con saldo por cobrar', to: '/admin/pagos?tab=cxc', icon: 'wallet', tone: 'warning' },
-      { n: props.data.newOfficeQuotes, label: 'cotizaciones de oficina nuevas', to: '/admin/cotizaciones', icon: 'building', tone: 'aqua' },
+      { n: props.data.pendingTransfers, label: props.data.pendingTransfers === 1 ? 'transferencia por revisar' : 'transferencias por revisar', to: '/admin/pagos', icon: 'bank', tone: 'info' },
+      { n: props.data.receivables, label: props.data.receivables === 1 ? 'pedido con saldo por cobrar' : 'pedidos con saldo por cobrar', to: '/admin/pagos?tab=cxc', icon: 'wallet', tone: 'warning' },
+      { n: props.data.newOfficeQuotes, label: props.data.newOfficeQuotes === 1 ? 'cotización de oficina nueva' : 'cotizaciones de oficina nuevas', to: '/admin/cotizaciones', icon: 'building', tone: 'aqua' },
     ] as { n: number; label: string; to: string; icon: IconName; tone: string }[]
   ).filter((a) => a.n > 0),
 )

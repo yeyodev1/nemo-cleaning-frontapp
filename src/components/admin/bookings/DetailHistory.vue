@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { dateTime } from '@/utils/format'
+import { historyAction } from '@/config/labels'
 import type { HistoryEntry } from '@/types/api'
 
 const props = defineProps<{ history?: HistoryEntry[] }>()
@@ -15,7 +16,7 @@ const who = (h: HistoryEntry) => (typeof h.by === 'string' ? h.by : h.by?.name |
       <li v-for="(h, i) in entries" :key="i" class="hist__item">
         <span class="hist__dot" aria-hidden="true"></span>
         <div>
-          <strong>{{ h.action }}</strong>
+          <strong>{{ historyAction[h.action] || h.action }}</strong>
           <p v-if="h.note" class="hist__note">{{ h.note }}</p>
           <small class="muted">{{ dateTime(h.at) }}<template v-if="who(h)"> · {{ who(h) }}</template></small>
         </div>

@@ -26,12 +26,14 @@ const methods = computed(() => {
       title: 'Tarjeta',
       text: 'Visa o Mastercard, pago seguro con Payphone. Se confirma al instante.',
     })
-  list.push({
-    id: 'transfer',
-    icon: 'bank',
-    title: 'Transferencia',
-    text: 'Transfiere y sube el comprobante. Lo revisamos y te confirmamos.',
-  })
+  // Sin cuentas configuradas el cliente no sabría a dónde transferir (y el comprobante es obligatorio).
+  if (catalog.settings?.bankAccounts?.length)
+    list.push({
+      id: 'transfer',
+      icon: 'bank',
+      title: 'Transferencia',
+      text: 'Transfiere y sube el comprobante. Lo revisamos y te confirmamos.',
+    })
   list.push({
     id: 'cash',
     icon: 'cash',

@@ -20,7 +20,7 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
 <template>
   <section>
     <div class="bar">
-      <p class="muted">{{ items.length }} personas</p>
+      <p class="muted">{{ items.length }} {{ items.length === 1 ? 'persona' : 'personas' }}</p>
       <button type="button" class="btn btn--primary" @click="open(null)"><AppIcon name="plus" /> Nuevo usuario</button>
     </div>
     <div v-if="loading && !items.length" class="list"><span v-for="i in 5" :key="i" class="skeleton" style="height: 68px"></span></div>

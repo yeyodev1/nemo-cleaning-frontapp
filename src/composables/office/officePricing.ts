@@ -16,6 +16,7 @@ export interface OfficeEstimate {
 }
 
 const n = (v: number) => (Number.isFinite(v) && v > 0 ? v : 0)
+const plural = (qty: number, one: string, many: string) => `${qty} ${qty === 1 ? one : many}`
 
 /**
  * Vista previa de la cotización en el cliente (centavos). El valor final lo
@@ -28,9 +29,9 @@ export function estimateOffice(space: OfficeSpace, p: OfficePricing): OfficeEsti
     if (qty > 0 && unit > 0) breakdown.push({ label, amount: Math.round(qty * unit) })
   }
   add(`${n(space.squareMeters)} m² de área`, n(space.squareMeters), p.pricePerM2)
-  add(`${n(space.chairs)} sillas`, n(space.chairs), p.pricePerChair)
-  add(`${n(space.desks)} escritorios`, n(space.desks), p.pricePerDesk)
-  add(`${n(space.bathrooms)} baños`, n(space.bathrooms), p.pricePerBathroom)
+  add(plural(n(space.chairs), 'silla', 'sillas'), n(space.chairs), p.pricePerChair)
+  add(plural(n(space.desks), 'escritorio', 'escritorios'), n(space.desks), p.pricePerDesk)
+  add(plural(n(space.bathrooms), 'baño', 'baños'), n(space.bathrooms), p.pricePerBathroom)
 
   const base = breakdown.reduce((s, l) => s + l.amount, 0)
   const discountPct = space.frequency === 'unica' ? 0 : p.frequencyDiscounts?.[space.frequency] || 0

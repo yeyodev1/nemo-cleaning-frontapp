@@ -103,7 +103,10 @@ const branchLabel = computed(() => scope.branchName(scope.branch) || 'Todas las 
   p {
     color: $ink-muted;
     font-size: $text-sm;
-    text-transform: capitalize;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
   }
 }
 

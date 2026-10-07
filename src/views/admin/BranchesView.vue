@@ -13,7 +13,7 @@ const dayList = (d: number[]) => [...(d || [])].sort().map((i) => days[i]).join(
 <template>
   <section>
     <div class="bar">
-      <p class="muted">{{ items.length }} sucursales</p>
+      <p class="muted">{{ items.length }} {{ items.length === 1 ? 'sucursal' : 'sucursales' }}</p>
       <button type="button" class="btn btn--primary" @click="open(null)"><AppIcon name="plus" /> Nueva sucursal</button>
     </div>
     <div v-if="loading && !items.length" class="grid"><span v-for="i in 2" :key="i" class="skeleton" style="height: 180px"></span></div>

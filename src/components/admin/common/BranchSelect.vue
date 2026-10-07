@@ -29,6 +29,9 @@ const scope = useAdminScope()
   border-color: transparent;
   border-radius: $radius-pill;
   max-width: 46vw;
+  // En móvil el nombre no cabe completo: puntos suspensivos en vez de cortar la palabra.
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   @include from('md') {
     max-width: 240px;

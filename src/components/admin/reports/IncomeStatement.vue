@@ -113,8 +113,12 @@ const margin = computed(() => {
     }
 
     small {
+      display: inline-block;
       font-weight: 600;
-      text-transform: capitalize;
+
+      &::first-letter {
+        text-transform: uppercase;
+      }
     }
 
     &.is-neg {

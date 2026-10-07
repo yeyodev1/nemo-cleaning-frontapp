@@ -62,7 +62,7 @@ async function save() {
     <form id="branch-form" class="form" @submit.prevent="save">
       <div class="form-row">
         <label class="field"><span class="field__label">Nombre</span><input v-model="form.name" type="text" required /></label>
-        <label class="field"><span class="field__label">Slug</span><input v-model="form.slug" type="text" pattern="[a-z0-9-]*" placeholder="via-a-la-costa" /></label>
+        <label class="field"><span class="field__label">Slug</span><input v-model="form.slug" type="text" pattern="[a-z0-9\-]*" placeholder="via-a-la-costa" /></label>
       </div>
       <label class="field"><span class="field__label">Dirección</span><input v-model="form.address" type="text" /></label>
       <div class="form-row">

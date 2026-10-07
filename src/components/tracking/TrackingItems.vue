@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { paymentMethod, paymentStatus } from '@/config/labels'
 import { money } from '@/utils/format'
 import type { Booking } from '@/types/api'
 
-defineProps<{ booking: Booking }>()
+const props = defineProps<{ booking: Booking }>()
+// Un pedido cancelado o no realizado ya no se cobra: no mostramos saldo ni "Por pagar".
+const closed = computed(() => ['cancelled', 'no_show'].includes(props.booking.status))
 </script>
 
 <template>
@@ -29,7 +32,7 @@ defineProps<{ booking: Booking }>()
         <dt>Pagado</dt>
         <dd class="money">{{ money(booking.amountPaid) }}</dd>
       </div>
-      <div v-if="booking.balance > 0">
+      <div v-if="booking.balance > 0 && !closed">
         <dt>Saldo pendiente</dt>
         <dd class="money">{{ money(booking.balance) }}</dd>
       </div>
@@ -37,6 +40,7 @@ defineProps<{ booking: Booking }>()
     <p class="items__pay">
       {{ paymentMethod[booking.paymentMethod] }}
       <StatusBadge
+        v-if="!closed || booking.amountPaid"
         :tone="paymentStatus[booking.paymentStatus].tone"
         :label="paymentStatus[booking.paymentStatus].label"
       />

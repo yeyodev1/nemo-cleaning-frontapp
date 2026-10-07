@@ -78,7 +78,10 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
 
   &__when {
     font-size: $text-lg;
-    text-transform: capitalize;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
   }
 
   &__branch {

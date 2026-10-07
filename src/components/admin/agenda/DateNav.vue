@@ -45,8 +45,12 @@ const model = defineModel<string>({ required: true })
   &__label {
     font-weight: 800;
     font-size: $text-sm;
-    text-transform: capitalize;
-    @include truncate;
+    // Puede ocupar dos líneas: truncado, con el botón "Hoy" a 390 px se perdía el año.
+    line-height: 1.25;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
   }
 }
 </style>
