@@ -240,6 +240,14 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
     margin-top: 1.25rem;
   }
 
+  &__staff {
+    margin-top: 0.75rem;
+    text-align: center;
+    padding: 0.75rem;
+    font-size: $text-sm;
+    color: $on-dark-soft;
+  }
+
 
 }
 
@@ -377,12 +385,5 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
 
 
 
-  &__staff {
-    margin-top: 0.75rem;
-    text-align: center;
-    padding: 0.75rem;
-    font-size: $text-sm;
-    color: $on-dark-soft;
-  }
 }
 </style>
