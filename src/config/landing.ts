@@ -12,6 +12,10 @@ export interface LineCopy {
   categories: ServiceCategory[]
   photo: string
   photoAlt: string
+  /** Foto del encabezado del catálogo de la línea (más abajo en el home). */
+  detailPhoto: string
+  detailAlt: string
+  icons: IconName[]
 }
 
 /** Las dos submarcas del catálogo. */
@@ -21,8 +25,11 @@ export const lines: LineCopy[] = [
     title: 'NEMO CAR',
     tagline: 'Lavado, detailing y recubrimientos cerámicos para tu vehículo.',
     categories: ['autos'],
-    photo: '/fotos/auto-detailing-pro.webp',
-    photoAlt: 'Técnico de Nemo haciendo detailing a una camioneta negra',
+    photo: '/fotos/hero/suv-600.webp',
+    photoAlt: 'Camioneta SUV negra con la pintura brillante',
+    detailPhoto: '/fotos/hero/detailing-pro-560.webp',
+    detailAlt: 'Técnico haciendo detailing a la carrocería de una camioneta negra',
+    icons: ['car', 'droplet', 'sparkles', 'shield'],
   },
   {
     id: 'home',
@@ -31,6 +38,9 @@ export const lines: LineCopy[] = [
     categories: ['alfombras', 'muebles', 'colchones', 'especializados', 'oficinas', 'infantiles'],
     photo: '/fotos/oficina.webp',
     photoAlt: 'Limpieza de un escritorio de oficina',
+    detailPhoto: '/fotos/antes-despues/sofa-despues.webp',
+    detailAlt: 'Sofá de cuero después de la limpieza',
+    icons: ['rug', 'sofa', 'bed', 'building'],
   },
 ]
 
@@ -98,22 +108,22 @@ export const beforeAfter: { id: string; title: string; before: string; after: st
   },
 ]
 
-/** Cómo funciona la reserva en esta web (comportamiento real de la app). */
+/** Cómo funciona la reserva en esta web (comportamiento real de la app: wizard → visita → pago). */
 export const steps: { icon: IconName; title: string; text: string }[] = [
   {
-    icon: 'list',
-    title: 'Arma tu pedido',
-    text: 'Elige servicios, tamaño u opción y cantidades. Ves el subtotal al instante.',
-  },
-  {
     icon: 'calendar',
-    title: 'Elige día y hora',
-    text: 'Escoge la sucursal y un horario disponible.',
+    title: 'Reserva en línea',
+    text: 'Elige servicios, tamaño u opción, la sucursal y un día y hora disponibles. Ves el subtotal al instante.',
   },
   {
-    icon: 'sparkles',
+    icon: 'home',
     title: 'Vamos a tu domicilio',
-    text: 'Sigue el estado de tu pedido en línea con tu enlace de seguimiento.',
+    text: 'El servicio es a domicilio. Sigue el estado de tu pedido con tu enlace de seguimiento.',
+  },
+  {
+    icon: 'wallet',
+    title: 'Paga como prefieras',
+    text: 'Tarjeta con Payphone, transferencia subiendo el comprobante o efectivo el día del servicio.',
   },
 ]
 

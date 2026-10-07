@@ -1,23 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import SectionHead from './SectionHead.vue'
 import LineServiceCard from './LineServiceCard.vue'
+import LineExtras from './LineExtras.vue'
 import VehicleSizeHelp from '@/components/booking/VehicleSizeHelp.vue'
-import { useCatalogStore } from '@/stores/catalog'
 import type { LineCopy } from '@/config/landing'
-import { priceSummary } from '@/utils/pricing'
 import type { Service } from '@/types/api'
+import { money } from '@/utils/format'
+import { useLineServices } from '@/composables/home/useLineServices'
+import { useCarousel } from '@/composables/home/useCarousel'
 
-/** Una línea del catálogo (NEMO CAR o NEMO HOME & OFFICE) con sus servicios reales del API. */
+/** Catálogo de una línea (NEMO CAR o NEMO HOME & OFFICE) con sus servicios reales del API, en carrusel. */
 const props = defineProps<{ line: LineCopy }>()
-const catalog = useCatalogStore()
-
-const services = computed(() =>
-  catalog.services.filter((s) => !s.isExtra && props.line.categories.includes(s.category)),
-)
-const extras = computed(() => catalog.services.filter((s) => s.isExtra && props.line.categories.includes(s.category)))
+const { catalog, services, extras, fromPrice } = useLineServices(() => props.line)
 const isCar = computed(() => props.line.id === 'car')
+const track = ref<HTMLElement | null>(null)
+const { canPrev, canNext, progress, go, refresh } = useCarousel(track)
+watch(services, () => nextTick(refresh))
 
 function cta(s: Service) {
   if (s.category === 'oficinas') return { to: '/cotizar-oficina', label: 'Cotizar' }
@@ -28,39 +27,44 @@ function cta(s: Service) {
 <template>
   <section :id="`nemo-${line.id}`" class="line" :class="`line--${line.id}`" :aria-labelledby="`line-${line.id}`">
     <div class="line__inner">
-      <SectionHead :id="`line-${line.id}`" light eyebrow="Catálogo" :title="line.title" :text="line.tagline" />
+      <header v-reveal class="line__head">
+        <figure class="line__photo">
+          <img :src="line.detailPhoto" :alt="line.detailAlt" loading="lazy" decoding="async" />
+        </figure>
+        <div class="line__copy">
+          <p class="line__eyebrow">Catálogo</p>
+          <h2 :id="`line-${line.id}`" class="line__title">{{ line.title }}</h2>
+          <p class="line__tagline">{{ line.tagline }}</p>
+          <p v-if="fromPrice !== null" class="line__from">
+            {{ services.length }} servicios · desde <strong class="money">{{ money(fromPrice) }}</strong>
+          </p>
+        </div>
+      </header>
 
       <VehicleSizeHelp v-if="isCar" dark class="line__sizes" />
 
-      <div v-if="catalog.loading && !services.length" class="line__grid">
+      <div v-if="catalog.loading && !services.length" class="line__track">
         <span v-for="n in 3" :key="n" class="skeleton line__skeleton"></span>
       </div>
       <p v-else-if="catalog.error && !services.length" class="line__error">
         <AppIcon name="alert" :size="18" /> No pudimos cargar los servicios. Recarga la página.
       </p>
       <template v-else>
-        <p v-if="services.length > 1" class="line__swipe" aria-hidden="true">
-        <AppIcon name="arrow-right" :size="14" /> Desliza para ver los {{ services.length }} servicios
-      </p>
-      <div class="line__grid">
-        <LineServiceCard v-for="s in services" :key="s._id" v-reveal :service="s" :cta="cta(s)" />
-      </div>
+        <div ref="track" class="line__track" tabindex="0" :aria-label="`Servicios de ${line.title}`">
+          <LineServiceCard v-for="s in services" :key="s._id" :service="s" :cta="cta(s)" />
+        </div>
+        <div v-if="services.length > 1" class="line__nav">
+          <span class="line__bar" aria-hidden="true"><span :style="{ transform: `scaleX(${Math.max(0.08, progress)})` }"></span></span>
+          <button type="button" class="line__arrow" :disabled="!canPrev" aria-label="Servicio anterior" @click="go(-1)">
+            <AppIcon name="arrow-left" :size="18" />
+          </button>
+          <button type="button" class="line__arrow" :disabled="!canNext" aria-label="Servicio siguiente" @click="go(1)">
+            <AppIcon name="arrow-right" :size="18" />
+          </button>
+        </div>
       </template>
 
-      <div v-if="extras.length" class="line__extras">
-        <h3>Servicios adicionales</h3>
-        <ul>
-          <li v-for="e in extras" :key="e._id">
-            <span>
-              {{ e.name }}
-              <small v-if="e.variants.length">{{ e.variants.map((v) => v.label).join(' · ') }}</small>
-              <small v-else-if="e.description">{{ e.description }}</small>
-            </span>
-            <strong class="money">{{ priceSummary(e) }}</strong>
-          </li>
-        </ul>
-      </div>
-
+      <LineExtras v-if="extras.length" :extras="extras" />
     </div>
   </section>
 </template>
@@ -70,17 +74,79 @@ function cta(s: Service) {
   @include dark-pattern;
   color: $on-dark;
   padding: $space-section 0;
+  overflow: hidden;
 
   &--home {
     @include dark-pattern($navy-deep);
   }
 
-  &--car {
-    border-bottom: 1px solid $dark-line;
+  &__inner {
+    @include container(1240px);
   }
 
-  &__inner {
-    @include container;
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+
+    @include from('md') {
+      flex-direction: row;
+      align-items: center;
+      gap: 2.5rem;
+    }
+  }
+
+  &__photo {
+    @include photo-frame(24px);
+    aspect-ratio: 16 / 9;
+    box-shadow: $shadow-lg, 0 0 0 1px rgba(#fff, 0.1);
+
+    @include from('md') {
+      flex: 0 0 38%;
+      aspect-ratio: 4 / 3;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &--car &__photo img {
+    object-position: 50% 35%;
+  }
+
+  &__eyebrow {
+    @include eyebrow;
+    color: $sky-blue;
+  }
+
+  &__title {
+    @include display(clamp(2.3rem, 1.4rem + 4vw, 4.4rem), 700);
+    margin-top: 0.35rem;
+    letter-spacing: -0.03em;
+    color: #fff;
+    @include orange-underline(56px);
+  }
+
+  &__tagline {
+    margin-top: 0.9rem;
+    max-width: 520px;
+    color: $on-dark-soft;
+  }
+
+  &__from {
+    margin-top: 0.75rem;
+    font-size: $text-sm;
+    color: $on-dark-soft;
+
+    strong {
+      font-family: $font-display;
+      font-size: $text-xl;
+      color: $orange;
+    }
   }
 
   &__sizes {
@@ -88,47 +154,46 @@ function cta(s: Service) {
     max-width: 560px;
   }
 
-  // Móvil: carrusel horizontal con snap (8 servicios uno debajo de otro serían eternos).
-  // Desde md: grilla de tarjetas.
-  &__grid {
+  // Carrusel con snap en todos los anchos: 8 tarjetas en grilla eran una pared.
+  &__track {
     display: flex;
-    gap: 0.9rem;
+    gap: 1rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1rem;
     margin-inline: -1rem;
-    padding: 0.25rem 1rem 1rem;
-    scrollbar-width: thin;
-    scrollbar-color: rgba($orange, 0.6) transparent;
+    padding: 0.25rem 1rem 1.25rem;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     > * {
       flex: 0 0 86%;
-      scroll-snap-align: center;
+      scroll-snap-align: start;
     }
 
     @include from('md') {
-      overflow: visible;
-      margin-inline: 0;
-      padding: 0;
-      flex-wrap: wrap;
+      margin-inline: -2rem;
+      padding-inline: 2rem;
+      scroll-padding-inline: 2rem;
       gap: 1.25rem;
 
       > * {
-        flex: 1 1 300px;
-        min-width: 0;
+        flex-basis: calc((100% - 1.25rem) / 2.15);
       }
     }
-  }
 
-  &__swipe {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-bottom: 0.75rem;
-    font-size: $text-xs;
-    color: $on-dark-soft;
+    @include from('lg') {
+      > * {
+        flex-basis: calc((100% - 2.5rem) / 3.1);
+      }
+    }
 
-    @include from('md') {
-      display: none;
+    &:focus-visible {
+      outline: 2px solid $orange;
+      outline-offset: 4px;
     }
   }
 
@@ -137,60 +202,60 @@ function cta(s: Service) {
     opacity: 0.12;
   }
 
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__bar {
+    flex: 1;
+    height: 2px;
+    margin-right: 0.75rem;
+    border-radius: 2px;
+    background: rgba(#fff, 0.14);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      background: $orange;
+      transform-origin: left;
+      transition: transform 0.2s linear;
+    }
+  }
+
+  &__arrow {
+    width: $tap;
+    height: $tap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(#fff, 0.25);
+    color: #fff;
+    transition: opacity $dur-fast ease, transform $dur-fast $ease-out, background-color $dur-fast ease, border-color $dur-fast ease;
+
+    &:hover:not(:disabled) {
+      background: $orange;
+      border-color: $orange;
+      color: $navy;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+    }
+  }
+
   &__error {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: $on-dark-soft;
   }
-
-  &__extras {
-    margin-top: 2.5rem;
-
-    h3 {
-      font-family: $font-display;
-      color: #fff;
-      font-size: $text-xl;
-      margin-bottom: 1rem;
-      @include orange-underline(36px);
-    }
-
-    ul {
-      list-style: none;
-      border-top: 1px solid $dark-line;
-
-      @include from('lg') {
-        columns: 2;
-        column-gap: 3rem;
-      }
-    }
-
-    li {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 1rem;
-      padding: 0.7rem 0;
-      border-bottom: 1px solid $dark-line;
-      font-size: $text-sm;
-      break-inside: avoid;
-
-      span {
-        display: flex;
-        flex-direction: column;
-      }
-
-      small {
-        color: $on-dark-soft;
-        font-size: $text-xs;
-      }
-
-      strong {
-        color: $orange;
-        white-space: nowrap;
-      }
-    }
-  }
-
 }
 </style>

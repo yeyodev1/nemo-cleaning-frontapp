@@ -540,16 +540,15 @@ select {
   }
 }
 
-// v-reveal
-.reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.55s $ease-out,
-    transform 0.55s $ease-out;
-
-  &.is-revealed {
-    opacity: 1;
-    transform: none;
+// v-reveal: visible en reposo; `is-revealing` solo reproduce la entrada (ver directives/reveal.ts).
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
   }
+}
+
+.reveal.is-revealing {
+  animation: reveal-in 0.7s $ease-out both;
+  animation-delay: var(--reveal-delay, 0ms);
 }

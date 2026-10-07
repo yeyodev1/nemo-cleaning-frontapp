@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import HomeHero from '@/components/home/HomeHero.vue'
+import HomeMarquee from '@/components/home/HomeMarquee.vue'
+import HomeLines from '@/components/home/HomeLines.vue'
 import HomeLine from '@/components/home/HomeLine.vue'
 import HomeBeforeAfter from '@/components/home/HomeBeforeAfter.vue'
 import HomePackages from '@/components/home/HomePackages.vue'
@@ -18,10 +20,12 @@ const [car, home] = lines
 <template>
   <div class="home">
     <HomeHero />
-    <HomeLine v-if="car" :line="car" />
+    <HomeMarquee />
+    <HomeLines />
     <HomeBeforeAfter />
-    <HomeLine v-if="home" :line="home" />
+    <HomeLine v-if="car" :line="car" />
     <HomePackages />
+    <HomeLine v-if="home" :line="home" />
     <HomeSteps />
     <HomeCoverage />
     <HomeFaq />
@@ -29,3 +33,10 @@ const [car, home] = lines
     <StickyCta />
   </div>
 </template>
+
+<style scoped>
+/* Ninguna sección (carruseles, parallax, radar) puede ensanchar la página. */
+.home {
+  overflow-x: clip;
+}
+</style>

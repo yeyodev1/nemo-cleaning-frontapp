@@ -45,7 +45,10 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
 </script>
 
 <template>
-  <header class="header" :class="{ 'header--scrolled': scrolled || minimal || open }">
+  <header
+    class="header"
+    :class="{ 'header--scrolled': scrolled || minimal || open, 'header--over': route.path === '/' && !scrolled && !open && !minimal }"
+  >
     <div class="header__bar">
       <RouterLink to="/" class="header__brand" aria-label="Nemo Cleaning Services, inicio"><NemoLogo variant="dark" :height="52" /></RouterLink>
 
@@ -273,6 +276,11 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
   backdrop-filter: saturate(1.2) blur(14px);
   -webkit-backdrop-filter: saturate(1.2) blur(14px);
   transition: box-shadow 0.25s ease, background 0.25s ease;
+
+  // Sobre la foto del hero del home: casi transparente hasta que se hace scroll.
+  &--over {
+    background: rgba($navy-deep, 0.18);
+  }
 
   &--scrolled {
     background: rgba($navy, 0.98);

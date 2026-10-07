@@ -1,6 +1,10 @@
 import type { Directive } from 'vue'
 
-/** v-reveal: aparece suave al entrar en pantalla. Respeta reduced-motion. */
+/**
+ * v-reveal: el bloque entra suave al aparecer en pantalla. Por defecto SIEMPRE es visible:
+ * solo se anima (keyframes desde opacity 0) cuando el observer lo ve entrar, así nunca queda
+ * oculto si el observer no corre (capturas, impresión, navegadores viejos). Respeta reduced-motion.
+ */
 let observer: IntersectionObserver | null = null
 
 function getObserver() {
@@ -8,13 +12,16 @@ function getObserver() {
   observer = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
-        if (e.isIntersecting) {
-          e.target.classList.add('is-revealed')
-          observer?.unobserve(e.target)
-        }
+        if (!e.isIntersecting) continue
+        const el = e.target as HTMLElement
+        observer?.unobserve(el)
+        // Lo que ya estaba en pantalla al montar no se re-anima (evita el parpadeo del primer pintado).
+        if (el.dataset.revealSkip) continue
+        el.classList.add('is-revealing')
+        el.addEventListener('animationend', () => el.classList.remove('is-revealing'), { once: true })
       }
     },
-    { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+    { rootMargin: '0px 0px -6% 0px', threshold: 0.06 },
   )
   return observer
 }
@@ -23,8 +30,9 @@ export const vReveal: Directive<HTMLElement, number | undefined> = {
   mounted(el, binding) {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduce || !('IntersectionObserver' in window)) return
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.9) el.dataset.revealSkip = '1'
     el.classList.add('reveal')
-    if (binding.value) el.style.transitionDelay = `${binding.value}ms`
+    if (binding.value) el.style.setProperty('--reveal-delay', `${binding.value}ms`)
     getObserver().observe(el)
   },
   unmounted(el) {
