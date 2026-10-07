@@ -119,3 +119,29 @@ export function mapsUrl(address: string): string {
 export function errorMessage(e: unknown, fallback = 'Ocurrió un error. Inténtalo de nuevo.'): string {
   return (e as { message?: string })?.message || fallback
 }
+
+/** Quincena del mes calendario: Q1 = días 1–15, Q2 = 16–fin. → "Q2 · 16 al 31 de octubre" */
+export function fortnightLabel(month: string, q: 1 | 2, short = false): string {
+  const last = monthRange(month).to.slice(8, 10)
+  const name = new Intl.DateTimeFormat('es-EC', { month: short ? 'short' : 'long', timeZone: 'UTC' })
+    .format(isoToDate(`${month}-01`))
+    .replace(/\./g, '')
+  return q === 1 ? `Q1 · 1 al 15 de ${name}` : `Q2 · 16 al ${Number(last)} de ${name}`
+}
+
+/** 13674 → "13,674" (mismo separador que `money()`). */
+const intFmt = new Intl.NumberFormat('en-US')
+export function num(n: number | null | undefined): string {
+  return intFmt.format(n || 0)
+}
+
+/**
+ * Pedidos sin cobro pedido a pedido (igual que el back): "Plan mensual" (prepagado), "Canje" y
+ * "Cortesía". No son deuda: en vez de "Por pagar" se muestra la forma de pago.
+ */
+export function settledLabel(b: { paymentAccount?: string; paymentConfirmation?: string }): string {
+  const a = (b.paymentAccount || '').trim()
+  if (/^(plan mensual|canje|cortes[ií]a)$/i.test(a)) return a
+  if (b.paymentConfirmation === 'exchange') return 'Canje'
+  return ''
+}

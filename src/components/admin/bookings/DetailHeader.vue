@@ -3,7 +3,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import BookingBadges from '@/components/admin/common/BookingBadges.vue'
 import { paymentMethod } from '@/config/labels'
 import { useAdminScope } from '@/stores/adminScope'
-import { longDate, mapsUrl, money, whatsappUrl } from '@/utils/format'
+import { longDate, mapsUrl, money, whatsappUrl, settledLabel } from '@/utils/format'
 import type { BookingDetail } from '@/types/api'
 
 const props = defineProps<{ booking: BookingDetail }>()
@@ -19,13 +19,14 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
         <h2 class="dh__when">{{ longDate(booking.date) }} · {{ booking.time }}</h2>
         <p class="muted dh__branch"><AppIcon name="store" :size="14" /> {{ branch() }} · {{ booking.durationMinutes }} min</p>
       </div>
-      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" />
+      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
     </div>
 
     <div class="dh__money">
       <div><small>Total</small><strong class="money">{{ money(booking.total) }}</strong></div>
       <div><small>Pagado</small><strong class="money">{{ money(booking.amountPaid) }}</strong></div>
-      <div :class="{ 'is-due': booking.balance > 0 }"><small>Saldo</small><strong class="money">{{ money(booking.balance) }}</strong></div>
+      <div v-if="settledLabel(booking)"><small>Saldo</small><strong>{{ settledLabel(booking) }}</strong></div>
+      <div v-else :class="{ 'is-due': booking.balance > 0 }"><small>Saldo</small><strong class="money">{{ money(booking.balance) }}</strong></div>
       <div><small>Método</small><strong>{{ paymentMethod[booking.paymentMethod] }}</strong></div>
     </div>
 

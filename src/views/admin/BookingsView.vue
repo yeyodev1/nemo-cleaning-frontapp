@@ -7,6 +7,7 @@ import BookingFilters from '@/components/admin/bookings/BookingFilters.vue'
 import { bookingsService, type BookingFilters as Filters } from '@/services/bookings.service'
 import { usePagedList } from '@/composables/admin/usePagedList'
 import { useAdminScope } from '@/stores/adminScope'
+import { num } from '@/utils/format'
 
 const scope = useAdminScope()
 const initial: Filters = { status: '', paymentStatus: '', from: '', to: '', q: '' }
@@ -21,7 +22,7 @@ onMounted(() => load(1))
 <template>
   <div class="bookings">
     <div class="bookings__head">
-      <p class="muted">{{ total }} pedido{{ total === 1 ? '' : 's' }}</p>
+      <p class="muted">{{ num(total) }} pedido{{ total === 1 ? '' : 's' }}</p>
       <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary"><AppIcon name="plus" /> Nuevo pedido</RouterLink>
     </div>
 

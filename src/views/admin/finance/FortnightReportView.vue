@@ -47,7 +47,7 @@ const empty = computed(
       <KpiRow>
         <KpiCard label="Producción" :value="money(data.reconciliation.production.total)" icon="chart" :hint="`${data.bookings} servicios`" />
         <KpiCard label="Cobrado" :value="money(data.collected.total.total)" icon="wallet" tone="success" hint="Dinero que entró en el mes" />
-        <KpiCard label="Gastos + pagos" :value="money(data.profit.totalCosts.total)" icon="receipt" tone="warning" />
+        <KpiCard label="Costos" :value="money(data.profit.totalCosts.total)" icon="receipt" tone="warning" hint="Gastos + nómina + pagos pendientes" />
         <KpiCard
           label="Utilidad"
           :value="money(data.profit.profit.total)"

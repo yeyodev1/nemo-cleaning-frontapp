@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { settledLabel } from '@/utils/format'
 import { itemLabel } from '@/utils/pricing'
 import { computed } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
@@ -19,7 +20,7 @@ const color = computed(() => props.booking.operators[0]?.color || '#C8CDD4')
     <span class="acard__items">{{ booking.items.map(itemLabel).join(', ') }}</span>
     <span class="acard__addr"><AppIcon name="pin" :size="14" /> {{ booking.address }}</span>
     <span class="acard__foot">
-      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" />
+      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
       <span v-if="booking.operators.length" class="acard__ops">{{ booking.operators.map((o) => o.name).join(', ') }}</span>
     </span>
   </button>

@@ -7,7 +7,7 @@ import KpiCard from '@/components/admin/common/KpiCard.vue'
 import CustomerForm from '@/components/admin/customers/CustomerForm.vue'
 import { managementService } from '@/services/management.service'
 import { useToastStore } from '@/stores/toast'
-import { dateTime, errorMessage, intlPhone, money, shortDate, whatsappUrl } from '@/utils/format'
+import { dateTime, errorMessage, intlPhone, money, shortDate, whatsappUrl, settledLabel } from '@/utils/format'
 import type { Customer, CustomerDetail } from '@/types/api'
 
 const route = useRoute()
@@ -61,7 +61,7 @@ function onSaved(c: Customer) {
 
       <div class="kpis">
         <KpiCard label="Pedidos" :value="data.totalOrders" icon="list" />
-        <KpiCard label="Total gastado" :value="money(data.totalSpent)" icon="wallet" tone="aqua" />
+        <KpiCard label="Total pagado" :value="money(data.totalSpent)" icon="wallet" tone="aqua" />
       </div>
 
       <h3 class="title">Historial de pedidos</h3>
@@ -72,7 +72,7 @@ function onSaved(c: Customer) {
             <span class="bk__main">
               <strong>{{ b.code }}</strong>
               <span class="muted">{{ shortDate(b.date) }} · {{ b.time }} · {{ b.items.map((i) => i.name).join(', ') }}</span>
-              <BookingBadges :status="b.status" :payment="b.paymentStatus" />
+              <BookingBadges :status="b.status" :payment="b.paymentStatus" :settled="settledLabel(b)" />
             </span>
             <strong class="money">{{ money(b.total) }}</strong>
           </RouterLink>

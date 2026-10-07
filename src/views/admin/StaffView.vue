@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import UserForm from '@/components/admin/staff/UserForm.vue'
+import SegTabs from '@/components/admin/finance/SegTabs.vue'
 import { useCrudList } from '@/composables/admin/useCrudList'
 import { managementService } from '@/services/management.service'
 import { useAdminScope } from '@/stores/adminScope'
@@ -13,7 +14,18 @@ import type { Role } from '@/types/api'
 const scope = useAdminScope()
 const { items, loading, editing, formOpen, open, onSaved } = useCrudList(() => managementService.users())
 const order: Role[] = ['admin', 'manager', 'operator']
-const sorted = computed(() => [...items.value].sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || a.name.localeCompare(b.name)))
+// Con el historial hay muchos lavadores que ya no trabajan: por defecto solo los activos.
+const show = ref('active')
+const tabs = computed(() => [
+  { value: 'active', label: 'Activos', count: items.value.filter((u) => u.active).length },
+  { value: 'inactive', label: 'Inactivos' },
+  { value: 'all', label: 'Todos' },
+])
+const sorted = computed(() =>
+  [...items.value]
+    .filter((u) => show.value === 'all' || (show.value === 'active') === u.active)
+    .sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || a.name.localeCompare(b.name)),
+)
 const tone = { admin: 'navy', manager: 'info', operator: 'aqua' } as const
 const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).filter(Boolean).join(', ')
 </script>
@@ -21,9 +33,10 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
 <template>
   <section>
     <div class="bar">
-      <p class="muted">{{ items.length }} {{ items.length === 1 ? 'persona' : 'personas' }}</p>
+      <p class="muted">{{ sorted.length }} {{ sorted.length === 1 ? 'persona' : 'personas' }}</p>
       <button type="button" class="btn btn--primary" @click="open(null)"><AppIcon name="plus" /> Nueva persona</button>
     </div>
+    <SegTabs v-model="show" :tabs="tabs" />
     <div v-if="loading && !items.length" class="list"><span v-for="i in 5" :key="i" class="skeleton" style="height: 68px"></span></div>
     <ul v-else class="list">
       <li v-for="u in sorted" :key="u._id">

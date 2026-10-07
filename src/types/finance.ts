@@ -65,7 +65,17 @@ export interface FortnightReport {
     paid: QTotals
     pending: QTotals
   }
-  profit: { totalCosts: QTotals; profit: QTotals; margin: QTotals }
+  profit: {
+    /** Gastos del periodo (incluye los pagos por realizar ya pagados: se registran solos como gasto). */
+    expenses?: QTotals
+    /** Nómina esperada del mes. */
+    payroll?: QTotals
+    /** Lo pendiente de los pagos por realizar (sin los de nómina). */
+    payablesPending?: QTotals
+    totalCosts: QTotals
+    profit: QTotals
+    margin: QTotals
+  }
   liquidity: { inAccounts: QTotals; pendingPayments: QTotals; available: QTotals }
 }
 
@@ -188,9 +198,17 @@ export interface MonthlyDetail {
 
 export type CashConcept = 'opening' | 'tip_cash' | 'to_management' | 'from_management' | 'adjustment' | 'other'
 
+export interface CashStart {
+  branch: ID
+  name: string
+  /** Desde qué día cuenta la caja (lo anterior no suma). */
+  startDate: string
+  openingBalance: number
+}
+
 export interface CashRow {
   key: string
-  source: 'payment' | 'expense' | 'manual'
+  source: 'payment' | 'expense' | 'manual' | 'opening'
   id: ID
   date: string
   concept: string
@@ -211,6 +229,7 @@ export interface CashRegister {
   closing: number
   production: number
   pettyCash: number
+  starts?: CashStart[]
   rows: CashRow[]
 }
 
@@ -241,6 +260,8 @@ export interface ReceivablesAging {
   bookings: number
   buckets: Record<AgingBucket, number>
   lost: { total: number; count: number }
+  /** Transferencias en revisión: "Por confirmar", no se suman a lo que se debe. */
+  toConfirm?: { total: number; count: number }
   items: AgingCustomer[]
 }
 

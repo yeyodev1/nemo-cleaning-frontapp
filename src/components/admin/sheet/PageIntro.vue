@@ -1,11 +1,17 @@
 <script setup lang="ts">
-/** Línea que explica para qué sirve la pantalla + acciones principales (visibles, no escondidas). */
-defineProps<{ text: string }>()
+import { useRoute } from 'vue-router'
+
+/**
+ * Acciones principales de la pantalla (visibles, no escondidas). La línea de "para qué sirve"
+ * la pinta el layout desde `meta.purpose`; `text` queda solo para pantallas sin ella.
+ */
+defineProps<{ text?: string }>()
+const route = useRoute()
 </script>
 
 <template>
-  <div class="intro">
-    <p class="intro__text">{{ text }}</p>
+  <div v-if="$slots.default || (text && !route.meta.purpose)" class="intro">
+    <p v-if="text && !route.meta.purpose" class="intro__text">{{ text }}</p>
     <div v-if="$slots.default" class="intro__actions"><slot /></div>
   </div>
 </template>

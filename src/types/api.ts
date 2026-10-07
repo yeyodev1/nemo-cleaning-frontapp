@@ -276,6 +276,9 @@ export interface Payment {
   registeredBy?: PersonRef
   reviewedBy?: PersonRef
   reviewedAt?: string
+  /** Fecha en que entró el dinero (o la del servicio en el historial). */
+  paidAt?: string
+  customer?: { name?: string; phone?: string } | null
   createdAt: string
 }
 
@@ -311,6 +314,7 @@ export type ExpenseCategory =
   | 'reparaciones'
   | 'uniformes'
   | 'imprevistos'
+  | 'comisiones'
 
 export type PaidFrom = 'petty_cash' | 'management'
 export type ExpenseKind = 'variable' | 'fixed'
@@ -334,6 +338,8 @@ export interface Expense {
   seriesKey?: string
   installment?: { number: number; count: number; totalAmount: number } | null
   employee?: ID | null
+  /** Gasto creado al marcar pagado un "Pago por realizar" (se cambia desde allí). */
+  payable?: ID | null
 }
 
 // ---------- Oficinas ----------
@@ -504,8 +510,19 @@ export interface Dashboard {
   today: { bookings: number; completed: number; pending: number; income: number }
   period: { bookings: number; income: number; expenses: number; net: number; averageTicket: number }
   pendingTransfers: number
+  /** Monto de transferencias en revisión ("Por confirmar"); no es deuda. */
+  toConfirm?: number
+  /** Por cobrar (centavos): sin plan mensual, canje, cortesía, perdidas ni transferencias en revisión. */
   receivables: number
   newOfficeQuotes: number
+  production?: {
+    fortnight: 1 | 2
+    fortnightFrom: string
+    today: { amount: number; bookings: number }
+    fortnightToDate: { amount: number; bookings: number }
+    monthToDate: { amount: number; bookings: number }
+    monthScheduled: { amount: number; bookings: number }
+  }
   incomeByDay: { date: string; amount: number }[]
   topServices: { name: string; quantity: number; amount: number }[]
   byOperator: { name: string; bookings: number; amount: number }[]

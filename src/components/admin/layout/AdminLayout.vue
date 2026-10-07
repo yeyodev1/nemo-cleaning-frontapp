@@ -37,7 +37,14 @@ watch(() => route.path, () => (drawer.value = false))
       <div class="admin__content">
         <RouterView v-slot="{ Component, route: r }">
           <Transition name="page" mode="out-in">
-            <component :is="Component" :key="r.path" />
+            <div :key="r.path">
+              <!-- Título y para qué sirve la pantalla (en el celular el título no cabe arriba). -->
+              <div v-if="r.meta.purpose" class="admin__head">
+                <h2 class="admin__h">{{ r.meta.title }}</h2>
+                <p v-if="r.meta.purpose" class="admin__purpose">{{ r.meta.purpose }}</p>
+              </div>
+              <component :is="Component" />
+            </div>
           </Transition>
         </RouterView>
       </div>
@@ -98,6 +105,35 @@ watch(() => route.path, () => (drawer.value = false))
     @include from('lg') {
       font-size: $text-xl;
     }
+  }
+
+  // En el celular la barra marina solo lleva logo + sucursal: el título va en el contenido.
+  &__title {
+    @include until('lg') {
+      visibility: hidden;
+    }
+  }
+
+  &__head {
+    margin-bottom: 1rem;
+  }
+
+  &__h {
+    @include display;
+    font-size: $text-xl;
+    line-height: 1.15;
+    color: $navy;
+
+    @include from('lg') {
+      display: none;
+    }
+  }
+
+  &__purpose {
+    margin-top: 0.2rem;
+    font-size: $text-sm;
+    color: $ink-muted;
+    max-width: 70ch;
   }
 
   &__branch {

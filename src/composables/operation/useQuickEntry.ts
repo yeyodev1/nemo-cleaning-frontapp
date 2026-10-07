@@ -25,7 +25,7 @@ const SESSION_KEY = 'nemo_quick_entry'
 export function defaultConfirmation(account: string): PaymentConfirmation {
   const a = account.toLowerCase()
   if (a.startsWith('transferencia')) return 'pending_confirmation'
-  if (a === 'canje') return 'exchange'
+  if (a === 'canje' || a === 'cortesía' || a === 'cortesia') return 'exchange'
   return 'confirmed'
 }
 

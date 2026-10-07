@@ -2,7 +2,7 @@
 import { itemLabel } from '@/utils/pricing'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import BookingBadges from '@/components/admin/common/BookingBadges.vue'
-import { money, shortDate } from '@/utils/format'
+import { money, shortDate, settledLabel } from '@/utils/format'
 import { useAdminScope } from '@/stores/adminScope'
 import type { Booking } from '@/types/api'
 
@@ -27,7 +27,7 @@ function branchName(b: Booking) {
       </span>
       <span class="row__items">{{ booking.items.map(itemLabel).join(', ') }}</span>
       <span class="row__meta">
-        <BookingBadges :status="booking.status" :payment="booking.paymentStatus" />
+        <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
         <span v-if="branchName(booking)" class="row__branch"><AppIcon name="store" :size="14" /> {{ branchName(booking) }}</span>
         <span v-for="o in booking.operators" :key="o._id" class="row__op">
           <span class="row__dot" :style="{ background: o.color || '#1E2D3A' }"></span>{{ o.name }}
@@ -36,7 +36,7 @@ function branchName(b: Booking) {
     </span>
     <span class="row__money">
       <strong class="money">{{ money(booking.total) }}</strong>
-      <small v-if="booking.balance > 0" class="money">Saldo {{ money(booking.balance) }}</small>
+      <small v-if="booking.balance > 0 && !settledLabel(booking)" class="money">Saldo {{ money(booking.balance) }}</small>
     </span>
   </RouterLink>
 </template>

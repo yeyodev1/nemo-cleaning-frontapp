@@ -11,6 +11,7 @@ defineProps<{ data: CashRegister; showDate: boolean }>()
 const emit = defineEmits<{ remove: [row: CashRow] }>()
 
 function concept(r: CashRow) {
+  if (r.source === 'opening') return 'Inicio del registro'
   if (r.source === 'payment') return 'Producción'
   if (r.source === 'expense') return expenseCategory[r.concept as ExpenseCategory] || r.concept
   return cashConcept[r.concept as CashConcept]?.label || r.concept
@@ -40,7 +41,7 @@ function concept(r: CashRow) {
         <td>
           <strong>{{ concept(r) }}</strong>
           <small v-if="showDate" class="muted d">{{ shortDate(r.date) }}</small>
-          <small v-if="r.source !== 'manual'" class="muted d">automático</small>
+          <small v-if="r.source !== 'manual' && r.source !== 'opening'" class="muted d">automático</small>
         </td>
         <td class="num pos">{{ r.in ? money(r.in) : '' }}</td>
         <td class="num neg">{{ r.out ? money(r.out) : '' }}</td>

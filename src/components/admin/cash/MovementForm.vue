@@ -30,7 +30,8 @@ watch(
   () => props.open,
   (o) => o && Object.assign(form, blank()),
 )
-const concepts = Object.entries(cashConcept) as [CashConcept, (typeof cashConcept)[CashConcept]][]
+// El saldo inicial se fija en "Inicio del registro" (arriba en la caja), no como movimiento.
+const concepts = (Object.entries(cashConcept) as [CashConcept, (typeof cashConcept)[CashConcept]][]).filter(([k]) => k !== 'opening')
 const fixedDirection = computed(() => cashConcept[form.concept].direction)
 watch(
   () => form.concept,

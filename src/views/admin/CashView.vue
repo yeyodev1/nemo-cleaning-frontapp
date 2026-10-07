@@ -8,6 +8,7 @@ import MonthNav from '@/components/admin/sheet/MonthNav.vue'
 import PageIntro from '@/components/admin/sheet/PageIntro.vue'
 import CashTable from '@/components/admin/cash/CashTable.vue'
 import MovementForm from '@/components/admin/cash/MovementForm.vue'
+import CashStart from '@/components/admin/cash/CashStart.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
@@ -54,7 +55,7 @@ const print = () => window.print()
   <section class="cash" :class="{ 'is-stale': loading && !!data }" :aria-busy="loading">
     <PageIntro text="Registro de caja como en el Excel: saldo inicial, ingresos, egresos y saldo acumulado. Los cobros en efectivo y los gastos de caja menor entran solos.">
       <button type="button" class="btn btn--ghost" @click="print"><AppIcon name="file" /> Imprimir</button>
-      <button type="button" class="btn btn--primary" @click="formOpen = true"><AppIcon name="plus" /> Movimiento</button>
+      <button type="button" class="btn btn--primary" @click="formOpen = true"><AppIcon name="plus" /> Entrega o movimiento</button>
     </PageIntro>
 
     <SegTabs v-model="mode" :tabs="[{ value: 'day', label: 'Por día' }, { value: 'month', label: 'Mes completo' }]" />
@@ -71,6 +72,7 @@ const print = () => window.print()
 
     <div v-if="loading && !data" class="skeleton" style="height: 280px"></div>
     <template v-else-if="data">
+      <CashStart v-if="data.starts?.length" :starts="data.starts" @saved="load" />
       <KpiRow>
         <KpiCard label="Saldo inicial" :value="money(data.opening)" icon="wallet" />
         <KpiCard label="Ingresos" :value="money(data.totalIn)" icon="arrow-right" tone="success" :hint="`Producción en efectivo ${money(data.production)}`" />

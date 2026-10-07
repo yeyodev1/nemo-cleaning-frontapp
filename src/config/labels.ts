@@ -94,6 +94,7 @@ export const expenseCategory: Record<ExpenseCategory, string> = {
   reparaciones: 'Reparaciones',
   uniformes: 'Uniformes',
   imprevistos: 'Imprevistos',
+  comisiones: 'Comisiones',
 }
 
 export const paidFrom: Record<PaidFrom, string> = {

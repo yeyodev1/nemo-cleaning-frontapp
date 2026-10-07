@@ -15,7 +15,7 @@ import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
 import { useReport } from '@/composables/admin/useReport'
 import { pct } from '@/config/financeLabels'
-import { errorMessage, money, monthISO } from '@/utils/format'
+import { errorMessage, fortnightLabel, money, monthISO } from '@/utils/format'
 import type { Payable } from '@/types/finance'
 
 const scope = useAdminScope()
@@ -112,6 +112,14 @@ async function copyPrevious() {
       <MonthNav v-model="month" />
     </div>
 
+    <p class="note">
+      <AppIcon name="info" :size="18" />
+      <span>
+        Lo pagado aparece solo en Gastos (con la fecha de pago). Los de categoría <strong>Nómina</strong> no se suman
+        como gasto: los sueldos se cuentan desde Nómina.
+      </span>
+    </p>
+
     <KpiRow v-if="data">
       <KpiCard label="Total listado" :value="money(data.totals.total)" icon="list" :hint="`${data.totals.count} pagos`" />
       <KpiCard label="Pagado" :value="money(data.totals.paid)" icon="check-circle" tone="success" />
@@ -133,7 +141,7 @@ async function copyPrevious() {
     <template v-else>
       <div v-for="g in groups" :key="g.f" class="group">
         <h3 class="group__title">
-          {{ g.f === 1 ? 'Quincena 1 (1–15)' : 'Quincena 2 (16–fin de mes)' }}
+          {{ fortnightLabel(month, g.f as 1 | 2) }}
           <span class="money">{{ money(g.total) }}</span>
         </h3>
         <TransitionGroup v-if="g.list.length" name="fade-up" tag="ul" class="rows">
@@ -180,6 +188,23 @@ async function copyPrevious() {
 .filters {
   max-width: 360px;
   margin-bottom: 1rem;
+}
+
+.note {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: $radius-md;
+  background: $info-bg;
+  color: $info;
+  font-size: $text-sm;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
 }
 
 .rows {

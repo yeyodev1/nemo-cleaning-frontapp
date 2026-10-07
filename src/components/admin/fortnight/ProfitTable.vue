@@ -20,7 +20,12 @@ defineProps<{ report: FortnightReport; cols: { q1: string; q2: string; total: st
     <tbody>
       <tr class="is-section"><td colspan="4">4. Utilidad</td></tr>
       <QRow label="Producción" :value="report.reconciliation.production" />
-      <QRow label="Gastos totales" :value="report.profit.totalCosts" negative hint="Gastos desembolsados + total por pagar" />
+      <template v-if="report.profit.expenses">
+        <QRow label="Gastos del periodo" :value="report.profit.expenses" negative hint="Incluye los pagos por realizar ya pagados" />
+        <QRow label="Nómina del mes" :value="report.profit.payroll!" negative hint="Sueldos esperados (sale de Nómina)" />
+        <QRow label="Pagos por realizar pendientes" :value="report.profit.payablesPending!" negative hint="Solo lo que falta pagar; sin Nómina" />
+      </template>
+      <QRow label="Costos totales" :value="report.profit.totalCosts" negative kind="sub" hint="Cada pago cuenta una sola vez" />
       <QRow label="Utilidad bruta" :value="report.profit.profit" kind="key" signed />
       <tr>
         <td>Margen de utilidad</td>

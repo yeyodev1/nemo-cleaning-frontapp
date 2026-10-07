@@ -79,6 +79,10 @@ class LedgerService extends APIBase {
     return this.get<CashRegister>('admin/finance/cash', { from, to, branch })
   }
 
+  updateCashStart(body: { branch: string; startDate: string; openingBalance: number }) {
+    return this.patch('admin/finance/cash/start', body)
+  }
+
   createMovement(body: CashMovementInput) {
     return this.post('admin/finance/cash/movements', body)
   }

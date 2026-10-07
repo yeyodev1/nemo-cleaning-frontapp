@@ -16,8 +16,10 @@ const { tabs, isActive } = useAdminNav()
       :class="{ 'is-active': isActive(t.to) }"
       :aria-current="isActive(t.to) ? 'page' : undefined"
     >
-      <AppIcon :name="t.icon" :size="22" />
-      <span>{{ t.label }}</span>
+      <span class="tabs__icon" :class="{ 'tabs__icon--cta': t.to === '/admin/produccion/registrar' }">
+        <AppIcon :name="t.icon" :size="22" />
+      </span>
+      <span>{{ t.short || t.label }}</span>
     </RouterLink>
     <button type="button" class="tabs__item" @click="emit('more')">
       <AppIcon name="menu" :size="22" />
@@ -42,6 +44,23 @@ const { tabs, isActive } = useAdminNav()
     display: none;
   }
 
+  // "Registrar servicio": la acción más usada, resaltada en naranja (a un toque).
+  &__icon--cta {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: $orange;
+    color: $navy-ink;
+    transition: transform $dur-fast $ease-out;
+  }
+
+  &__item:active &__icon--cta {
+    transform: scale(0.92);
+  }
+
   &__item {
     flex: 1;
     min-height: 62px;
@@ -57,6 +76,10 @@ const { tabs, isActive } = useAdminNav()
 
     &.is-active {
       color: $navy;
+
+      .tabs__icon--cta {
+        box-shadow: 0 0 0 3px rgba($orange, 0.35);
+      }
 
       &::before {
         content: '';

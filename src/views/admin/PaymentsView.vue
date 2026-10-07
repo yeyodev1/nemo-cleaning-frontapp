@@ -15,9 +15,9 @@ const tab = computed({
   set: (v: string) => router.replace({ query: { ...route.query, tab: v === 'revisar' ? undefined : v } }),
 })
 const tabs = computed(() => [
-  { value: 'revisar', label: 'Por revisar', count: reviewCount.value },
+  { value: 'revisar', label: 'Por confirmar', count: reviewCount.value },
   { value: 'todos', label: 'Todos' },
-  { value: 'cxc', label: 'Cuentas por cobrar' },
+  { value: 'cxc', label: 'Por cobrar' },
 ])
 </script>
 

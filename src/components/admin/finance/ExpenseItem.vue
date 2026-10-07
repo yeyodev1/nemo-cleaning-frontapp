@@ -23,12 +23,14 @@ const emit = defineEmits<{ edit: []; remove: [] }>()
         <StatusBadge v-if="e.recurring" tone="info" label="Se repite" />
         <StatusBadge v-if="e.installment" tone="warning" :label="`Diferido ${e.installment.number}/${e.installment.count}`" />
         <StatusBadge v-if="employeeName" tone="" :label="`Anticipo · ${employeeName}`" />
+        <StatusBadge v-if="e.payable" tone="success" label="Desde Pagos por realizar" />
         <a v-if="e.receiptUrl" :href="e.receiptUrl" target="_blank" rel="noopener" class="exp__receipt"><AppIcon name="file" :size="14" /> Recibo</a>
       </span>
     </div>
     <div class="exp__end">
       <strong class="money">{{ money(e.amount) }}</strong>
-      <span class="exp__actions">
+      <RouterLink v-if="e.payable" to="/admin/finanzas/pagos" class="exp__link">Cambiar en Pagos por realizar</RouterLink>
+      <span v-else class="exp__actions">
         <button type="button" class="btn btn--ghost btn--icon" aria-label="Editar gasto" @click="emit('edit')"><AppIcon name="edit" :size="18" /></button>
         <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar gasto" @click="emit('remove')"><AppIcon name="trash" :size="18" /></button>
       </span>
@@ -52,6 +54,18 @@ const emit = defineEmits<{ edit: []; remove: [] }>()
     strong {
       font-size: $text-sm;
     }
+  }
+
+  &__link {
+    font-size: $text-xs;
+    font-weight: 700;
+    color: $navy;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-align: right;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
   }
 
   &__meta {

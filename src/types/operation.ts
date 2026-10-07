@@ -74,6 +74,8 @@ export interface ProductionList {
     tip: number
     balance: number
     receivable: number
+    /** Transferencias en revisión ("Por confirmar"). */
+    toConfirm?: number
     byConfirmation: Partial<Record<PaymentConfirmation, { count: number; total: number; balance: number }>>
   }
 }

@@ -7,7 +7,7 @@ import BookingBadges from '@/components/admin/common/BookingBadges.vue'
 import { bookingsService } from '@/services/bookings.service'
 import { useToastStore } from '@/stores/toast'
 import { bookingStatus, options, paymentMethod } from '@/config/labels'
-import { errorMessage, longDate, mapsUrl, money, whatsappUrl } from '@/utils/format'
+import { errorMessage, longDate, mapsUrl, money, whatsappUrl, settledLabel } from '@/utils/format'
 import type { Booking, BookingStatus } from '@/types/api'
 
 const props = defineProps<{ booking: Booking | null }>()
@@ -37,7 +37,7 @@ async function save() {
 <template>
   <BaseSheet :open="Boolean(booking)" side :title="booking ? `${booking.code} · ${booking.time}` : ''" @close="emit('close')">
     <div v-if="booking" class="quick">
-      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" />
+      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
       <p class="quick__when">{{ longDate(booking.date) }}, {{ booking.time }}</p>
 
       <div class="quick__block">

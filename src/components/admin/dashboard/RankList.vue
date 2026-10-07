@@ -3,13 +3,19 @@ import { computed } from 'vue'
 import { money } from '@/utils/format'
 
 /** Ranking con barra proporcional (servicios u operadores). */
-const props = defineProps<{ title: string; rows: { name: string; count: number; amount: number }[]; countLabel: string }>()
+const props = defineProps<{
+  title: string
+  subtitle?: string
+  rows: { name: string; count: number; amount: number }[]
+  countLabel: string
+  countLabelOne?: string
+}>()
 const max = computed(() => Math.max(1, ...props.rows.map((r) => r.amount)))
 </script>
 
 <template>
   <section class="card rank">
-    <h2 class="rank__title">{{ title }}</h2>
+    <h2 class="rank__title">{{ title }}<small v-if="subtitle">{{ subtitle }}</small></h2>
     <ol v-if="rows.length" class="rank__list">
       <li v-for="r in rows" :key="r.name" class="rank__row">
         <span class="rank__top">
@@ -17,7 +23,7 @@ const max = computed(() => Math.max(1, ...props.rows.map((r) => r.amount)))
           <span class="money">{{ money(r.amount) }}</span>
         </span>
         <span class="rank__bar"><span :style="{ width: `${(r.amount / max) * 100}%` }"></span></span>
-        <small>{{ r.count }} {{ countLabel }}</small>
+        <small>{{ r.count }} {{ r.count === 1 && countLabelOne ? countLabelOne : countLabel }}</small>
       </li>
     </ol>
     <p v-else class="empty">Aún no hay datos.</p>
@@ -29,6 +35,15 @@ const max = computed(() => Math.max(1, ...props.rows.map((r) => r.amount)))
   &__title {
     font-size: $text-base;
     margin-bottom: 0.9rem;
+
+    small {
+      display: block;
+      margin-top: 0.15rem;
+      font-family: $font-ui;
+      font-size: $text-xs;
+      font-weight: 500;
+      color: $ink-muted;
+    }
   }
 
   &__list {

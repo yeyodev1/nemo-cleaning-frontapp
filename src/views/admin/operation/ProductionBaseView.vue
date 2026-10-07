@@ -61,8 +61,8 @@ function onChanged() {
 
     <KpiRow v-if="totals">
       <KpiCard label="Producción" :value="money(totals.production)" icon="chart" :hint="`${totals.count} servicios`" />
-      <KpiCard label="Por cobrar" :value="money(totals.receivable)" icon="wallet" tone="warning" hint="Sin contar canje ni perdidas" />
-      <KpiCard label="Por confirmar" :value="money(pendingConf?.total || 0)" icon="bank" tone="aqua" :hint="`${pendingConf?.count || 0} transferencias sin ver`" />
+      <KpiCard label="Por cobrar" :value="money(totals.receivable)" icon="wallet" tone="warning" hint="Sin plan mensual, canje, cortesía ni perdidas" />
+      <KpiCard label="Por confirmar" :value="money(totals.toConfirm ?? pendingConf?.total ?? 0)" icon="bank" tone="aqua" hint="Transferencias por verificar: no es deuda" />
       <KpiCard label="Propinas" :value="money(totals.tip)" icon="cash" tone="success" />
     </KpiRow>
 
@@ -105,10 +105,11 @@ function onChanged() {
     <EmptyState
       v-else-if="!b.data.value?.items.length"
       title="No hay servicios en este periodo"
-      text="Cuando registres un servicio hecho aparecerá aquí con su pago y confirmación."
+      text="Registra los servicios que ya se hicieron o mira otro periodo."
       icon="list"
     >
-      <RouterLink to="/admin/produccion/registrar" class="btn btn--primary"><AppIcon name="plus" /> Registrar el primero</RouterLink>
+      <RouterLink to="/admin/produccion/registrar" class="btn btn--primary"><AppIcon name="plus" /> Registrar servicio</RouterLink>
+      <button v-if="b.preset.value !== 'month'" type="button" class="btn btn--ghost" @click="b.setPreset('month')">Ver este mes</button>
     </EmptyState>
     <template v-else-if="b.data.value">
       <div class="only-mobile">

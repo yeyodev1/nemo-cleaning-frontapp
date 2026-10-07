@@ -13,6 +13,8 @@ import type { Role } from '@/types/api'
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string
+    /** Una línea bajo el título del panel: para qué sirve la pantalla. */
+    purpose?: string
     layout?: 'public' | 'admin' | 'bare'
     /** Oculta footer público (wizards). */
     focus?: boolean

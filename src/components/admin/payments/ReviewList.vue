@@ -4,17 +4,17 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import ProofLink from './ProofLink.vue'
 import { usePaymentReview } from '@/composables/admin/usePaymentReview'
 import { useAdminScope } from '@/stores/adminScope'
-import { dateTime, money } from '@/utils/format'
+import { dateTime, money, shortDate } from '@/utils/format'
 import { paymentMethod } from '@/config/labels'
 
 const emit = defineEmits<{ count: [n: number] }>()
 const scope = useAdminScope()
-const { items, loading, busy, load, review } = usePaymentReview(() => scope.query)
+const { items, total, totalAmount, page, pages, loading, busy, load, review } = usePaymentReview(() => scope.query)
 const notes = reactive<Record<string, string>>({})
 
-onMounted(load)
-watch(() => scope.branch, load)
-watch(() => items.value.length, (n) => emit('count', n), { immediate: true })
+onMounted(() => load())
+watch(() => scope.branch, () => load())
+watch(total, (n) => emit('count', n), { immediate: true })
 </script>
 
 <template>
@@ -26,19 +26,28 @@ watch(() => items.value.length, (n) => emit('count', n), { immediate: true })
       <AppIcon name="check-circle" :size="32" style="margin: 0 auto 0.5rem; color: #14915f" />
       No hay transferencias por revisar.
     </p>
-    <ul v-else class="list">
+    <template v-else>
+    <p class="rev-sum">
+      <strong class="money">{{ money(totalAmount) }}</strong> por confirmar en
+      <strong>{{ total }}</strong> {{ total === 1 ? 'transferencia' : 'transferencias' }}. Revisa el comprobante o el
+      banco y aprueba: no son deuda del cliente, solo falta verificarlas.
+    </p>
+    <ul class="list">
       <li v-for="p in items" :key="p._id" class="rev">
         <ProofLink v-if="p.proofUrl" :url="p.proofUrl" :title="`Comprobante ${p.bookingCode}`" />
-        <span v-else class="rev__noproof"><AppIcon name="image" /> Sin archivo</span>
         <div class="rev__body">
           <div class="rev__top">
             <strong class="rev__amount money">{{ money(p.amount) }}</strong>
             <RouterLink :to="`/admin/pedidos/${p.booking}`" class="rev__code">{{ p.bookingCode }}</RouterLink>
           </div>
+          <p v-if="p.customer?.name" class="rev__who">{{ p.customer.name }}</p>
           <p class="rev__meta">
-            {{ paymentMethod[p.method] }} · {{ dateTime(p.createdAt) }}<template v-if="scope.branchName(p.branch)"> · {{ scope.branchName(p.branch) }}</template>
+            {{ p.account || paymentMethod[p.method] }} · {{ p.paidAt ? shortDate(p.paidAt.slice(0, 10)) : dateTime(p.createdAt) }}<template v-if="scope.branchName(p.branch)"> · {{ scope.branchName(p.branch) }}</template>
           </p>
-          <p v-if="p.reference" class="rev__meta">Ref. {{ p.reference }}</p>
+          <p class="rev__meta">
+            <template v-if="p.reference">Ref. {{ p.reference }} · </template>
+            <span v-if="!p.proofUrl" class="rev__noproof">Sin comprobante</span>
+          </p>
           <label class="sr-only" :for="`note-${p._id}`">Nota</label>
           <input :id="`note-${p._id}`" v-model="notes[p._id]" type="text" placeholder="Nota (opcional, p. ej. motivo de rechazo)" />
           <div class="rev__actions">
@@ -52,10 +61,31 @@ watch(() => items.value.length, (n) => emit('count', n), { immediate: true })
         </div>
       </li>
     </ul>
+    <button v-if="page < pages" type="button" class="btn btn--ghost btn--block rev-more" :disabled="loading" @click="load(true)">
+      {{ loading ? 'Cargando…' : `Ver más (${total - items.length} restantes)` }}
+    </button>
+    </template>
   </div>
 </template>
 
 <style scoped lang="scss">
+.rev-sum {
+  @include card(0.9rem);
+  margin-bottom: 0.75rem;
+  font-size: $text-sm;
+  color: $ink-muted;
+  background: $info-bg;
+  border-color: transparent;
+
+  strong {
+    color: $info;
+  }
+}
+
+.rev-more {
+  margin-top: 0.75rem;
+}
+
 .list {
   list-style: none;
   @include flex-cards(320px, 0.75rem);
@@ -68,20 +98,8 @@ watch(() => items.value.length, (n) => emit('count', n), { immediate: true })
   align-items: flex-start;
 
   &__noproof {
-    width: 88px;
-    height: 88px;
-    flex-shrink: 0;
-    border-radius: $radius-sm;
-    background: $warning-bg;
     color: $warning;
-    font-size: $text-xs;
     font-weight: 700;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.2rem;
-    text-align: center;
   }
 
   &__body {
@@ -109,6 +127,12 @@ watch(() => items.value.length, (n) => emit('count', n), { immediate: true })
     font-size: $text-sm;
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  &__who {
+    font-weight: 700;
+    font-size: $text-sm;
+    @include truncate;
   }
 
   &__meta {

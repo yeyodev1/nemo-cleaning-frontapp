@@ -44,6 +44,10 @@ function remind(i: (typeof items.value)[number]) {
         <KpiCard label="Total por cobrar" :value="money(data.total)" icon="wallet" tone="warning" :hint="`${data.customers} clientes · ${data.bookings} servicios`" />
         <KpiCard v-for="b in buckets" :key="b" :label="agingBucket[b].label" :value="money(data.buckets[b])" :tone="b === 'd60' ? 'danger' : b === 'd0_5' ? 'success' : 'warning'" icon="clock" />
       </KpiRow>
+      <p v-if="data.toConfirm?.total" class="lost">
+        Aparte, <strong class="money">{{ money(data.toConfirm.total) }}</strong> en {{ data.toConfirm.count }} transferencias por confirmar
+        (no es deuda): <RouterLink to="/admin/pagos">revísalas en Pagos</RouterLink>.
+      </p>
       <p v-if="data.lost.total" class="lost">Marcado como perdida (no se suma): {{ money(data.lost.total) }} en {{ data.lost.count }} {{ data.lost.count === 1 ? 'servicio' : 'servicios' }}.</p>
 
       <SegTabs v-model="filter" :tabs="tabs" />

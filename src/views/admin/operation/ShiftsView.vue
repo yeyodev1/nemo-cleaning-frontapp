@@ -102,10 +102,14 @@ function onReset(op: string) {
 
   > :first-child {
     max-width: 360px;
-    flex: 1 1 320px;
   }
 
+  // En columna (celular) un flex-basis de 320px se vuelve alto: solo aplica en fila.
   @include from('md') {
+    > :first-child {
+      flex: 1 1 320px;
+    }
+
     flex-direction: row;
     align-items: flex-end;
     justify-content: space-between;

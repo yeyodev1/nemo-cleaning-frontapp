@@ -28,7 +28,7 @@ const squared = computed(() => r.value.difference.total === 0 && r.value.differe
       <QRow label="Efectivo desembolsado" :value="r.cashDisbursed" hint="Gastos de caja menor pagados en efectivo" />
       <QRow label="Valores por confirmar" :value="r.toConfirm" hint="Transferencias con comprobante sin revisar" />
       <QRow label="Valores por cobrar" :value="r.toCollect" />
-      <QRow v-if="has('barter')" label="Canje" :value="r.barter" hint="Servicios sin cobro" />
+      <QRow v-if="has('barter')" label="Canje, cortesía y plan mensual" :value="r.barter" hint="No se cobran pedido a pedido" />
       <QRow v-if="has('lost')" label="Perdidas" :value="r.lost" hint="No se cobrarán" />
       <QRow v-if="has('tips')" label="Propinas cobradas con el pago" :value="r.tips" negative hint="Entraron a cuenta pero no son producción" />
       <QRow label="Diferencia de conciliación" :value="r.difference" kind="total" signed />

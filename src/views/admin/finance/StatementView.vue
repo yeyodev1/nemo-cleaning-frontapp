@@ -12,7 +12,7 @@ import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useReport } from '@/composables/admin/useReport'
 import { pct } from '@/config/financeLabels'
-import { money, monthISO } from '@/utils/format'
+import { money, monthISO, monthLabel } from '@/utils/format'
 
 const scope = useAdminScope()
 const tab = ref('anual')
@@ -53,7 +53,7 @@ function openDetail(m: number) {
           <AnnualTable :data="data" :current="current" @pick="openDetail" />
           <p v-if="missingPayroll" class="warn">* Mes con ventas pero sin nómina cargada: los sueldos aparecen en $0 hasta que abras ese mes en Nómina.</p>
           <MonthStructure v-if="selected" :m="selected" :month="monthStr" />
-          <button type="button" class="btn btn--soft more" @click="tab = 'mes'">Ver el detalle de {{ monthStr }} <AppIcon name="arrow-right" /></button>
+          <button type="button" class="btn btn--soft more" @click="tab = 'mes'">Ver el detalle de {{ monthLabel(monthStr) }} <AppIcon name="arrow-right" /></button>
         </template>
       </div>
       <MonthlyDetail v-else key="m" :initial="monthStr" />
