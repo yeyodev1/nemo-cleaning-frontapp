@@ -18,6 +18,7 @@ import type {
   ReceivablesAging,
   ZoneReport,
 } from '@/types/finance'
+import type { MonthGridData } from '@/types/grid'
 
 type Branch = string | undefined
 
@@ -57,6 +58,23 @@ class LedgerService extends APIBase {
 
   copyPayables(month: string, branch: Branch) {
     return this.post<{ created: number; skipped: number }>('admin/finance/payables/copy', { month, branch })
+  }
+
+  /** Hoja "Nómina": sueldo base por colaborador y mes del año. */
+  payrollYear(year: number, branch: Branch) {
+    return this.get<MonthGridData>('admin/finance/payroll/year', { year, branch })
+  }
+
+  savePayrollSalary(body: { user: string; month: string; salary: number | null; position?: string; branch?: string | null }) {
+    return this.put<{ ok: boolean; salary: number | null }>('admin/finance/payroll/salary', body)
+  }
+
+  copyPayroll(from: string, to: string, branch: Branch) {
+    return this.post<{ ok: boolean; copied: number; skipped: number }>('admin/finance/payroll/copy', { from, to, branch })
+  }
+
+  removePayrollRow(body: { user: string; year: number }) {
+    return this.post<{ ok: boolean; deleted: number; kept: number }>('admin/finance/payroll/remove-row', body)
   }
 
   payroll(month: string, branch: Branch) {

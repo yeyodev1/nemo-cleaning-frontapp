@@ -1,6 +1,7 @@
 import APIBase from './httpBase'
 import type { ID } from '@/types/api'
 import type { Booking } from '@/types/api'
+import type { MonthGridData } from '@/types/grid'
 import type {
   CommissionRule,
   CommissionSheet,
@@ -69,6 +70,18 @@ class OperationService extends APIBase {
     return this.post<{ ok: boolean; copied: number }>('admin/goals/copy', { from, to })
   }
 
+  /** Comisiones manuales (las que usan los reportes): grilla del año. */
+  commissionEntries(year: number, branch?: string) {
+    return this.get<MonthGridData>('admin/commissions/entries', { year, branch })
+  }
+  saveCommissionEntry(body: { month: string; amount: number | null; user?: ID | null; name?: string; branch?: string | null; position?: string }) {
+    return this.put<{ ok: boolean; amount: number | null }>('admin/commissions/entries', body)
+  }
+  removeCommissionRow(body: { year: number; user?: ID | null; name?: string; branch?: string | null }) {
+    return this.post<{ ok: boolean; deleted: number }>('admin/commissions/entries/remove-row', body)
+  }
+
+  /** Calculadora FEE: solo referencia. */
   commissions(month: string, branch?: string) {
     return this.get<CommissionSheet>('admin/commissions', { month, branch })
   }

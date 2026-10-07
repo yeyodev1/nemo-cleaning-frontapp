@@ -93,6 +93,11 @@ Catálogo: variantes (tamaño/medida/plan), rangos (`priceMax`, se cobra el meno
   `booking/` (asistente; `ServicePicker.vue` + `ServiceOption.vue` los reutiliza el panel), `home/`, `office/`, `tracking/`,
   `admin/layout` (sidebar escritorio, tab bar + drawer móvil, selector de sucursal), `admin/common`
   (KpiCard, Pagination, BookingBadges) y una carpeta por módulo del panel.
+- **Grillas que escribe gerencia** (Nómina "Sueldos base", Comisiones): `components/admin/grid/` (`MonthGrid` ENE…DIC en
+  escritorio / chips de mes + lista en celular, `MoneyCell` con guardado por celda, Enter = celda de abajo, `$1,234.56`
+  fuera de foco, vacío = null; `AddPersonSheet`) + `composables/admin/useMonthGrid.ts` (totales en vivo, estado
+  guardando/guardado/error). Metas usan `MoneyCell` en `GoalCard` (`useGoalEntry`). La pestaña "Calculadora FEE
+  (referencia)" no alimenta reportes: "Usar este valor" copia el FEE a la hoja manual.
 - **Payphone (Cajita v2.0)**: `composables/booking/usePayphoneBox.ts` carga CSS+JS del CDN solo al pagar;
   `PayphoneBox.vue` lo enmarca; Payphone vuelve a `/pay-response?id=&clientTransactionId=` (URL configurada en Payphone, no en la Cajita) y
   `usePaymentConfirm.ts` llama a `/public/payphone/confirm` (idempotente).

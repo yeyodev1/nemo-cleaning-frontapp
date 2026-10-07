@@ -145,3 +145,22 @@ export function settledLabel(b: { paymentAccount?: string; paymentConfirmation?:
   if (b.paymentConfirmation === 'exchange') return 'Canje'
   return ''
 }
+
+/**
+ * Lo que se escribe en una celda de dinero → centavos. "" = celda vacía (null);
+ * NaN = texto inválido. Acepta "$1,234.56", "1234.56" y "142,28" (coma decimal).
+ */
+export function parseMoney(text: string): number | null {
+  let t = text.replace(/[$\s]/g, '')
+  if (!t) return null
+  if (t.includes(',') && t.includes('.')) t = t.replace(/,/g, '')
+  else if (/^-?\d+,\d{1,2}$/.test(t)) t = t.replace(',', '.')
+  else t = t.replace(/,/g, '')
+  if (!/^-?\d*(\.\d*)?$/.test(t) || t === '-' || t === '.') return NaN
+  return Math.round(parseFloat(t) * 100)
+}
+
+/** Centavos → texto para editar ("1234.5" → "1234.50"; vacío si no hay valor). */
+export function editMoney(cents: number | null | undefined): string {
+  return cents === null || cents === undefined ? '' : (cents / 100).toFixed(2)
+}

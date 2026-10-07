@@ -51,7 +51,7 @@ function openDetail(m: number) {
           </KpiRow>
           <p class="hint">Toca un mes en el encabezado para ver sus indicadores abajo.</p>
           <AnnualTable :data="data" :current="current" @pick="openDetail" />
-          <p v-if="missingPayroll" class="warn">* Mes con ventas pero sin nómina cargada: los sueldos aparecen en $0 hasta que abras ese mes en Nómina.</p>
+          <p v-if="missingPayroll" class="warn">* Mes con ventas pero sin nómina cargada: los sueldos aparecen en $0 hasta que escribas los sueldos de ese mes en Nómina.</p>
           <MonthStructure v-if="selected" :m="selected" :month="monthStr" />
           <button type="button" class="btn btn--soft more" @click="tab = 'mes'">Ver el detalle de {{ monthLabel(monthStr) }} <AppIcon name="arrow-right" /></button>
         </template>

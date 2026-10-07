@@ -108,9 +108,9 @@ async function save() {
             <option v-for="(l, k) in positionLabel" :key="k" :value="k">{{ l }}</option>
           </select>
         </label>
-        <MoneyField :model-value="form.monthlySalary || 0" label="Sueldo mensual" @update:model-value="form.monthlySalary = $event" hint="Base para la nómina." />
+        <MoneyField :model-value="form.monthlySalary || 0" label="Sueldo mensual" @update:model-value="form.monthlySalary = $event" hint="Solo se propone en los meses nuevos de Nómina; cada mes se edita allí." />
       </div>
-      <label class="check"><input v-model="form.commissions" type="checkbox" /> Gana FEE diario (comisión por excedente)</label>
+      <label class="check"><input v-model="form.commissions" type="checkbox" /> Cuenta en la calculadora FEE (solo referencia)</label>
       <label v-if="form.commissions" class="field">
         <span class="field__label">Supervisor que cobra su "FEE supervisor"</span>
         <select v-model="form.supervisor">
