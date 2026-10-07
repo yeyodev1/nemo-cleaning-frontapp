@@ -65,7 +65,9 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
   border-radius: $radius-md;
   background: #fff;
   border: 1px solid $line;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 
   &.is-open {
     border-color: rgba($orange, 0.6);
@@ -93,21 +95,23 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
   &__chev {
     flex-shrink: 0;
     color: $orange-ink;
-    transition: transform $dur $ease-out;
+    transition: transform 400ms $ease-out;
   }
 
   &.is-open &__chev {
     transform: rotate(180deg);
   }
 
+  // Cerrar usa una curva pareja para que se recoja tan suave como se abre.
   &__a {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows $dur $ease-out;
+    transition: grid-template-rows 380ms $ease-in-out;
   }
 
   &.is-open &__a {
     grid-template-rows: 1fr;
+    transition: grid-template-rows 440ms $ease-out;
   }
 
   &__inner {
@@ -119,17 +123,27 @@ const toggle = (i: number) => (open.value = open.value === i ? null : i)
       color: $ink-soft;
       font-size: $text-sm;
       opacity: 0;
-      transform: translateY(-4px);
+      transform: translateY(-6px);
       transition:
-        opacity $dur-fast $ease-out,
-        transform $dur $ease-out;
+        opacity 200ms $ease-in-out,
+        transform 260ms $ease-in-out;
     }
   }
 
   &.is-open &__inner p {
     opacity: 1;
     transform: none;
-    transition-delay: 60ms;
+    transition:
+      opacity 320ms $ease-out 120ms,
+      transform 380ms $ease-out 100ms;
+  }
+
+  &__q {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba($navy, 0.03);
+    }
   }
 }
 </style>

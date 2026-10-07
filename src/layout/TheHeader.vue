@@ -77,29 +77,31 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
       </div>
     </div>
 
-    <!-- Menú móvil: fondo que se desvanece + panel que baja, con los enlaces en cascada. -->
-    <!-- Fuera del header: su backdrop-filter haría que "fixed" se posicione contra él. -->
+    <!-- Menú móvil: fondo que se desvanece + panel que se despliega como cortina, con los enlaces en cascada. -->
+    <!-- Fuera del header: su backdrop-filter haría que "fixed" se posicione contra él y dejaría un vidrio borroso al cerrar. -->
     <Teleport to="body">
-      <Transition name="backdrop" :duration="{ enter: 280, leave: 340 }">
+      <Transition name="backdrop" :duration="{ enter: 340, leave: 460 }">
         <div v-if="open" class="menu-backdrop" aria-hidden="true" @click="open = false"></div>
       </Transition>
+      <!-- Duración explícita: Vue espera la cascada completa al entrar y la cortina completa al salir. -->
+      <Transition name="menu" :duration="{ enter: 760, leave: 460 }">
+        <nav v-if="open" id="menu-movil" class="menu" aria-label="Menú móvil">
+          <div class="menu__inner">
+            <RouterLink v-for="(l, i) in links" :key="l.to" :to="l.to" class="menu__link" :style="{ '--i': i }">
+              {{ l.label }} <AppIcon name="chevron-right" :size="18" />
+            </RouterLink>
+            <RouterLink :to="account.to" class="menu__link" :style="{ '--i': links.length }">
+              <span class="menu__label"><AppIcon name="user" :size="20" /> {{ account.label }}</span>
+              <AppIcon name="chevron-right" :size="18" />
+            </RouterLink>
+            <RouterLink to="/reservar" class="btn btn--accent btn--lg btn--block menu__cta" :style="{ '--i': links.length + 1 }">
+              Reservar <AppIcon name="arrow-right" />
+            </RouterLink>
+            <RouterLink to="/admin/login" class="menu__staff" :style="{ '--i': links.length + 2 }">Acceso del personal</RouterLink>
+          </div>
+        </nav>
+      </Transition>
     </Teleport>
-    <!-- Duración explícita: Vue debe esperar a la cascada completa al entrar y al fundido al salir. -->
-    <Transition name="menu" :duration="{ enter: 640, leave: 340 }">
-      <nav v-if="open" id="menu-movil" class="header__menu" aria-label="Menú móvil">
-        <RouterLink v-for="(l, i) in links" :key="l.to" :to="l.to" class="header__mlink" :style="{ '--i': i }">
-          {{ l.label }} <AppIcon name="chevron-right" :size="18" />
-        </RouterLink>
-        <RouterLink :to="account.to" class="header__mlink" :style="{ '--i': links.length }">
-          <span class="header__mlabel"><AppIcon name="user" :size="20" /> {{ account.label }}</span>
-          <AppIcon name="chevron-right" :size="18" />
-        </RouterLink>
-        <RouterLink to="/reservar" class="btn btn--accent btn--lg btn--block header__mlink-cta" :style="{ '--i': links.length + 1 }">
-          Reservar <AppIcon name="arrow-right" />
-        </RouterLink>
-        <RouterLink to="/admin/login" class="header__staff" :style="{ '--i': links.length + 2 }">Acceso del personal</RouterLink>
-      </nav>
-    </Transition>
   </header>
 </template>
 
@@ -108,8 +110,8 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
 .icon-swap-enter-active,
 .icon-swap-leave-active {
   transition:
-    opacity 140ms $ease-out,
-    transform 140ms $ease-out;
+    opacity 180ms $ease-out,
+    transform 180ms $ease-out;
 }
 
 .icon-swap-enter-from,
@@ -121,7 +123,7 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
 .menu-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 49;
+  z-index: 48;
   background: rgba($navy-ink, 0.55);
 
   @include from('lg') {
@@ -130,11 +132,11 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
 }
 
 .backdrop-enter-active {
-  transition: opacity $dur $ease-out;
+  transition: opacity 340ms $ease-out;
 }
 
 .backdrop-leave-active {
-  transition: opacity 320ms $ease-in-out;
+  transition: opacity 420ms $ease-in-out 40ms;
 }
 
 .backdrop-enter-from,
@@ -142,45 +144,114 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
   opacity: 0;
 }
 
-.menu-enter-active,
-.menu-leave-active {
+// El panel se despliega como cortina (clip-path) desde debajo del header y vuelve a recogerse al cerrar:
+// nunca desaparece de golpe ni deja el vidrio borroso del header a la vista.
+.menu.menu-enter-active {
   transition:
-    opacity $dur $ease-out,
-    transform $dur-slow $ease-out;
+    clip-path 440ms $ease-out,
+    transform 440ms $ease-out;
 
-  > * {
+  .menu__inner > * {
     transition:
-      opacity $dur $ease-out,
-      transform $dur $ease-out;
+      opacity 320ms $ease-out,
+      transform 320ms $ease-out;
+    transition-delay: calc(120ms + var(--i, 0) * 45ms);
   }
 }
 
-// Entrada en cascada (40 ms por enlace).
-.menu-enter-active > * {
-  transition-delay: calc(80ms + var(--i, 0) * 40ms);
-}
-
-// Salida: el recorrido inverso, todo junto y un poco más corto; el panel sube y se desvanece.
-.menu-leave-active {
+.menu.menu-leave-active {
   transition:
-    opacity 320ms $ease-in-out,
-    transform 320ms $ease-in-out;
+    clip-path 420ms $ease-in-out 40ms,
+    transform 420ms $ease-in-out 40ms;
 
-  > * {
+  // Salida en cascada inversa y corta: los enlaces se van antes de que la cortina termine de subir.
+  .menu__inner > * {
     transition:
-      opacity 240ms $ease-in-out,
-      transform 240ms $ease-in-out;
+      opacity 200ms $ease-in-out,
+      transform 200ms $ease-in-out;
+    transition-delay: calc((8 - var(--i, 0)) * 18ms);
   }
 }
 
-.menu-enter-from,
-.menu-leave-to {
-  opacity: 0;
-  transform: translateY(-16px);
+// `.menu.` sube la especificidad: si no, la regla base `.menu` (declarada después) pisa el estado inicial.
+.menu.menu-enter-from,
+.menu.menu-leave-to {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(-8px);
 
-  > * {
+  .menu__inner > * {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(-6px);
+  }
+}
+
+.menu {
+  position: fixed;
+  top: calc(var(--header-h) + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 49;
+  max-height: calc(100dvh - var(--header-h) - env(safe-area-inset-top));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: $navy;
+  border-bottom: 1px solid $dark-line;
+  box-shadow: 0 24px 40px rgba($navy-ink, 0.35);
+  clip-path: inset(0 0 0 0);
+  color: #fff;
+
+  @include from('lg') {
+    display: none;
+  }
+
+  &__inner {
+    @include container;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    padding: 0 0.25rem;
+    font-size: $text-lg;
+    font-weight: 600;
+    border-bottom: 1px solid $dark-line;
+    transition: color 0.2s ease;
+
+    &:hover,
+    &:active {
+      color: $orange;
+    }
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__cta {
+    margin-top: 1.25rem;
+  }
+
+
+}
+
+@include reduced-motion {
+  .menu-enter-active,
+  .menu-leave-active,
+  .menu-enter-active .menu__inner > *,
+  .menu-leave-active .menu__inner > *,
+  .backdrop-enter-active,
+  .backdrop-leave-active {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
   }
 }
 
@@ -284,11 +355,7 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
     }
   }
 
-  &__mlabel {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+
 
   &__burger {
     width: $tap;
@@ -304,38 +371,11 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
     }
   }
 
-  &__menu {
-    @include container;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding-top: 0.5rem;
-    padding-bottom: 1.5rem;
-    max-height: calc(100dvh - var(--header-h));
-    overflow-y: auto;
-    background: $navy;
-    border-bottom: 1px solid $dark-line;
-    box-shadow: 0 24px 40px rgba($navy-ink, 0.35);
 
-    @include from('lg') {
-      display: none;
-    }
-  }
 
-  &__mlink {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 56px;
-    padding: 0 0.25rem;
-    font-size: $text-lg;
-    font-weight: 600;
-    border-bottom: 1px solid $dark-line;
-  }
 
-  .btn--block {
-    margin-top: 1.25rem;
-  }
+
+
 
   &__staff {
     margin-top: 0.75rem;

@@ -42,7 +42,7 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <!-- Se queda montado hasta que termina la salida (el panel baja y el fondo se desvanece). -->
-    <Transition name="sheet" :duration="{ enter: 350, leave: 300 }">
+    <Transition name="sheet" :duration="{ enter: 460, leave: 420 }">
       <div v-if="open" class="sheet" :class="{ 'sheet--side': side }" @click.self="emit('close')">
         <section
           ref="panel"
@@ -178,11 +178,11 @@ onBeforeUnmount(() => {
 }
 
 .sheet-leave-active {
-  transition-duration: 300ms;
+  transition-duration: 400ms;
   transition-timing-function: $ease-in-out;
 
   .sheet__panel {
-    transition-duration: 300ms;
+    transition-duration: 400ms;
     transition-timing-function: $ease-in-out;
   }
 }
