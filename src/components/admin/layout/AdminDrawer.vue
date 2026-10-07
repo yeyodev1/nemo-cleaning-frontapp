@@ -15,9 +15,9 @@ const { rest, isActive, logout, user } = useAdminNav()
       {{ user.user.name }} · <span>{{ roleLabel[user.user.role] }}</span>
     </p>
     <nav class="drawer__grid">
+      <template v-for="(i, n) in rest" :key="i.to">
+      <span v-if="i.group && i.group !== rest[n - 1]?.group" class="drawer__group">{{ i.group }}</span>
       <RouterLink
-        v-for="(i, n) in rest"
-        :key="i.to"
         :to="i.to"
         :style="{ '--i': n }"
         class="drawer__item"
@@ -27,6 +27,7 @@ const { rest, isActive, logout, user } = useAdminNav()
         <AppIcon :name="i.icon" :size="22" />
         <span>{{ i.label }}</span>
       </RouterLink>
+      </template>
     </nav>
     <div class="drawer__foot">
       <a href="/" target="_blank" rel="noopener" class="btn btn--ghost btn--block">
@@ -53,6 +54,17 @@ const { rest, isActive, logout, user } = useAdminNav()
 
   &__grid {
     @include flex-cards(130px, 0.6rem);
+  }
+
+  // Encabezado de sección (Finanzas, Comercial): ocupa toda la fila de la grilla.
+  &__group {
+    flex: 1 1 100% !important;
+    margin-top: 0.5rem;
+    font-size: $text-xs;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $ink-muted;
   }
 
   // Cascada al abrir (la hoja ya sube; los accesos aparecen detrás, 30 ms cada uno).

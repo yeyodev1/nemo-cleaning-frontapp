@@ -3,6 +3,7 @@ import type {
   CashReport,
   Expense,
   ExpenseCategory,
+  ExpenseKind,
   IncomeStatement,
   Paginated,
   PaidFrom,
@@ -15,15 +16,21 @@ export interface ExpenseFilters {
   to?: string
   category?: ExpenseCategory | ''
   paidFrom?: PaidFrom | ''
+  kind?: ExpenseKind | ''
   page?: number
   limit?: number
 }
 
 export type ExpenseInput = Omit<Expense, '_id' | 'createdAt' | 'createdBy'>
 
+export interface ExpensePage extends Paginated<Expense> {
+  totalAmount: number
+  totals?: { fixed: number; variable: number; pettyCash: number; management: number }
+}
+
 class FinanceService extends APIBase {
   expenses(q: ExpenseFilters) {
-    return this.get<Paginated<Expense>>('admin/expenses', { ...q })
+    return this.get<ExpensePage>('admin/expenses', { ...q })
   }
 
   createExpense(body: ExpenseInput) {
@@ -34,8 +41,9 @@ class FinanceService extends APIBase {
     return this.patch<Expense>(`admin/expenses/${id}`, body)
   }
 
-  deleteExpense(id: string) {
-    return this.delete<{ ok?: boolean }>(`admin/expenses/${id}`)
+  /** `series` borra todas las cuotas de un diferido. */
+  deleteExpense(id: string, series = false) {
+    return this.delete<{ ok?: boolean; deleted?: number }>(`admin/expenses/${id}${series ? '?scope=series' : ''}`)
   }
 
   incomeStatement(month: string, branch?: string) {

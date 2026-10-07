@@ -1,196 +1,143 @@
 <script setup lang="ts">
 import { computed, ref, toRef } from 'vue'
+import KpiCard from '@/components/admin/common/KpiCard.vue'
+import SegTabs from '@/components/admin/finance/SegTabs.vue'
+import ConfirmSheet from '@/components/admin/sheet/ConfirmSheet.vue'
+import KpiRow from '@/components/admin/sheet/KpiRow.vue'
+import MonthNav from '@/components/admin/sheet/MonthNav.vue'
+import PageIntro from '@/components/admin/sheet/PageIntro.vue'
+import CashTable from '@/components/admin/cash/CashTable.vue'
+import MovementForm from '@/components/admin/cash/MovementForm.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { financeService } from '@/services/finance.service'
+import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
+import { useToastStore } from '@/stores/toast'
 import { useReport } from '@/composables/admin/useReport'
-import { expenseCategory, paymentMethod } from '@/config/labels'
-import { addDays, longDate, money, todayISO } from '@/utils/format'
-import type { PaymentMethod } from '@/types/api'
+import { addDays, errorMessage, longDate, money, monthISO, monthRange, todayISO } from '@/utils/format'
+import type { CashRow } from '@/types/finance'
 
 const scope = useAdminScope()
+const toast = useToastStore()
+const mode = ref('day')
 const date = ref(todayISO())
+const month = ref(monthISO())
 const branch = toRef(scope, 'branch')
-const { data, loading } = useReport(() => financeService.cash(date.value, scope.query), [date, branch])
+const range = computed(() => (mode.value === 'day' ? { from: date.value, to: date.value } : monthRange(month.value)))
+const { data, loading, load } = useReport(() => ledgerService.cash(range.value.from, range.value.to, scope.query), [range, branch])
+const branchLabel = computed(() => scope.branchName(scope.branch) || 'Todas las sucursales (suma de cajas)')
 
-const methods: PaymentMethod[] = ['cash', 'transfer', 'card']
-const byMethod = (m: PaymentMethod) => data.value?.income?.byMethod?.[m] || 0
-const isToday = computed(() => date.value === todayISO())
+const formOpen = ref(false)
+function onSaved() {
+  formOpen.value = false
+  load()
+}
+const toDelete = ref<CashRow | null>(null)
+const deleting = ref(false)
+async function confirmDelete() {
+  if (!toDelete.value) return
+  deleting.value = true
+  try {
+    await ledgerService.deleteMovement(toDelete.value.id)
+    toast.success('Movimiento eliminado')
+    toDelete.value = null
+    load()
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    deleting.value = false
+  }
+}
 const print = () => window.print()
-const branchLabel = computed(() => scope.branchName(scope.branch) || 'Todas las sucursales')
 </script>
 
 <template>
-  <section class="cash">
+  <section class="cash" :class="{ 'is-stale': loading && !!data }" :aria-busy="loading">
+    <PageIntro text="Registro de caja como en el Excel: saldo inicial, ingresos, egresos y saldo acumulado. Los cobros en efectivo y los gastos de caja menor entran solos.">
+      <button type="button" class="btn btn--ghost" @click="print"><AppIcon name="file" /> Imprimir</button>
+      <button type="button" class="btn btn--primary" @click="formOpen = true"><AppIcon name="plus" /> Movimiento</button>
+    </PageIntro>
+
+    <SegTabs v-model="mode" :tabs="[{ value: 'day', label: 'Por día' }, { value: 'month', label: 'Mes completo' }]" />
     <div class="nav">
-      <button type="button" class="btn btn--ghost btn--icon" aria-label="Día anterior" @click="date = addDays(date, -1)">
-        <AppIcon name="chevron-left" />
-      </button>
-      <label class="nav__date">
-        <span class="sr-only">Fecha</span>
-        <input v-model="date" type="date" />
-      </label>
-      <button type="button" class="btn btn--ghost btn--icon" aria-label="Día siguiente" @click="date = addDays(date, 1)">
-        <AppIcon name="chevron-right" />
-      </button>
-      <button v-if="!isToday" type="button" class="btn btn--soft btn--sm" @click="date = todayISO()">Hoy</button>
-      <button type="button" class="btn btn--ghost btn--sm nav__print" @click="print"><AppIcon name="file" /> Imprimir</button>
+      <template v-if="mode === 'day'">
+        <button type="button" class="btn btn--ghost btn--icon" aria-label="Día anterior" @click="date = addDays(date, -1)"><AppIcon name="chevron-left" /></button>
+        <label class="nav__date"><span class="sr-only">Fecha</span><input v-model="date" type="date" /></label>
+        <button type="button" class="btn btn--ghost btn--icon" aria-label="Día siguiente" @click="date = addDays(date, 1)"><AppIcon name="chevron-right" /></button>
+        <button v-if="date !== todayISO()" type="button" class="btn btn--soft btn--sm" @click="date = todayISO()">Hoy</button>
+      </template>
+      <MonthNav v-else v-model="month" class="nav__month" />
     </div>
+    <p class="head">{{ mode === 'day' ? longDate(date) : 'Mes completo' }} · {{ branchLabel }}</p>
 
-    <header class="head">
-      <h2>Registro de caja</h2>
-      <p>{{ longDate(date) }} · {{ branchLabel }}</p>
-    </header>
-
-    <div v-if="loading && !data" class="grid"><span v-for="i in 3" :key="i" class="skeleton" style="height: 110px"></span></div>
+    <div v-if="loading && !data" class="skeleton" style="height: 280px"></div>
     <template v-else-if="data">
-      <div class="grid">
-        <article class="box">
-          <h3>Cobros del día</h3>
-          <ul class="lines">
-            <li v-for="m in methods" :key="m"><span>{{ paymentMethod[m] }}</span><strong class="money">{{ money(byMethod(m)) }}</strong></li>
-          </ul>
-          <p class="box__total"><span>Total cobrado</span><strong class="money">{{ money(data.income?.total) }}</strong></p>
-        </article>
-
-        <article class="box">
-          <h3>Gastos de caja menor</h3>
-          <ul v-if="data.pettyCashExpenses?.items?.length" class="lines">
-            <li v-for="e in data.pettyCashExpenses.items" :key="e._id">
-              <span>{{ e.description }} <small>· {{ expenseCategory[e.category] || e.category }}</small></span>
-              <strong class="money">− {{ money(e.amount) }}</strong>
-            </li>
-          </ul>
-          <p v-else class="muted box__none">Sin gastos de caja menor.</p>
-          <p class="box__total"><span>Total gastos</span><strong class="money">{{ money(data.pettyCashExpenses?.total) }}</strong></p>
-        </article>
-      </div>
-
-      <article class="balance">
-        <span>Efectivo cobrado − gastos de caja menor</span>
-        <strong class="money">{{ money(data.balance) }}</strong>
-        <small>Saldo del día</small>
-      </article>
+      <KpiRow>
+        <KpiCard label="Saldo inicial" :value="money(data.opening)" icon="wallet" />
+        <KpiCard label="Ingresos" :value="money(data.totalIn)" icon="arrow-right" tone="success" :hint="`Producción en efectivo ${money(data.production)}`" />
+        <KpiCard label="Egresos" :value="money(data.totalOut)" icon="arrow-left" tone="danger" :hint="`Caja menor ${money(data.pettyCash)}`" />
+        <KpiCard label="Saldo en caja" :value="money(data.closing)" icon="cash" :tone="data.closing < 0 ? 'danger' : 'aqua'" hint="Debe coincidir con lo que hay físicamente" />
+      </KpiRow>
+      <CashTable :data="data" :show-date="mode === 'month'" @remove="toDelete = $event" />
     </template>
-    <p v-else class="empty">No se pudo cargar el registro de caja.</p>
+
+    <MovementForm :open="formOpen" :date="mode === 'day' ? date : todayISO()" @close="formOpen = false" @saved="onSaved" />
+    <ConfirmSheet
+      :open="!!toDelete"
+      title="Eliminar movimiento"
+      :message="toDelete ? `Se quitará el movimiento «${toDelete.detail || 'sin detalle'}» y el saldo se recalcula.` : ''"
+      confirm-label="Eliminar"
+      danger
+      :busy="deleting"
+      @close="toDelete = null"
+      @confirm="confirmDelete"
+    />
   </section>
 </template>
 
 <style scoped lang="scss">
+// Mientras llega el mes/periodo nuevo, lo anterior se atenúa para no confundirlo con lo actual.
+.is-stale :deep(.kpis),
+.is-stale :deep(.sheet-wrap),
+.is-stale :deep(.rows),
+.is-stale :deep(.grid) {
+  opacity: 0.45;
+  transition: opacity $dur-fast ease;
+  pointer-events: none;
+}
+
 .nav {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.6rem;
 
   &__date {
     flex: 1 1 150px;
+    max-width: 240px;
   }
 
-  &__print {
-    margin-left: auto;
+  &__month {
+    flex: 1 1 260px;
+    max-width: 360px;
   }
 }
 
 .head {
+  color: $ink-muted;
+  font-size: $text-sm;
   margin-bottom: 1rem;
 
-  h2 {
-    font-size: $text-xl;
-  }
-
-  p {
-    color: $ink-muted;
-    font-size: $text-sm;
-
-    &::first-letter {
-      text-transform: uppercase;
-    }
-  }
-}
-
-.grid {
-  @include flex-cards(300px, 0.85rem);
-}
-
-.box {
-  @include card(1rem 1.1rem);
-
-  h3 {
-    font-size: $text-base;
-    margin-bottom: 0.6rem;
-  }
-
-  &__none {
-    font-size: $text-sm;
-    padding: 0.5rem 0;
-  }
-
-  &__total {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.6rem;
-    padding-top: 0.6rem;
-    border-top: 1px dashed $line-strong;
-    font-weight: 800;
-  }
-}
-
-.lines {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-
-  li {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    font-size: $text-sm;
-  }
-
-  small {
-    color: $ink-muted;
-  }
-}
-
-.balance {
-  margin-top: 0.85rem;
-  border-radius: $radius-md;
-  padding: 1.2rem;
-  background: linear-gradient(135deg, $navy-deep, $navy);
-  color: $on-dark-soft;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: $text-sm;
-
-  strong {
-    color: #fff;
-    font-size: $display-sm;
-    letter-spacing: -0.02em;
+  &::first-letter {
+    text-transform: uppercase;
   }
 }
 
 @media print {
-  .nav {
+  .nav,
+  :deep(.intro__actions),
+  :deep(.seg) {
     display: none;
-  }
-
-  .box,
-  .balance {
-    break-inside: avoid;
-  }
-
-  .balance {
-    background: none;
-    color: $ink;
-    border: 2px solid $ink;
-
-    strong {
-      color: $ink;
-    }
   }
 }
 </style>

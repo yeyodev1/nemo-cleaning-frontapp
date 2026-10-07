@@ -293,8 +293,26 @@ export type ExpenseCategory =
   | 'marketing'
   | 'impuestos'
   | 'otros'
+  // Fase 2: categorías reales del Excel de gerencia.
+  | 'combustible'
+  | 'quimicos'
+  | 'anticipos'
+  | 'usuarios_adicionales'
+  | 'importaciones'
+  | 'productos_importados'
+  | 'recargas'
+  | 'propinas'
+  | 'internet'
+  | 'luz'
+  | 'agua'
+  | 'gastos_mecanicos'
+  | 'rodapies'
+  | 'reparaciones'
+  | 'uniformes'
+  | 'imprevistos'
 
 export type PaidFrom = 'petty_cash' | 'management'
+export type ExpenseKind = 'variable' | 'fixed'
 
 export interface Expense {
   _id: ID
@@ -309,6 +327,12 @@ export interface Expense {
   receiptUrl?: string
   createdBy?: PersonRef
   createdAt: string
+  /** Fase 2: fijo / variable, recurrente, diferido en cuotas y colaborador (anticipos). */
+  kind?: ExpenseKind
+  recurring?: boolean
+  seriesKey?: string
+  installment?: { number: number; count: number; totalAmount: number } | null
+  employee?: ID | null
 }
 
 // ---------- Oficinas ----------

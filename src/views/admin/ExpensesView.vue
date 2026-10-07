@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, toRef, watch } from 'vue'
-import AppIcon from '@/components/ui/AppIcon.vue'
-import StatusBadge from '@/components/ui/StatusBadge.vue'
+import KpiCard from '@/components/admin/common/KpiCard.vue'
 import Pagination from '@/components/admin/common/Pagination.vue'
 import FilterBar from '@/components/admin/finance/FilterBar.vue'
 import ExpenseForm from '@/components/admin/finance/ExpenseForm.vue'
+import ExpenseItem from '@/components/admin/finance/ExpenseItem.vue'
+import ConfirmSheet from '@/components/admin/sheet/ConfirmSheet.vue'
+import EmptyState from '@/components/admin/sheet/EmptyState.vue'
+import KpiRow from '@/components/admin/sheet/KpiRow.vue'
+import MonthNav from '@/components/admin/sheet/MonthNav.vue'
+import PageIntro from '@/components/admin/sheet/PageIntro.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { usePagedList } from '@/composables/admin/usePagedList'
-import { financeService, type ExpenseFilters } from '@/services/finance.service'
+import { financeService, type ExpenseFilters, type ExpensePage } from '@/services/finance.service'
+import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
-import { expenseCategory, options, paidFrom, paymentMethod } from '@/config/labels'
-import { errorMessage, money, monthISO, monthRange, shortDate } from '@/utils/format'
+import { expenseCategory, options, paidFrom } from '@/config/labels'
+import { expenseKind } from '@/config/financeLabels'
+import { errorMessage, money, monthISO, monthRange } from '@/utils/format'
 import type { Expense } from '@/types/api'
 
 const scope = useAdminScope()
@@ -19,20 +27,23 @@ const user = useUserStore()
 const toast = useToastStore()
 const month = ref(monthISO())
 const branch = toRef(scope, 'branch')
+const summary = ref<ExpensePage | null>(null)
 
-const initial: ExpenseFilters = { ...monthRange(month.value), category: '', paidFrom: '' }
+const initial: ExpenseFilters = { ...monthRange(month.value), category: '', paidFrom: '', kind: '' }
 const { filters, items, page, pages, total, loading, load } = usePagedList(
-  (q) => financeService.expenses({ ...q, branch: scope.query, paidFrom: user.isAdmin ? q.paidFrom : 'petty_cash', limit: 50 }),
+  async (q) => {
+    const res = await financeService.expenses({ ...q, branch: scope.query, paidFrom: user.isAdmin ? q.paidFrom : 'petty_cash', limit: 50 })
+    summary.value = res
+    return res
+  },
   initial,
   [branch],
 )
 watch(month, (m) => m && Object.assign(filters, monthRange(m)))
 onMounted(() => load(1))
-
-// Totales de la página visible (el API no manda agregados en la lista).
-const sumBy = (k: Expense['paidFrom']) => items.value.filter((e) => e.paidFrom === k).reduce((s, e) => s + e.amount, 0)
-const petty = computed(() => sumBy('petty_cash'))
-const mgmt = computed(() => sumBy('management'))
+const t = computed(() => summary.value?.totals)
+const employeeName = (id?: string | null) => (id ? scope.operators.find((o) => o._id === id)?.name || 'Colaborador' : '')
+const branchName = (id: string | null) => (id ? scope.branchName(id) || 'Sucursal' : 'General')
 
 const formOpen = ref(false)
 const editing = ref<Expense | null>(null)
@@ -45,36 +56,75 @@ function onSaved() {
   load()
 }
 
-async function remove(e: Expense) {
-  if (!window.confirm(`¿Eliminar el gasto "${e.description}" por ${money(e.amount)}?`)) return
+const toDelete = ref<Expense | null>(null)
+const deleteSeries = ref(false)
+const deleting = ref(false)
+function askDelete(e: Expense) {
+  deleteSeries.value = false
+  toDelete.value = e
+}
+async function confirmDelete() {
+  const e = toDelete.value
+  if (!e) return
+  deleting.value = true
   try {
-    await financeService.deleteExpense(e._id)
-    toast.success('Gasto eliminado')
+    const r = await financeService.deleteExpense(e._id, deleteSeries.value)
+    toast.success(deleteSeries.value ? `Se eliminaron ${r.deleted ?? ''} cuotas del diferido` : 'Gasto eliminado')
+    toDelete.value = null
     load()
   } catch (err) {
     toast.error(errorMessage(err))
+  } finally {
+    deleting.value = false
+  }
+}
+
+const repeating = ref(false)
+async function repeatFixed() {
+  repeating.value = true
+  try {
+    const r = await ledgerService.repeatFixed(month.value, scope.query)
+    if (r.created) toast.success(`Listo: se copiaron ${r.created} gastos fijos (${r.names.join(', ')})`)
+    else toast.info(r.skipped ? 'Los gastos fijos de este mes ya estaban cargados' : 'El mes anterior no tiene gastos fijos que se repitan')
+    load(1)
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    repeating.value = false
   }
 }
 </script>
 
 <template>
   <section>
-    <div class="top">
-      <div class="totals">
-        <div class="totals__item"><span>Caja menor</span><strong class="money">{{ money(petty) }}</strong></div>
-        <div v-if="user.isAdmin" class="totals__item"><span>Gerencia</span><strong class="money">{{ money(mgmt) }}</strong></div>
-        <div class="totals__item totals__item--all"><span>Total</span><strong class="money">{{ money(petty + mgmt) }}</strong></div>
-      </div>
+    <PageIntro text="Todo lo que se gasta: caja menor y gerencia, fijos y variables, diferidos en cuotas y anticipos al personal (se descuentan en Nómina).">
+      <button v-if="user.isAdmin" type="button" class="btn btn--ghost" :disabled="repeating" @click="repeatFixed">
+        <AppIcon name="refresh" /> {{ repeating ? 'Copiando…' : 'Repetir gastos fijos' }}
+      </button>
       <button type="button" class="btn btn--primary" @click="openForm(null)"><AppIcon name="plus" /> Nuevo gasto</button>
-    </div>
+    </PageIntro>
+
+    <KpiRow>
+      <KpiCard label="Total del mes" :value="money(summary?.totalAmount)" icon="receipt" :hint="`${total} gastos`" />
+      <KpiCard label="Variables" :value="money(t?.variable)" icon="chart" tone="warning" hint="Incluye anticipos y propinas" />
+      <KpiCard label="Fijos" :value="money(t?.fixed)" icon="calendar" tone="aqua" />
+      <KpiCard label="Caja menor" :value="money(t?.pettyCash)" icon="cash" :hint="user.isAdmin ? `Gerencia ${money(t?.management)}` : undefined" />
+    </KpiRow>
 
     <FilterBar>
-      <label class="field"><span class="field__label">Mes</span><input v-model="month" type="month" /></label>
+      <MonthNav v-model="month" class="month" />
       <label class="field">
         <span class="field__label">Categoría</span>
         <select v-model="filters.category">
           <option value="">Todas</option>
           <option v-for="o in options(expenseCategory)" :key="o.value" :value="o.value">{{ o.label }}</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label">Tipo</span>
+        <select v-model="filters.kind">
+          <option value="">Fijos y variables</option>
+          <option v-for="o in options(expenseKind)" :key="o.value" :value="o.value">{{ o.label }}</option>
         </select>
       </label>
       <label v-if="user.isAdmin" class="field">
@@ -86,96 +136,34 @@ async function remove(e: Expense) {
       </label>
     </FilterBar>
 
-    <div v-if="loading && !items.length" class="rows"><span v-for="i in 5" :key="i" class="skeleton" style="height: 68px"></span></div>
-    <p v-else-if="!items.length" class="empty">No hay gastos registrados en este periodo.</p>
-    <ul v-else class="rows">
-      <li v-for="e in items" :key="e._id" class="exp">
-        <div class="exp__main">
-          <strong>{{ e.description }}</strong>
-          <span class="exp__meta">
-            {{ shortDate(e.date) }} · {{ expenseCategory[e.category] }} · {{ paymentMethod[e.paymentMethod] }}
-            <template v-if="e.supplier"> · {{ e.supplier }}</template>
-            · {{ e.branch ? scope.branchName(e.branch) || 'Sucursal' : 'General' }}
-          </span>
-          <span class="exp__tags">
-            <StatusBadge :tone="e.paidFrom === 'petty_cash' ? 'aqua' : 'navy'" :label="paidFrom[e.paidFrom]" />
-            <a v-if="e.receiptUrl" :href="e.receiptUrl" target="_blank" rel="noopener" class="exp__receipt"><AppIcon name="file" :size="14" /> Recibo</a>
-          </span>
-        </div>
-        <div class="exp__end">
-          <strong class="money">{{ money(e.amount) }}</strong>
-          <span class="exp__actions">
-            <button type="button" class="btn btn--ghost btn--icon" aria-label="Editar gasto" @click="openForm(e)"><AppIcon name="edit" :size="18" /></button>
-            <button type="button" class="btn btn--danger btn--icon" aria-label="Eliminar gasto" @click="remove(e)"><AppIcon name="trash" :size="18" /></button>
-          </span>
-        </div>
-      </li>
-    </ul>
+    <div v-if="loading && !items.length" class="rows"><span v-for="i in 5" :key="i" class="skeleton" style="height: 72px"></span></div>
+    <EmptyState v-else-if="!items.length" title="No hay gastos en este mes" text="Registra el primero. Si tienes gastos fijos del mes pasado (alquiler), usa «Repetir gastos fijos»." icon="receipt">
+      <button type="button" class="btn btn--primary" @click="openForm(null)"><AppIcon name="plus" /> Nuevo gasto</button>
+    </EmptyState>
+    <TransitionGroup v-else name="fade-up" tag="ul" class="rows">
+      <ExpenseItem v-for="e in items" :key="e._id" :e="e" :branch-name="branchName(e.branch)" :employee-name="employeeName(e.employee)" @edit="openForm(e)" @remove="askDelete(e)" />
+    </TransitionGroup>
     <Pagination :page="page" :pages="pages" :total="total" @go="load" />
 
     <ExpenseForm :open="formOpen" :expense="editing" @close="formOpen = false" @saved="onSaved" />
+    <ConfirmSheet
+      :open="!!toDelete"
+      title="Eliminar gasto"
+      :message="toDelete ? `«${toDelete.description}» por ${money(toDelete.amount)} se quitará de los reportes.` : ''"
+      confirm-label="Eliminar"
+      danger
+      :busy="deleting"
+      @close="toDelete = null"
+      @confirm="confirmDelete"
+    >
+      <label v-if="toDelete?.installment" class="check series">
+        <input v-model="deleteSeries" type="checkbox" /> Eliminar las {{ toDelete.installment.count }} cuotas de este diferido
+      </label>
+    </ConfirmSheet>
   </section>
 </template>
 
 <style scoped lang="scss">
-.top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-
-  > .btn {
-    flex: 1 1 100%;
-
-    @include from('md') {
-      flex: 0 0 auto;
-    }
-  }
-}
-
-.totals {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1 1 100%;
-
-  @include from('md') {
-    flex: 0 1 auto;
-  }
-
-  &__item {
-    @include card(0.6rem 0.85rem);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    font-size: $text-xs;
-    color: $ink-muted;
-    font-weight: 700;
-    white-space: nowrap;
-
-    // En escritorio el grupo se encoge al contenido: sin mínimo, "Caja menor" se partía en dos líneas.
-    @include from('md') {
-      min-width: 7.5rem;
-    }
-
-    strong {
-      color: $ink;
-      font-size: $text-base;
-    }
-
-    &--all {
-      background: $navy;
-      border-color: $navy;
-      color: $on-dark-soft;
-
-      strong {
-        color: #fff;
-      }
-    }
-  }
-}
-
 .rows {
   list-style: none;
   display: flex;
@@ -183,54 +171,16 @@ async function remove(e: Expense) {
   gap: 0.5rem;
 }
 
-.exp {
-  @include card(0.8rem 0.9rem);
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
+// El mes ocupa toda la fila en celular: "Septiembre de 2026" no cabe en media columna.
+.month {
+  flex: 1 1 100% !important;
 
-  &__main {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-
-    strong {
-      font-size: $text-sm;
-    }
+  @include from('md') {
+    flex: 1 1 280px !important;
   }
+}
 
-  &__meta {
-    font-size: $text-xs;
-    color: $ink-muted;
-  }
-
-  &__tags {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__receipt {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: $text-xs;
-    font-weight: 700;
-    color: $navy;
-  }
-
-  &__end {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.4rem;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 0.35rem;
-  }
+.series {
+  margin-top: 0.75rem;
 }
 </style>

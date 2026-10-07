@@ -14,16 +14,17 @@ const { items, isActive, logout, user } = useAdminNav()
       <span class="side__tag">Panel</span>
     </RouterLink>
     <nav class="side__nav">
-      <RouterLink
-        v-for="i in items"
-        :key="i.to"
-        :to="i.to"
-        class="side__link"
-        :class="{ 'is-active': isActive(i.to) }"
-        :aria-current="isActive(i.to) ? 'page' : undefined"
-      >
-        <AppIcon :name="i.icon" :size="19" /> {{ i.label }}
-      </RouterLink>
+      <template v-for="(i, n) in items" :key="i.to">
+        <span v-if="i.group && i.group !== items[n - 1]?.group" class="side__group">{{ i.group }}</span>
+        <RouterLink
+          :to="i.to"
+          class="side__link"
+          :class="{ 'is-active': isActive(i.to) }"
+          :aria-current="isActive(i.to) ? 'page' : undefined"
+        >
+          <AppIcon :name="i.icon" :size="19" /> {{ i.label }}
+        </RouterLink>
+      </template>
     </nav>
     <div v-if="user.user" class="side__user">
       <span class="side__avatar">{{ user.user.name.charAt(0) }}</span>
@@ -79,6 +80,15 @@ const { items, isActive, logout, user } = useAdminNav()
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  &__group {
+    margin: 0.9rem 0.75rem 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(#fff, 0.45);
   }
 
   &__link {

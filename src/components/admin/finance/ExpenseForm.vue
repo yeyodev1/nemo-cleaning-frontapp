@@ -1,84 +1,23 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import FileDrop from '@/components/ui/FileDrop.vue'
 import MoneyField from './MoneyField.vue'
-import { financeService, type ExpenseInput } from '@/services/finance.service'
-import { useAdminScope } from '@/stores/adminScope'
-import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import { useUpload } from '@/composables/admin/useUpload'
+import { useExpenseForm } from '@/composables/finance/useExpenseForm'
 import { expenseCategory, options, paidFrom, paymentMethod } from '@/config/labels'
-import { errorMessage, todayISO } from '@/utils/format'
+import { expenseCategoryGroups } from '@/config/financeLabels'
 import type { Expense } from '@/types/api'
 
 const props = defineProps<{ open: boolean; expense: Expense | null }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
-const scope = useAdminScope()
-const user = useUserStore()
 const toast = useToastStore()
 const { uploading, upload } = useUpload()
-const saving = ref(false)
-
-function blank(): ExpenseInput {
-  return {
-    branch: scope.branch || (user.isAdmin ? null : scope.visibleBranches[0]?._id || null),
-    date: todayISO(),
-    category: 'insumos',
-    description: '',
-    amount: 0,
-    paymentMethod: 'cash',
-    paidFrom: 'petty_cash',
-    supplier: '',
-    receiptUrl: '',
-  }
-}
-
-const form = reactive<ExpenseInput>(blank())
-
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return
-    const e = props.expense
-    Object.assign(
-      form,
-      e
-        ? {
-            branch: e.branch ?? null,
-            date: e.date.slice(0, 10),
-            category: e.category,
-            description: e.description,
-            amount: e.amount,
-            paymentMethod: e.paymentMethod,
-            paidFrom: e.paidFrom,
-            supplier: e.supplier || '',
-            receiptUrl: e.receiptUrl || '',
-          }
-        : blank(),
-    )
-  },
-)
+const { form, saving, save, isAdvance, deferredHint, scope, user } = useExpenseForm(props, () => emit('saved'))
 
 async function onFile(file: File) {
   const url = await upload(file)
   if (url) form.receiptUrl = url
-}
-
-async function save() {
-  if (form.amount <= 0) return toast.error('Ingresa un monto mayor a cero')
-  saving.value = true
-  try {
-    const body = { ...form, paidFrom: user.isAdmin ? form.paidFrom : 'petty_cash' } as ExpenseInput
-    if (props.expense) await financeService.updateExpense(props.expense._id, body)
-    else await financeService.createExpense(body)
-    toast.success(props.expense ? 'Gasto actualizado' : 'Gasto registrado')
-    emit('saved')
-  } catch (e) {
-    toast.error(errorMessage(e))
-  } finally {
-    saving.value = false
-  }
 }
 </script>
 
@@ -86,20 +25,30 @@ async function save() {
   <BaseSheet :open="open" :title="expense ? 'Editar gasto' : 'Nuevo gasto'" @close="emit('close')">
     <form id="expense-form" class="form" @submit.prevent="save">
       <div class="form-row">
-        <label class="field"><span class="field__label">Fecha</span><input v-model="form.date" type="date" required /></label>
-        <MoneyField v-model="form.amount" label="Monto" required />
-      </div>
-      <label class="field">
-        <span class="field__label">Descripción</span>
-        <input v-model="form.description" type="text" required maxlength="160" placeholder="Ej. Shampoo para tapicería" />
-      </label>
-      <div class="form-row">
         <label class="field">
           <span class="field__label">Categoría</span>
           <select v-model="form.category">
-            <option v-for="o in options(expenseCategory)" :key="o.value" :value="o.value">{{ o.label }}</option>
+            <optgroup v-for="g in expenseCategoryGroups" :key="g.label" :label="g.label">
+              <option v-for="c in g.items" :key="c" :value="c">{{ expenseCategory[c] }}</option>
+            </optgroup>
           </select>
         </label>
+        <MoneyField v-model="form.amount" :label="form.deferred ? 'Monto total del diferido' : 'Monto'" required />
+      </div>
+      <label class="field">
+        <span class="field__label">Descripción</span>
+        <input v-model="form.description" type="text" required maxlength="160" :placeholder="form.deferred ? 'Ej. moto, maquinaria Karcher' : 'Ej. Gasolina moto Sebastián'" />
+      </label>
+      <label v-if="isAdvance" class="field">
+        <span class="field__label">¿A quién se le dio el anticipo?</span>
+        <select v-model="form.employee" required>
+          <option :value="null">Elige…</option>
+          <option v-for="o in scope.operators" :key="o._id" :value="o._id">{{ o.name }}</option>
+        </select>
+        <span class="field__hint">Se descuenta solo de su nómina del mes.</span>
+      </label>
+      <div class="form-row">
+        <label class="field"><span class="field__label">{{ form.deferred ? 'Fecha de la primera cuota' : 'Fecha' }}</span><input v-model="form.date" type="date" required /></label>
         <label class="field">
           <span class="field__label">Sucursal</span>
           <select v-model="form.branch">
@@ -108,6 +57,29 @@ async function save() {
           </select>
         </label>
       </div>
+
+      <div class="kind" role="radiogroup" aria-label="Tipo de gasto">
+        <label class="kind__opt" :class="{ 'is-on': form.kind === 'variable' }"><input v-model="form.kind" type="radio" value="variable" /> <strong>Variable</strong><small>Cambia cada mes</small></label>
+        <label class="kind__opt" :class="{ 'is-on': form.kind === 'fixed' }"><input v-model="form.kind" type="radio" value="fixed" /> <strong>Fijo</strong><small>Alquiler, cuotas fijas</small></label>
+      </div>
+      <label v-if="form.kind === 'fixed' && !form.deferred" class="check">
+        <input v-model="form.recurring" type="checkbox" /> Se repite cada mes (aparece en «Repetir gastos fijos»)
+      </label>
+
+      <template v-if="!expense">
+        <label class="check"><input v-model="form.deferred" type="checkbox" /> Es un diferido (se paga en cuotas mensuales)</label>
+        <div v-if="form.deferred" class="form-row">
+          <label class="field"><span class="field__label">Número de cuotas</span><input v-model.number="form.count" type="number" min="2" max="60" /></label>
+          <label class="field">
+            <span class="field__label">Empieza en la cuota</span>
+            <input v-model.number="form.first" type="number" min="1" :max="form.count" />
+            <span class="field__hint">Si ya venías pagándolo (ej. 10 de 12).</span>
+          </label>
+        </div>
+        <p v-if="deferredHint" class="hint">{{ deferredHint }}</p>
+      </template>
+      <p v-else-if="expense.installment" class="hint">Cuota {{ expense.installment.number }} de {{ expense.installment.count }}: los cambios solo afectan a esta cuota.</p>
+
       <div class="form-row">
         <label class="field">
           <span class="field__label">Pagado desde</span>
@@ -122,6 +94,7 @@ async function save() {
           </select>
         </label>
       </div>
+      <p v-if="form.paidFrom === 'petty_cash' && form.paymentMethod === 'cash'" class="hint">Sale solo del registro de caja de la sucursal.</p>
       <label class="field">
         <span class="field__label">Proveedor (opcional)</span>
         <input v-model="form.supplier" type="text" maxlength="120" />
@@ -145,5 +118,50 @@ async function save() {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+}
+
+.hint {
+  font-size: $text-sm;
+  color: $info;
+  background: $info-bg;
+  padding: 0.55rem 0.75rem;
+  border-radius: $radius-sm;
+}
+
+.kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+
+  &__opt {
+    display: flex;
+    flex-direction: column;
+    padding: 0.65rem 0.8rem;
+    border: 1.5px solid $line-strong;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition: border-color $dur-fast ease, background-color $dur-fast ease;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    small {
+      color: $ink-muted;
+      font-size: $text-xs;
+    }
+
+    &.is-on {
+      border-color: $navy;
+      background: $navy-soft;
+    }
+
+    &:focus-within {
+      outline: 2.5px solid $orange-deep;
+      outline-offset: 2px;
+    }
+  }
 }
 </style>
