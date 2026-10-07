@@ -98,6 +98,13 @@ Catálogo: variantes (tamaño/medida/plan), rangos (`priceMax`, se cobra el meno
   fuera de foco, vacío = null; `AddPersonSheet`) + `composables/admin/useMonthGrid.ts` (totales en vivo, estado
   guardando/guardado/error). Metas usan `MoneyCell` en `GoalCard` (`useGoalEntry`). La pestaña "Calculadora FEE
   (referencia)" no alimenta reportes: "Usar este valor" copia el FEE a la hoja manual.
+- **WhatsApp** (`utils/whatsapp.ts`: textos de los mensajes, `openWhatsApp` y `copyText`): en /reservar el método
+  "Coordinar y pagar por WhatsApp" crea el pedido y abre wa.me (en escritorio la pestaña se abre en el mismo clic, antes
+  del await; en el celular se navega); `BookingSuccess` + `WhatsappHandoff` dan el botón grande y copiar.
+  `CartWhatsappLink` manda el carrito sin crear pedido. Panel: `/admin/whatsapp` (bandeja con burbuja en el menú,
+  store `whatsappInbox` que consulta cada minuto, hoja `WaOrderSheet` con pago/operador/link de pago) y
+  `/admin/whatsapp/nuevo` (pedido rápido: teléfono primero, `ServiceLinePicker`). `WaTag` marca esos pedidos en listas,
+  agenda y Base. `moneyMethods` (labels) = métodos de pago sin "whatsapp" para pagos y gastos.
 - **Payphone (Cajita v2.0)**: `composables/booking/usePayphoneBox.ts` carga CSS+JS del CDN solo al pagar;
   `PayphoneBox.vue` lo enmarca; Payphone vuelve a `/pay-response?id=&clientTransactionId=` (URL configurada en Payphone, no en la Cajita) y
   `usePaymentConfirm.ts` llama a `/public/payphone/confirm` (idempotente).

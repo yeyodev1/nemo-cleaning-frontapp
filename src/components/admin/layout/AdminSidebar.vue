@@ -4,7 +4,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import { roleLabel } from '@/config/labels'
 import { useAdminNav } from './useAdminNav'
 
-const { items, isActive, logout, user } = useAdminNav()
+const { items, isActive, logout, user, badgeOf } = useAdminNav()
 </script>
 
 <template>
@@ -23,6 +23,9 @@ const { items, isActive, logout, user } = useAdminNav()
           :aria-current="isActive(i.to) ? 'page' : undefined"
         >
           <AppIcon :name="i.icon" :size="19" /> {{ i.label }}
+          <Transition name="fade">
+            <span v-if="badgeOf(i)" :key="badgeOf(i)" class="side__badge bump" :aria-label="`${badgeOf(i)} sin confirmar`">{{ badgeOf(i) }}</span>
+          </Transition>
         </RouterLink>
       </template>
     </nav>
@@ -116,6 +119,21 @@ const { items, isActive, logout, user } = useAdminNav()
         color: $orange;
       }
     }
+  }
+
+  &__badge {
+    margin-left: auto;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: $radius-pill;
+    background: $whatsapp;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &__user {

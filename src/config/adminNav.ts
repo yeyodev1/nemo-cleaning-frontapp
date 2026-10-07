@@ -12,6 +12,8 @@ export interface NavItem {
   short?: string
   /** Encabezado de sección en el menú (se pinta cuando cambia respecto al ítem anterior). */
   group?: string
+  /** Burbuja con un conteo en vivo (p. ej. pedidos por WhatsApp sin confirmar). */
+  badge?: 'whatsapp'
 }
 
 const AM: Role[] = ['admin', 'manager']
@@ -26,6 +28,7 @@ export const adminNav: NavItem[] = [
   { to: '/admin', label: 'Inicio', icon: 'grid', roles: AM, tab: true },
   // Operación (la Base, Calendario, Metas, FEE y Novedades del Excel)
   { to: '/admin/produccion/registrar', label: 'Registrar servicio', short: 'Registrar', icon: 'plus', roles: AM, tab: true, group: 'Operación' },
+  { to: '/admin/whatsapp', label: 'Pedidos por WhatsApp', short: 'WhatsApp', icon: 'whatsapp', roles: AM, group: 'Operación', badge: 'whatsapp' },
   { to: '/admin/produccion', label: 'Producción (Base)', short: 'Base', icon: 'layers', roles: AM, tab: true, group: 'Operación' },
   { to: '/admin/agenda', label: 'Agenda', icon: 'calendar', roles: AM, group: 'Operación' },
   { to: '/admin/pedidos', label: 'Pedidos', icon: 'list', roles: AM, group: 'Operación' },

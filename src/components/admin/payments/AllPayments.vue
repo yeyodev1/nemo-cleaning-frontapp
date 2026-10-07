@@ -7,7 +7,7 @@ import ProofLink from './ProofLink.vue'
 import { usePagedList } from '@/composables/admin/usePagedList'
 import { bookingsService, type PaymentFilters } from '@/services/bookings.service'
 import { useAdminScope } from '@/stores/adminScope'
-import { options, paymentMethod, paymentRecordStatus } from '@/config/labels'
+import { moneyMethods, options, paymentMethod, paymentRecordStatus } from '@/config/labels'
 import { dateTime, money } from '@/utils/format'
 
 const scope = useAdminScope()
@@ -35,7 +35,7 @@ onMounted(() => load(1))
         <span class="field__label">Método</span>
         <select v-model="filters.method">
           <option value="">Todos</option>
-          <option v-for="o in options(paymentMethod)" :key="o.value" :value="o.value">{{ o.label }}</option>
+          <option v-for="o in moneyMethods" :key="o.value" :value="o.value">{{ o.label }}</option>
         </select>
       </label>
       <label class="field"><span class="field__label">Desde</span><input v-model="filters.from" type="date" /></label>

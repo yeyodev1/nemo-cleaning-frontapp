@@ -55,7 +55,7 @@ async function onFile(file: File) {
         v-if="catalog.settings?.payphoneEnabled"
         type="button"
         class="btn btn--block"
-        :class="booking.paymentMethod === 'card' ? 'btn--primary btn--lg' : 'btn--ghost'"
+        :class="['card', 'whatsapp'].includes(booking.paymentMethod) ? 'btn--primary btn--lg' : 'btn--ghost'"
         @click="paying = true"
       >
         <AppIcon name="card" /> Pagar {{ money(due()) }} con tarjeta

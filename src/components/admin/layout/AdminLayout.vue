@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AdminSidebar from './AdminSidebar.vue'
 import AdminTabBar from './AdminTabBar.vue'
@@ -8,16 +8,22 @@ import BranchSelect from '../common/BranchSelect.vue'
 import NemoLogo from '@/components/brand/NemoLogo.vue'
 import { useAdminScope } from '@/stores/adminScope'
 import { useUserStore } from '@/stores/user'
+import { useWhatsappInbox } from '@/stores/whatsappInbox'
 
 const route = useRoute()
 const scope = useAdminScope()
 const user = useUserStore()
 const drawer = ref(false)
+const whatsapp = useWhatsappInbox()
 
 const title = computed(() => route.meta.title || 'Panel')
 onMounted(() => {
-  if (!user.isOperator) scope.load()
+  if (user.isOperator) return
+  scope.load()
+  whatsapp.start()
 })
+onBeforeUnmount(() => whatsapp.stop())
+watch(() => scope.branch, () => !user.isOperator && whatsapp.refresh())
 watch(() => route.path, () => (drawer.value = false))
 </script>
 

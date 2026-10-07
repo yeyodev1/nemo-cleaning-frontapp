@@ -19,7 +19,10 @@ export function useBookingWizard(heading: Readonly<Ref<HTMLElement | null>>) {
   const error = ref('')
   const isLast = computed(() => draft.step === STEPS.length)
   const title = computed(() => STEPS[draft.step - 1]?.title || '')
-  const actionLabel = computed(() => (isLast.value ? 'Confirmar reserva' : 'Continuar'))
+  const actionLabel = computed(() => {
+    if (!isLast.value) return 'Continuar'
+    return draft.paymentMethod === 'whatsapp' ? 'Confirmar y abrir WhatsApp' : 'Confirmar reserva'
+  })
 
   async function focusHeading() {
     await nextTick()

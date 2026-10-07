@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import StatusBadge from '@/components/ui/StatusBadge.vue'
+import WaTag from '@/components/admin/common/WaTag.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { paymentConfirmation } from '@/config/operationLabels'
 import { money, shortDate } from '@/utils/format'
@@ -15,7 +16,7 @@ const emit = defineEmits<{ select: [row: ProductionRow] }>()
     <li v-for="r in items" :key="r._id">
       <button type="button" class="pc__card" @click="emit('select', r)">
         <span class="pc__top">
-          <strong>{{ r.customer?.name || '—' }}</strong>
+          <strong>{{ r.customer?.name || '—' }} <WaTag v-if="r.source === 'whatsapp'" compact /></strong>
           <strong class="money">{{ money(r.total) }}</strong>
         </span>
         <span class="pc__meta">

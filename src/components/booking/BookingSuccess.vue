@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import AnimatedCheck from './AnimatedCheck.vue'
 import PayphoneBox from '@/components/payment/PayphoneBox.vue'
+import WhatsappHandoff from './WhatsappHandoff.vue'
+import { useBookingSubmit } from '@/composables/booking/useBookingSubmit'
 import { longDate, money } from '@/utils/format'
 import type { CreateBookingResult } from '@/types/api'
 import { useCustomerStore } from '@/stores/customer'
@@ -11,7 +13,9 @@ const props = defineProps<{ result: CreateBookingResult }>()
 const emit = defineEmits<{ again: [] }>()
 
 const customer = useCustomerStore()
+const { whatsappOpened } = useBookingSubmit()
 const b = computed(() => props.result.booking)
+const viaWhatsapp = computed(() => b.value.paymentMethod === 'whatsapp')
 const paying = ref(Boolean(props.result.payment) && props.result.booking.paymentMethod === 'card')
 const trackTo = computed(() => ({
   path: `/pedido/${b.value.code}`,
@@ -24,6 +28,7 @@ const trackUrl = computed(
 const next = computed(() => {
   if (b.value.paymentMethod === 'card')
     return 'Si no completaste el pago, puedes hacerlo desde el enlace de seguimiento.'
+  if (viaWhatsapp.value) return 'Te enviamos el resumen por correo. El pago lo coordinas con el asesor en WhatsApp.'
   if (b.value.paymentMethod === 'transfer')
     return 'Revisaremos tu comprobante y te confirmaremos por correo en breve.'
   return 'Paga en efectivo al equipo el día del servicio. Te enviamos el resumen por correo.'
@@ -47,7 +52,7 @@ const next = computed(() => {
 
     <template v-else>
       <AnimatedCheck />
-      <h1 class="done__title">¡Reserva recibida!</h1>
+      <h1 class="done__title">{{ viaWhatsapp ? '¡Pedido creado! Termínalo en WhatsApp' : '¡Reserva recibida!' }}</h1>
       <p class="done__code">{{ b.code }}</p>
       <dl class="done__facts">
         <div>
@@ -63,9 +68,10 @@ const next = computed(() => {
           <dd class="money">{{ money(b.total) }}</dd>
         </div>
       </dl>
+      <WhatsappHandoff v-if="viaWhatsapp" :result="result" :opened="whatsappOpened" />
       <p class="done__next"><AppIcon name="info" :size="18" /> {{ next }}</p>
       <div class="done__actions">
-        <RouterLink :to="trackTo" class="btn btn--primary btn--lg btn--block"
+        <RouterLink :to="trackTo" class="btn btn--block" :class="viaWhatsapp ? 'btn--ghost' : 'btn--primary btn--lg'"
           >Ir a mi pedido <AppIcon name="arrow-right"
         /></RouterLink>
         <button type="button" class="btn btn--ghost btn--block" @click="emit('again')">

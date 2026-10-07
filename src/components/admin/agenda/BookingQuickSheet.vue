@@ -37,7 +37,7 @@ async function save() {
 <template>
   <BaseSheet :open="Boolean(booking)" side :title="booking ? `${booking.code} · ${booking.time}` : ''" @close="emit('close')">
     <div v-if="booking" class="quick">
-      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
+      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" :source="booking.source" />
       <p class="quick__when">{{ longDate(booking.date) }}, {{ booking.time }}</p>
 
       <div class="quick__block">

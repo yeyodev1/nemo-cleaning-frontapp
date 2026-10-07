@@ -27,7 +27,7 @@ function branchName(b: Booking) {
       </span>
       <span class="row__items">{{ booking.items.map(itemLabel).join(', ') }}</span>
       <span class="row__meta">
-        <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
+        <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" :source="booking.source" />
         <span v-if="branchName(booking)" class="row__branch"><AppIcon name="store" :size="14" /> {{ branchName(booking) }}</span>
         <span v-for="o in booking.operators" :key="o._id" class="row__op">
           <span class="row__dot" :style="{ background: o.color || '#1E2D3A' }"></span>{{ o.name }}

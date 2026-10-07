@@ -50,7 +50,13 @@ export const paymentMethod: Record<PaymentMethod, string> = {
   card: 'Tarjeta',
   cash: 'Efectivo',
   transfer: 'Transferencia',
+  whatsapp: 'Por coordinar (WhatsApp)',
 }
+
+/** Métodos con los que entra dinero (un pago o gasto nunca es "por coordinar"). */
+export const moneyMethods = (Object.keys(paymentMethod) as PaymentMethod[])
+  .filter((m) => m !== 'whatsapp')
+  .map((value) => ({ value, label: paymentMethod[value] }))
 
 export const serviceCategory: Record<ServiceCategory, string> = {
   autos: 'Autos',

@@ -3,7 +3,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import { useAdminNav } from './useAdminNav'
 
 const emit = defineEmits<{ more: [] }>()
-const { tabs, isActive } = useAdminNav()
+const { tabs, isActive, restBadge } = useAdminNav()
 </script>
 
 <template>
@@ -21,8 +21,11 @@ const { tabs, isActive } = useAdminNav()
       </span>
       <span>{{ t.short || t.label }}</span>
     </RouterLink>
-    <button type="button" class="tabs__item" @click="emit('more')">
-      <AppIcon name="menu" :size="22" />
+    <button type="button" class="tabs__item" :aria-label="restBadge ? `Más: ${restBadge} pedidos por WhatsApp sin confirmar` : 'Más'" @click="emit('more')">
+      <span class="tabs__more">
+        <AppIcon name="menu" :size="22" />
+        <span v-if="restBadge" :key="restBadge" class="tabs__badge bump">{{ restBadge }}</span>
+      </span>
       <span>Más</span>
     </button>
   </nav>
@@ -59,6 +62,29 @@ const { tabs, isActive } = useAdminNav()
 
   &__item:active &__icon--cta {
     transform: scale(0.92);
+  }
+
+  &__more {
+    position: relative;
+    display: inline-flex;
+  }
+
+  &__badge {
+    position: absolute;
+    top: -6px;
+    right: -12px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: $radius-pill;
+    background: $whatsapp;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px #fff;
   }
 
   &__item {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppIcon from '@/components/ui/AppIcon.vue'
+import CartWhatsappLink from './CartWhatsappLink.vue'
 import { useQuote } from '@/composables/booking/useQuote'
 import { money } from '@/utils/format'
 
@@ -17,6 +18,7 @@ const { total, count, calculating } = useQuote()
         <span class="bar__count">{{ count }} {{ count === 1 ? 'servicio' : 'servicios' }}</span>
         <strong :key="total" class="bar__total money bump">{{ money(total) }}</strong>
         <span v-if="calculating" class="bar__calc">calculando…</span>
+        <CartWhatsappLink v-else compact />
       </div>
       <p v-else key="empty" class="bar__empty">Arma tu pedido</p>
     </Transition>

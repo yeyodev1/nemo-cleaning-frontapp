@@ -140,7 +140,10 @@ export type BookingStatus =
   | 'cancelled'
   | 'no_show'
 
-export type PaymentMethod = 'card' | 'cash' | 'transfer'
+/** 'whatsapp' = pago por coordinar por WhatsApp (solo en el pedido; un Payment siempre es card/cash/transfer). */
+export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'whatsapp'
+/** 'whatsapp' = terminó en el chat (web con "Coordinar por WhatsApp" o pedido rápido del panel). */
+export type BookingSource = 'web' | 'admin' | 'import' | 'whatsapp'
 export type PaymentStatus = 'pending' | 'review' | 'partial' | 'paid' | 'refunded'
 
 export interface BookingItem {
@@ -189,8 +192,8 @@ export interface Booking {
   code: string
   branch: ID | Branch
   customer: CustomerRef
-  /** 'import' = fila del Excel histórico (código HIS-…). */
-  source: 'web' | 'admin' | 'import'
+  /** 'import' = fila del Excel histórico (código HIS-…); 'whatsapp' = terminó en el chat. */
+  source: BookingSource
   items: BookingItem[]
   subtotal: number
   discount: number
@@ -515,6 +518,8 @@ export interface Dashboard {
   /** Por cobrar (centavos): sin plan mensual, canje, cortesía, perdidas ni transferencias en revisión. */
   receivables: number
   newOfficeQuotes: number
+  /** Pedidos por WhatsApp sin confirmar. */
+  whatsappPending?: number
   production?: {
     fortnight: 1 | 2
     fortnightFrom: string

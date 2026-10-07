@@ -36,6 +36,8 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
   <form class="qe" novalidate @submit.prevent="q.submit()">
     <PageIntro text="Carga un servicio ya hecho, como una fila de la Base. Al guardar, el día y el operador se quedan puestos para registrar el siguiente sin volver a elegirlos.">
       <RouterLink to="/admin/produccion" class="btn btn--ghost"><AppIcon name="list" /> Ver la Base del día</RouterLink>
+      <!-- Un pedido a futuro que llegó por el chat no es un servicio hecho: va al pedido rápido. -->
+      <RouterLink to="/admin/whatsapp/nuevo" class="btn btn--whatsapp"><AppIcon name="whatsapp" /> Pedido por WhatsApp</RouterLink>
     </PageIntro>
 
     <section class="card qe__sec">

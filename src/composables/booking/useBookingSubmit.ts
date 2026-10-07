@@ -6,9 +6,32 @@ import type { CreateBookingInput, CreateBookingResult } from '@/types/api'
 import { cartItems } from './cart'
 import { draft, resetDraft } from './useBookingDraft'
 import { savePayIntent } from './payIntent'
+import { orderWhatsapp } from './whatsappOrder'
+import { isMobileDevice, openWhatsApp } from '@/utils/whatsapp'
 
 // Resultado a nivel de módulo: la pantalla final sobrevive a cambios de paso.
 const result = ref<CreateBookingResult | null>(null)
+/** false = el navegador bloqueó la pestaña de WhatsApp: la pantalla final lo dice y ofrece el botón. */
+const whatsappOpened = ref(true)
+
+/**
+ * En escritorio la pestaña de WhatsApp se abre en el mismo clic (antes de esperar al servidor),
+ * porque después de un await el navegador la bloquea. En el celular no hace falta: se navega.
+ */
+function prepareWhatsappTab(): Window | null {
+  if (isMobileDevice()) return null
+  const tab = window.open('', '_blank')
+  if (tab) {
+    try {
+      tab.document.title = 'Abriendo WhatsApp…'
+      tab.document.body.innerHTML =
+        '<p style="font-family:system-ui,sans-serif;padding:2rem;color:#12263F">Abriendo WhatsApp…</p>'
+    } catch {
+      /* algunas políticas no dejan escribir: no importa */
+    }
+  }
+  return tab
+}
 
 export function useBookingSubmit() {
   const sending = ref(false)
@@ -42,9 +65,12 @@ export function useBookingSubmit() {
   async function submit() {
     sending.value = true
     error.value = ''
+    const viaWhatsapp = draft.paymentMethod === 'whatsapp'
+    const tab = viaWhatsapp ? prepareWhatsappTab() : null
     try {
       const res = await publicService.createBooking(payload())
       result.value = res
+      if (viaWhatsapp) whatsappOpened.value = openWhatsApp(orderWhatsapp(res).url, tab)
       if (res.payment) {
         savePayIntent({
           code: res.booking.code,
@@ -57,6 +83,7 @@ export function useBookingSubmit() {
       useCustomerStore().refresh()
       return res
     } catch (e) {
+      tab?.close()
       error.value = errorMessage(e, 'No pudimos crear tu pedido. Inténtalo de nuevo.')
       return null
     } finally {
@@ -68,5 +95,5 @@ export function useBookingSubmit() {
     result.value = null
   }
 
-  return { submit, sending, error, result, clearResult }
+  return { submit, sending, error, result, clearResult, whatsappOpened }
 }

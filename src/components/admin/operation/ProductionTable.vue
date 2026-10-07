@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import StatusBadge from '@/components/ui/StatusBadge.vue'
+import WaTag from '@/components/admin/common/WaTag.vue'
 import SheetTable from '@/components/admin/sheet/SheetTable.vue'
 import { paymentConfirmation } from '@/config/operationLabels'
 import { money, shortDate } from '@/utils/format'
@@ -29,7 +30,7 @@ const services = (r: ProductionRow) => r.items.map((i) => `${i.name}${i.variant 
     </thead>
     <tbody>
       <tr v-for="r in data.items" :key="r._id" class="row" tabindex="0" @click="emit('select', r)" @keydown.enter="emit('select', r)">
-        <td><strong>{{ r.customer?.name || '—' }}</strong><br /><small class="muted">{{ r.code }}</small></td>
+        <td><strong>{{ r.customer?.name || '—' }}</strong><br /><small class="muted">{{ r.code }}</small> <WaTag v-if="r.source === 'whatsapp'" compact /></td>
         <td>{{ shortDate(r.date) }}</td>
         <td>{{ r.operators.map((o) => o.name).join(', ') || '—' }}</td>
         <td>{{ r.zone || '—' }}</td>

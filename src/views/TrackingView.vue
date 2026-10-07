@@ -26,7 +26,8 @@ const cancelError = ref('')
 const showPay = computed(
   () =>
     needsPayment.value &&
-    (booking.value?.paymentMethod !== 'cash' || !!catalog.settings?.payphoneEnabled),
+    // Hay algo que hacer: subir la transferencia o pagar con tarjeta (también "por coordinar por WhatsApp").
+    (booking.value?.paymentMethod === 'transfer' || !!catalog.settings?.payphoneEnabled),
 )
 const wa = computed(() =>
   whatsappUrl(

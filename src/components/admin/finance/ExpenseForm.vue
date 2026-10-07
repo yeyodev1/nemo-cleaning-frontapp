@@ -5,7 +5,7 @@ import MoneyField from './MoneyField.vue'
 import { useToastStore } from '@/stores/toast'
 import { useUpload } from '@/composables/admin/useUpload'
 import { useExpenseForm } from '@/composables/finance/useExpenseForm'
-import { expenseCategory, options, paidFrom, paymentMethod } from '@/config/labels'
+import { expenseCategory, moneyMethods, options, paidFrom } from '@/config/labels'
 import { expenseCategoryGroups } from '@/config/financeLabels'
 import type { Expense } from '@/types/api'
 
@@ -90,7 +90,7 @@ async function onFile(file: File) {
         <label class="field">
           <span class="field__label">Forma de pago</span>
           <select v-model="form.paymentMethod">
-            <option v-for="o in options(paymentMethod)" :key="o.value" :value="o.value">{{ o.label }}</option>
+            <option v-for="o in moneyMethods" :key="o.value" :value="o.value">{{ o.label }}</option>
           </select>
         </label>
       </div>

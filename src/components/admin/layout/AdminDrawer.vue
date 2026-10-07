@@ -6,7 +6,7 @@ import { useAdminNav } from './useAdminNav'
 
 defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
-const { rest, isActive, logout, user } = useAdminNav()
+const { rest, isActive, logout, user, badgeOf } = useAdminNav()
 </script>
 
 <template>
@@ -26,6 +26,7 @@ const { rest, isActive, logout, user } = useAdminNav()
       >
         <AppIcon :name="i.icon" :size="22" />
         <span>{{ i.label }}</span>
+        <span v-if="badgeOf(i)" class="drawer__badge">{{ badgeOf(i) }}</span>
       </RouterLink>
       </template>
     </nav>
@@ -92,6 +93,27 @@ const { rest, isActive, logout, user } = useAdminNav()
       border-color: $orange;
       background: $orange-soft;
     }
+  }
+
+  &__item {
+    position: relative;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    border-radius: $radius-pill;
+    background: $whatsapp;
+    color: #fff;
+    font-size: $text-xs;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &__foot {

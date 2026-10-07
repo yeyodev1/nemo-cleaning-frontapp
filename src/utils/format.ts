@@ -164,3 +164,15 @@ export function parseMoney(text: string): number | null {
 export function editMoney(cents: number | null | undefined): string {
   return cents === null || cents === undefined ? '' : (cents / 100).toFixed(2)
 }
+
+/** "hace 5 min", "hace 2 h", "hace 3 días": cuánto lleva esperando un pedido. */
+export function timeAgo(iso?: string, now = Date.now()): string {
+  if (!iso) return ''
+  const min = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60000))
+  if (min < 1) return 'ahora'
+  if (min < 60) return `hace ${min} min`
+  const h = Math.round(min / 60)
+  if (h < 24) return `hace ${h} h`
+  const d = Math.round(h / 24)
+  return `hace ${d} ${d === 1 ? 'día' : 'días'}`
+}

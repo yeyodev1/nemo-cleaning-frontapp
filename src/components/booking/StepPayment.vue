@@ -40,6 +40,13 @@ const methods = computed(() => {
     title: 'Efectivo',
     text: 'Pagas al equipo el día del servicio.',
   })
+  // Siempre disponible: el pedido queda registrado y el pago se coordina con un asesor.
+  list.push({
+    id: 'whatsapp',
+    icon: 'whatsapp',
+    title: 'Coordinar y pagar por WhatsApp',
+    text: 'Registramos tu pedido y te abrimos WhatsApp con el resumen. Un asesor te ayuda con el pago.',
+  })
   return list
 })
 
@@ -68,7 +75,7 @@ async function onFile(file: File) {
         type="button"
         role="radio"
         class="method"
-        :class="{ 'is-on': draft.paymentMethod === m.id }"
+        :class="{ 'is-on': draft.paymentMethod === m.id, 'method--wa': m.id === 'whatsapp' }"
         :aria-checked="draft.paymentMethod === m.id"
         @click="draft.paymentMethod = m.id"
       >
@@ -108,6 +115,9 @@ async function onFile(file: File) {
     </p>
     <p v-if="draft.paymentMethod === 'cash'" class="pay__note">
       <AppIcon name="info" :size="16" /> Ten el monto listo; el equipo no siempre lleva cambio.
+    </p>
+    <p v-if="draft.paymentMethod === 'whatsapp'" class="pay__note">
+      <AppIcon name="whatsapp" :size="16" /> Al confirmar se abre WhatsApp con tu pedido listo para enviar.
     </p>
   </div>
 </template>
@@ -204,6 +214,25 @@ async function onFile(file: File) {
 
   &.is-on &__radio {
     border: 7px solid $navy;
+  }
+
+  // WhatsApp con su verde, para que se reconozca de un vistazo.
+  &--wa &__icon {
+    background: rgba($whatsapp, 0.12);
+    color: $whatsapp-ink;
+  }
+
+  &--wa.is-on {
+    border-color: $whatsapp-ink;
+  }
+
+  &--wa.is-on &__icon {
+    background: $whatsapp;
+    color: #fff;
+  }
+
+  &--wa.is-on &__radio {
+    border-color: $whatsapp-ink;
   }
 }
 </style>

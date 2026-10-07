@@ -72,7 +72,7 @@ function onSaved(c: Customer) {
             <span class="bk__main">
               <strong>{{ b.code }}</strong>
               <span class="muted">{{ shortDate(b.date) }} · {{ b.time }} · {{ b.items.map((i) => i.name).join(', ') }}</span>
-              <BookingBadges :status="b.status" :payment="b.paymentStatus" :settled="settledLabel(b)" />
+              <BookingBadges :status="b.status" :payment="b.paymentStatus" :settled="settledLabel(b)" :source="b.source" />
             </span>
             <strong class="money">{{ money(b.total) }}</strong>
           </RouterLink>

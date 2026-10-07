@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import CartWhatsappLink from './CartWhatsappLink.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { draft } from '@/composables/booking/useBookingDraft'
 import { useQuote } from '@/composables/booking/useQuote'
@@ -44,6 +45,7 @@ const branch = computed(() => catalog.branchById(draft.branch))
     <p v-if="calculating" class="summary__hint">Calculando…</p>
     <p v-else-if="failed" class="summary__hint">Total estimado; lo confirmamos al reservar.</p>
     <slot />
+    <CartWhatsappLink v-if="lines.length" />
   </aside>
 </template>
 

@@ -47,6 +47,7 @@ export interface ProductionRow {
   time: string
   branch: ID
   status: Booking['status']
+  source?: Booking['source']
   customer: { _id: ID; name: string; phone?: string } | null
   operators: { _id: ID; name: string; color?: string }[]
   zone: string

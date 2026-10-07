@@ -11,7 +11,18 @@ const props = defineProps<{ data: Dashboard }>()
 // una transferencia ya enviada no es deuda del cliente.
 const alerts = computed(() => {
   const d = props.data
+  const wa = d.whatsappPending ?? 0
   const rows: { show: boolean; value: string; label: string; hint: string; to: string; icon: IconName; tone: string }[] = [
+    {
+      // Primero: un pedido por WhatsApp sin confirmar es un cliente esperando respuesta.
+      show: wa > 0,
+      value: String(wa),
+      label: 'Pedidos por WhatsApp',
+      hint: `${wa} ${wa === 1 ? 'pedido por WhatsApp sin confirmar' : 'pedidos por WhatsApp sin confirmar'}`,
+      to: '/admin/whatsapp',
+      icon: 'whatsapp',
+      tone: 'wa',
+    },
     {
       show: d.pendingTransfers > 0,
       value: money(d.toConfirm ?? 0),
@@ -123,6 +134,10 @@ const alerts = computed(() => {
   &--warning {
     background: $warning-bg;
     color: $warning;
+  }
+  &--wa {
+    background: $whatsapp-soft;
+    color: $whatsapp-ink;
   }
   &--aqua {
     background: $orange-soft;

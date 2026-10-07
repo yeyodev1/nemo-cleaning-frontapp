@@ -4,7 +4,7 @@ import BaseSheet from '@/components/ui/BaseSheet.vue'
 import FileDrop from '@/components/ui/FileDrop.vue'
 import { managementService } from '@/services/management.service'
 import { useToastStore } from '@/stores/toast'
-import { options, paymentMethod } from '@/config/labels'
+import { moneyMethods } from '@/config/labels'
 import { errorMessage, fromCents, toCents } from '@/utils/format'
 import type { ManualPaymentInput } from '@/services/bookings.service'
 import type { PaymentMethod } from '@/types/api'
@@ -12,7 +12,7 @@ import type { PaymentMethod } from '@/types/api'
 const props = defineProps<{ open: boolean; balance: number; saving: boolean }>()
 const emit = defineEmits<{ close: []; submit: [body: ManualPaymentInput] }>()
 const toast = useToastStore()
-const methods = options(paymentMethod)
+const methods = moneyMethods
 const uploading = ref(false)
 const form = reactive({ amount: '', method: 'cash' as PaymentMethod, reference: '', note: '', proofUrl: '' })
 

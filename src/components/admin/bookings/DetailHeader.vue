@@ -19,7 +19,7 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
         <h2 class="dh__when">{{ longDate(booking.date) }} · {{ booking.time }}</h2>
         <p class="muted dh__branch"><AppIcon name="store" :size="14" /> {{ branch() }} · {{ booking.durationMinutes }} min</p>
       </div>
-      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" />
+      <BookingBadges :status="booking.status" :payment="booking.paymentStatus" :settled="settledLabel(booking)" :source="booking.source" />
     </div>
 
     <div class="dh__money">
