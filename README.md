@@ -31,7 +31,7 @@ Necesita el backend (`../nemo-cleaning-backapp`) corriendo en `:8100`. El contra
 
 ## Rutas
 
-**Públicas:** `/` · `/reservar` · `/cotizar-oficina` · `/pedido/:code?token=` · `/pago/respuesta`
+**Públicas:** `/` · `/reservar` · `/cotizar-oficina` · `/pedido/:code?token=` · `/pay-response` (`/pago/respuesta` redirige) · `/ingresar` · `/mi-cuenta`
 
 **Panel:** `/admin/login` · `/admin` (dashboard) · `/admin/agenda` · `/admin/pedidos` (+ `/nuevo`, `/:id`) ·
 `/admin/pagos` · `/admin/gastos` · `/admin/caja` · `/admin/reportes` · `/admin/cotizaciones` ·
@@ -42,6 +42,6 @@ Necesita el backend (`../nemo-cleaning-backapp`) corriendo en `:8100`. El contra
 
 Vercel (framework Vite). `vercel.json` reescribe todo a `index.html` (SPA) y cachea `/assets`.
 Configurar `VITE_API_URL` en el proyecto de Vercel. Payphone debe tener como URL de respuesta
-`https://nemocleaning.ec/pago/respuesta`.
+`https://nemocleaning.ec/pay-response`.
 
 Más detalle de arquitectura y convenciones en `CLAUDE.md`.

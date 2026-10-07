@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { publicService } from '@/services/public.service'
 import { errorMessage } from '@/utils/format'
+import { useCustomerStore } from '@/stores/customer'
 import type { CreateBookingInput, CreateBookingResult } from '@/types/api'
 import { cartItems } from './cart'
 import { draft, resetDraft } from './useBookingDraft'
@@ -51,6 +52,8 @@ export function useBookingSubmit() {
         })
       }
       resetDraft()
+      // Con sesión: el back pudo actualizar nombre/teléfono con los del pedido.
+      useCustomerStore().refresh()
       return res
     } catch (e) {
       error.value = errorMessage(e, 'No pudimos crear tu pedido. Inténtalo de nuevo.')

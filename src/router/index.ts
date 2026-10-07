@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useCustomerStore } from '@/stores/customer'
 import { site } from '@/config/site'
 import adminRoutes from './admin.routes'
 
@@ -24,10 +25,28 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Seguimiento de tu pedido', focus: true },
   },
   {
-    path: '/pago/respuesta',
+    // URL de respuesta configurada en Payphone: https://nemocleaning.ec/pay-response
+    path: '/pay-response',
     name: 'PaymentResponse',
     component: () => import('@/views/PaymentResponseView.vue'),
     meta: { title: 'Confirmando pago', focus: true },
+  },
+  {
+    // Ruta anterior: se conserva por enlaces viejos y pagos en curso, con su query (?id=&clientTransactionId=).
+    path: '/pago/respuesta',
+    redirect: (to) => ({ path: '/pay-response', query: to.query, hash: to.hash }),
+  },
+  {
+    path: '/ingresar',
+    name: 'CustomerLogin',
+    component: () => import('@/views/account/CustomerLoginView.vue'),
+    meta: { title: 'Ingresar', customerGuestOnly: true },
+  },
+  {
+    path: '/mi-cuenta',
+    name: 'CustomerAccount',
+    component: () => import('@/views/account/CustomerAccountView.vue'),
+    meta: { title: 'Mi cuenta', requiresCustomer: true },
   },
   ...adminRoutes,
   {
@@ -50,6 +69,16 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+  // Sesión del cliente (web pública): independiente de la del personal.
+  if (to.meta.requiresCustomer || to.meta.customerGuestOnly) {
+    const customer = useCustomerStore()
+    await customer.restore()
+    if (to.meta.requiresCustomer && !customer.isAuthenticated) {
+      return { name: 'CustomerLogin', query: { next: to.fullPath }, replace: true }
+    }
+    if (to.meta.customerGuestOnly && customer.isAuthenticated) return { name: 'CustomerAccount', replace: true }
+  }
+
   const user = useUserStore()
   if (to.meta.requiresAuth || to.meta.guestOnly) await user.restore()
 
@@ -68,7 +97,7 @@ router.afterEach((to) => {
     ? `${to.meta.title} | ${site.name}`
     : 'Nemo Cleaning | Limpieza profesional a domicilio en Guayaquil y Samborondón'
   // El panel y las páginas privadas fuera del índice.
-  const privatePage = to.path.startsWith('/admin') || ['Tracking', 'PaymentResponse'].includes(String(to.name))
+  const privatePage = to.path.startsWith('/admin') || ['Tracking', 'PaymentResponse', 'CustomerLogin', 'CustomerAccount'].includes(String(to.name))
   let robots = document.head.querySelector('meta[name="robots"]')
   if (!robots) {
     robots = document.createElement('meta')

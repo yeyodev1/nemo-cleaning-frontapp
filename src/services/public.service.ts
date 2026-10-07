@@ -17,6 +17,8 @@ import type {
 } from '@/types/api'
 
 class PublicService extends APIBase {
+  // Rutas públicas: si el cliente ingresó, su token asocia la reserva a su cuenta.
+  protected authAs = 'customer' as const
   branches() {
     return this.get<Branch[]>('public/branches')
   }

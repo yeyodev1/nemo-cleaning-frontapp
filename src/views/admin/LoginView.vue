@@ -1,37 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BrandLogo from '@/components/brand/BrandLogo.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import CodeLoginForm from '@/components/auth/CodeLoginForm.vue'
+import { authService } from '@/services/auth.service'
 import { useUserStore } from '@/stores/user'
-import { errorMessage } from '@/utils/format'
 
 const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 
-const email = ref('')
-const password = ref('')
-const show = ref(false)
-const busy = ref(false)
-const error = ref('')
+// Sin contraseñas: el personal ingresa con un código que llega a su correo.
+const request = (email: string) => authService.requestCode(email)
+const verify = (email: string, code: string) => user.verifyCode(email, code)
 
-async function submit() {
-  if (!email.value || !password.value) {
-    error.value = 'Ingresa tu correo y contraseña'
-    return
-  }
-  busy.value = true
-  error.value = ''
-  try {
-    await user.login(email.value.trim(), password.value)
-    const next = typeof route.query.next === 'string' && route.query.next.startsWith('/admin') ? route.query.next : user.home
-    router.replace(next)
-  } catch (e) {
-    error.value = errorMessage(e, 'No se pudo iniciar sesión')
-  } finally {
-    busy.value = false
-  }
+function done() {
+  const next = typeof route.query.next === 'string' && route.query.next.startsWith('/admin') ? route.query.next : user.home
+  router.replace(next)
 }
 </script>
 
@@ -48,32 +33,18 @@ async function submit() {
     </aside>
 
     <section class="login__panel">
-      <form class="login__form" novalidate @submit.prevent="submit">
+      <div class="login__form">
         <RouterLink to="/" class="login__logo"><BrandLogo :height="38" /></RouterLink>
         <h1>Panel del personal</h1>
-        <p class="login__sub">Ingresa con tu cuenta de Nemo Cleaning.</p>
-
-        <label class="field">
-          <span class="field__label">Correo</span>
-          <input v-model="email" type="email" autocomplete="username" inputmode="email" required />
-        </label>
-        <label class="field">
-          <span class="field__label">Contraseña</span>
-          <span class="login__pass">
-            <input v-model="password" :type="show ? 'text' : 'password'" autocomplete="current-password" required />
-            <button type="button" class="login__eye" :aria-label="show ? 'Ocultar contraseña' : 'Mostrar contraseña'" :aria-pressed="show" @click="show = !show">
-              <AppIcon :name="show ? 'ban' : 'eye'" :size="18" />
-            </button>
-          </span>
-        </label>
-
-        <p v-if="error" class="login__error" role="alert"><AppIcon name="alert" :size="18" /> {{ error }}</p>
-
-        <button type="submit" class="btn btn--primary btn--lg btn--block" :disabled="busy">
-          {{ busy ? 'Ingresando…' : 'Ingresar' }}
-        </button>
+        <p class="login__sub">Ingresa con tu correo de Nemo Cleaning: te enviamos un código de acceso.</p>
+        <CodeLoginForm
+          :request="request"
+          :verify="verify"
+          email-hint="Solo las cuentas activas del personal reciben el código."
+          @success="done"
+        />
         <RouterLink to="/" class="login__back"><AppIcon name="arrow-left" :size="16" /> Volver al sitio</RouterLink>
-      </form>
+      </div>
     </section>
   </div>
 </template>
@@ -169,41 +140,6 @@ async function submit() {
   &__sub {
     color: $ink-muted;
     margin-top: -0.5rem;
-  }
-
-  &__pass {
-    position: relative;
-    display: block;
-
-    input {
-      padding-right: 3.2rem;
-    }
-  }
-
-  &__eye {
-    position: absolute;
-    right: 2px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: $tap;
-    height: $tap;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: $ink-muted;
-    border-radius: $radius-sm;
-  }
-
-  &__error {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.7rem 0.9rem;
-    border-radius: $radius-sm;
-    background: $danger-bg;
-    color: $danger;
-    font-weight: 600;
-    font-size: $text-sm;
   }
 
   &__back {

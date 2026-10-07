@@ -1,6 +1,8 @@
 import { computed, nextTick, onMounted, ref, watch, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '@/stores/catalog'
+import { useCustomerStore } from '@/stores/customer'
+import { prefillFromAccount } from './accountPrefill'
 import { draft } from './useBookingDraft'
 import { STEPS, useStepValidation } from './useBookingSteps'
 import { useBookingSubmit } from './useBookingSubmit'
@@ -10,6 +12,7 @@ export function useBookingWizard(heading: Readonly<Ref<HTMLElement | null>>) {
   const route = useRoute()
   const router = useRouter()
   const catalog = useCatalogStore()
+  const customer = useCustomerStore()
   const { validate, firstInvalid, canSubmit } = useStepValidation()
   const { submit, sending, error: submitError, result, clearResult } = useBookingSubmit()
 
@@ -70,7 +73,8 @@ export function useBookingWizard(heading: Readonly<Ref<HTMLElement | null>>) {
   )
 
   onMounted(async () => {
-    await catalog.load()
+    const [, account] = await Promise.all([catalog.load(), customer.restore()])
+    if (account) prefillFromAccount(account)
     const asked = Number(route.query.paso) || draft.step
     // No se puede saltar a un paso con los anteriores incompletos.
     draft.step = Math.min(asked, firstInvalid())

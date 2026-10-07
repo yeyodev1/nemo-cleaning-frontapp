@@ -15,7 +15,7 @@ import type {
 
 export type ServiceInput = Omit<Service, '_id'>
 export type BranchInput = Omit<Branch, '_id'>
-export type UserInput = Omit<User, '_id' | 'createdAt'> & { password?: string }
+export type UserInput = Omit<User, '_id' | 'createdAt'>
 export type CustomerInput = Partial<Omit<Customer, '_id' | 'createdAt' | 'totalOrders' | 'totalSpent'>>
 
 /** Algunos listados pueden venir paginados o como arreglo: se normaliza a arreglo. */

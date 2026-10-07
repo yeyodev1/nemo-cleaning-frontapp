@@ -1,34 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { authService } from '@/services/auth.service'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { useUserStore } from '@/stores/user'
-import { useToastStore } from '@/stores/toast'
 import { roleLabel } from '@/config/labels'
-import { errorMessage } from '@/utils/format'
 
 const user = useUserStore()
-const toast = useToastStore()
-const current = ref('')
-const next = ref('')
-const confirm = ref('')
-const busy = ref(false)
-const error = ref('')
-
-async function submit() {
-  error.value = ''
-  if (next.value.length < 8) return (error.value = 'La nueva contraseña debe tener al menos 8 caracteres')
-  if (next.value !== confirm.value) return (error.value = 'Las contraseñas no coinciden')
-  busy.value = true
-  try {
-    await authService.changePassword(current.value, next.value)
-    toast.success('Contraseña actualizada')
-    current.value = next.value = confirm.value = ''
-  } catch (e) {
-    error.value = errorMessage(e)
-  } finally {
-    busy.value = false
-  }
-}
 </script>
 
 <template>
@@ -41,24 +16,14 @@ async function submit() {
       </div>
     </section>
 
-    <form class="card account__form" @submit.prevent="submit">
-      <h2>Cambiar contraseña</h2>
-      <label class="field">
-        <span class="field__label">Contraseña actual</span>
-        <input v-model="current" type="password" autocomplete="current-password" required />
-      </label>
-      <label class="field">
-        <span class="field__label">Nueva contraseña</span>
-        <input v-model="next" type="password" autocomplete="new-password" minlength="8" required />
-        <span class="field__hint">Mínimo 8 caracteres.</span>
-      </label>
-      <label class="field">
-        <span class="field__label">Repite la nueva contraseña</span>
-        <input v-model="confirm" type="password" autocomplete="new-password" required />
-      </label>
-      <p v-if="error" class="field__error" role="alert">{{ error }}</p>
-      <button type="submit" class="btn btn--primary" :disabled="busy">{{ busy ? 'Guardando…' : 'Guardar contraseña' }}</button>
-    </form>
+    <!-- Ya no hay contraseña que cambiar: el acceso es con un código al correo. -->
+    <section class="card account__note">
+      <AppIcon name="lock" :size="20" />
+      <p>
+        Ingresas con un código de 6 dígitos que te enviamos a tu correo cada vez. Si cambias de correo, pídele a
+        gerencia que lo actualice en Personal.
+      </p>
+    </section>
   </div>
 </template>
 
@@ -93,17 +58,16 @@ async function submit() {
     text-transform: uppercase;
   }
 
-  &__form {
+  &__note {
     display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
+    gap: 0.75rem;
+    align-items: flex-start;
+    color: $ink-soft;
+    font-size: $text-sm;
 
-    h2 {
-      font-size: $text-lg;
-    }
-
-    .btn {
-      align-self: flex-start;
+    svg {
+      flex-shrink: 0;
+      color: $navy;
     }
   }
 }

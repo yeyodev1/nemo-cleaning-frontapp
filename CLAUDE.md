@@ -10,7 +10,8 @@ Vía a la Costa). Vue 3 + Vite 7 + TypeScript + Pinia + vue-router + axios + SCS
 (Express, puerto 8100). **La fuente de verdad del API es `../CONTRATO-API.md`.**
 
 Dos superficies en la misma app:
-- **Sitio público** (`/`, `/reservar`, `/cotizar-oficina`, `/pedido/:code?token=`, `/pago/respuesta`).
+- **Sitio público** (`/`, `/reservar`, `/cotizar-oficina`, `/pedido/:code?token=`, `/pay-response`, `/ingresar`,
+  `/mi-cuenta`). `/pago/respuesta` es una redirección a `/pay-response` que conserva la query.
 - **Panel** (`/admin/*`) con roles `admin` (gerencia), `manager` (sucursal) y `operator` (lavador → solo
   `/admin/mis-servicios`).
 
@@ -55,24 +56,29 @@ fondos `$paper` / `$sky`. Fuente: Plus Jakarta Sans (cargada con `<link>` en `in
 ## Arquitectura
 
 - **Router** (`src/router/`): lazy imports, `meta.title`, `meta.layout` (`public` | `admin` | `bare`),
-  `meta.focus` (oculta el footer en wizards), `meta.requiresAuth`, `meta.roles`. El guard restaura la
-  sesión con `/auth/me` y manda a cada rol a su inicio (`userStore.home`).
+  `meta.focus` (oculta el footer en wizards), `meta.requiresAuth`, `meta.roles`, `meta.requiresCustomer`,
+  `meta.customerGuestOnly`. El guard restaura la sesión con `/auth/me` y manda a cada rol a su inicio (`userStore.home`).
+- **Acceso sin contraseña**: `/admin/login` (personal) e `/ingresar` (clientes) usan `components/auth/CodeLoginForm.vue`
+  + `composables/auth/useCodeLogin.ts` (correo → código de 6 dígitos, reenvío cada 60 s).
+- **Dos sesiones separadas**: personal en `localStorage.nemo_access_token` (store `user`) y cliente en
+  `localStorage.nemo_customer_token` (store `customer`). Cada servicio declara `authAs` (`staff` | `customer` | `none`)
+  y `httpBase` adjunta solo ese token; `public.service` y `customer.service` usan el del cliente. Un 401 emite
+  `auth:token-expired` o `customer:token-expired` según el token que se mandó.
 - **Services** (`src/services/`): `class XService extends APIBase` + singleton. `httpBase.ts` resuelve
-  `VITE_API_URL`, pone el Bearer (`localStorage.nemo_access_token`), limpia query vacías y normaliza
+  `VITE_API_URL`, pone el Bearer que corresponde al servicio (ver "Dos sesiones"), limpia query vacías y normaliza
   errores a `ApiError { status, message }` (el `message` viene en español del back y se muestra tal cual).
-  Un 401 con sesión emite `auth:token-expired` → `main.ts` cierra sesión y lleva al login.
   - `public.service` (web pública), `auth.service`, `bookings.service` (dashboard, agenda, pedidos, pagos),
     `finance.service` (gastos, reportes, caja), `management.service` (catálogo, sucursales, personal,
     clientes, cotizaciones, configuración, uploads) y `operatorService`.
 - **Tipos** (`src/types/api.ts`): espejo del contrato.
-- **Stores** (Pinia): `user` (sesión/rol), `toast`, `catalog` (sucursales, servicios y settings públicos;
+- **Stores** (Pinia): `user` (sesión/rol del personal), `customer` (Mi cuenta), `toast`, `catalog` (sucursales, servicios y settings públicos;
   se cargan una vez), `adminScope` (sucursal global del panel; `''` = todas, solo gerencia).
 - **Componentes**: `ui/` (AppIcon, BaseSheet, QuantityStepper, FileDrop, StatusBadge, ToastList),
   `booking/` (asistente; `ServicePicker.vue` lo reutiliza el panel), `home/`, `office/`, `tracking/`,
   `admin/layout` (sidebar escritorio, tab bar + drawer móvil, selector de sucursal), `admin/common`
   (KpiCard, Pagination, BookingBadges) y una carpeta por módulo del panel.
 - **Payphone (Cajita v2.0)**: `composables/booking/usePayphoneBox.ts` carga CSS+JS del CDN solo al pagar;
-  `PayphoneBox.vue` lo enmarca; Payphone vuelve a `/pago/respuesta?id=&clientTransactionId=` y
+  `PayphoneBox.vue` lo enmarca; Payphone vuelve a `/pay-response?id=&clientTransactionId=` (URL configurada en Payphone, no en la Cajita) y
   `usePaymentConfirm.ts` llama a `/public/payphone/confirm` (idempotente).
 
 ## Convenciones

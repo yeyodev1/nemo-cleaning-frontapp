@@ -8,6 +8,9 @@ import { savePayIntent } from './payIntent'
  * Cajita de Pagos de Payphone (v2.0). Los recursos se cargan una sola vez y
  * solo cuando el cliente va a pagar. El formulario vence a los 10 min: entonces
  * se pide un intento nuevo (otro clientTransactionId) al backend.
+ *
+ * La Cajita no recibe la URL de respuesta: se configura en la app de Payphone
+ * Developer y es https://nemocleaning.ec/pay-response (ruta PaymentResponse).
  */
 const CSS = 'https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.css'
 const JS = 'https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.js'

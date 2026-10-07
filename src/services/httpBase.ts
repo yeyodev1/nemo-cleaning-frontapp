@@ -3,6 +3,17 @@ import type { AxiosRequestConfig } from 'axios'
 import type { ApiError } from '@/types/api'
 
 export const TOKEN_KEY = 'nemo_access_token'
+/** Sesión del cliente ("Mi cuenta"): clave aparte para no mezclarla con la del personal. */
+export const CUSTOMER_TOKEN_KEY = 'nemo_customer_token'
+
+/** Qué token manda cada servicio: el del personal, el del cliente o ninguno. */
+export type AuthAs = 'staff' | 'customer' | 'none'
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    authAs?: AuthAs
+  }
+}
 
 /**
  * URL del API. VITE_API_URL manda, salvo que apunte a localhost y el visitante
@@ -18,12 +29,20 @@ export function resolveApiBaseUrl(): string {
   return raw.replace(/\/+$/, '')
 }
 
-export function readToken(): string | null {
+function readKey(key: string): string | null {
   try {
-    return localStorage.getItem(TOKEN_KEY)
+    return localStorage.getItem(key)
   } catch {
     return null
   }
+}
+
+export function readToken(): string | null {
+  return readKey(TOKEN_KEY)
+}
+
+export function readCustomerToken(): string | null {
+  return readKey(CUSTOMER_TOKEN_KEY)
 }
 
 function toApiError(error: unknown): ApiError {
@@ -40,7 +59,8 @@ function toApiError(error: unknown): ApiError {
 const http = axios.create({ timeout: 20000 })
 
 http.interceptors.request.use((config) => {
-  const token = readToken()
+  const as = config.authAs ?? 'staff'
+  const token = as === 'staff' ? readToken() : as === 'customer' ? readCustomerToken() : null
   if (token) config.headers.set('Authorization', `Bearer ${token}`)
   return config
 })
@@ -49,9 +69,14 @@ http.interceptors.response.use(
   (r) => r,
   (error) => {
     const status = error.response?.status
-    // Solo las rutas con sesión disparan el cierre: un 401 público no es de sesión.
-    if (status === 401 && readToken() && !String(error.config?.url || '').includes('/auth/login')) {
+    const as = error.config?.authAs ?? 'staff'
+    const sent = Boolean(error.config?.headers?.Authorization)
+    // Solo un 401 de una petición que llevaba token es de sesión; cada sesión cierra la suya.
+    if (status === 401 && sent && as === 'staff' && readToken()) {
       window.dispatchEvent(new CustomEvent('auth:token-expired'))
+    }
+    if (status === 401 && sent && as === 'customer' && readCustomerToken()) {
+      window.dispatchEvent(new CustomEvent('customer:token-expired'))
     }
     return Promise.reject(error)
   },
@@ -71,6 +96,8 @@ export function cleanQuery(q?: Query): Record<string, string | number | boolean>
 
 export default class APIBase {
   protected baseUrl = resolveApiBaseUrl()
+  /** Token que adjunta este servicio; por defecto el del personal. */
+  protected authAs: AuthAs = 'staff'
 
   private url(endpoint: string) {
     return `${this.baseUrl}/${endpoint.replace(/^\/+/, '')}`
@@ -78,7 +105,7 @@ export default class APIBase {
 
   protected async get<T>(endpoint: string, query?: Query, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const { data } = await http.get<T>(this.url(endpoint), { params: cleanQuery(query), ...config })
+      const { data } = await http.get<T>(this.url(endpoint), { params: cleanQuery(query), authAs: this.authAs, ...config })
       return data
     } catch (e) {
       throw toApiError(e)
@@ -87,7 +114,7 @@ export default class APIBase {
 
   protected async post<T>(endpoint: string, body?: unknown, query?: Query): Promise<T> {
     try {
-      const { data } = await http.post<T>(this.url(endpoint), body ?? {}, { params: cleanQuery(query) })
+      const { data } = await http.post<T>(this.url(endpoint), body ?? {}, { params: cleanQuery(query), authAs: this.authAs })
       return data
     } catch (e) {
       throw toApiError(e)
@@ -96,7 +123,7 @@ export default class APIBase {
 
   protected async patch<T>(endpoint: string, body?: unknown): Promise<T> {
     try {
-      const { data } = await http.patch<T>(this.url(endpoint), body ?? {})
+      const { data } = await http.patch<T>(this.url(endpoint), body ?? {}, { authAs: this.authAs })
       return data
     } catch (e) {
       throw toApiError(e)
@@ -105,7 +132,7 @@ export default class APIBase {
 
   protected async delete<T>(endpoint: string): Promise<T> {
     try {
-      const { data } = await http.delete<T>(this.url(endpoint))
+      const { data } = await http.delete<T>(this.url(endpoint), { authAs: this.authAs })
       return data
     } catch (e) {
       throw toApiError(e)
@@ -117,7 +144,11 @@ export default class APIBase {
     const form = new FormData()
     form.append('file', file)
     try {
-      const { data } = await http.post<T>(this.url(endpoint), form, { params: cleanQuery(query), timeout: 60000 })
+      const { data } = await http.post<T>(this.url(endpoint), form, {
+        params: cleanQuery(query),
+        timeout: 60000,
+        authAs: this.authAs,
+      })
       return data
     } catch (e) {
       throw toApiError(e)

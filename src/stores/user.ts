@@ -25,8 +25,9 @@ export const useUserStore = defineStore('user', {
       return Boolean(this.user && roles.includes(this.user.role))
     },
 
-    async login(email: string, password: string) {
-      const { token, user } = await authService.login(email, password)
+    /** Segundo paso del acceso por código: guarda el token y la cuenta. */
+    async verifyCode(email: string, code: string) {
+      const { token, user } = await authService.verify(email, code)
       try {
         localStorage.setItem(TOKEN_KEY, token)
       } catch {

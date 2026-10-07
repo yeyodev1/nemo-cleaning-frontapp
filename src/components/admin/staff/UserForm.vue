@@ -14,7 +14,7 @@ const scope = useAdminScope()
 const toast = useToastStore()
 const saving = ref(false)
 
-const blank = (): UserInput => ({ name: '', email: '', phone: '', role: 'operator', branches: [], active: true, color: '#19C3B8', password: '' })
+const blank = (): UserInput => ({ name: '', email: '', phone: '', role: 'operator', branches: [], active: true, color: '#19C3B8' })
 const form = reactive<UserInput>(blank())
 
 watch(
@@ -22,12 +22,11 @@ watch(
   (o) => {
     if (!o) return
     const u = props.user
-    Object.assign(form, u ? { ...blank(), ...u, branches: [...(u.branches || [])], password: '' } : blank())
+    Object.assign(form, u ? { ...blank(), ...u, branches: [...(u.branches || [])] } : blank())
   },
 )
 
 async function save() {
-  if (!props.user && (form.password || '').length < 8) return toast.error('La contraseña debe tener al menos 8 caracteres')
   saving.value = true
   try {
     const body: UserInput = {
@@ -39,7 +38,6 @@ async function save() {
       active: form.active,
       color: form.color,
     }
-    if (form.password) body.password = form.password
     if (props.user) await managementService.updateUser(props.user._id, body)
     else await managementService.createUser(body)
     toast.success('Usuario guardado')
@@ -58,7 +56,10 @@ async function save() {
     <form id="user-form" class="form" @submit.prevent="save">
       <label class="field"><span class="field__label">Nombre</span><input v-model="form.name" type="text" required autocomplete="off" /></label>
       <div class="form-row">
-        <label class="field"><span class="field__label">Correo (usuario)</span><input v-model="form.email" type="email" required autocomplete="off" /></label>
+        <label class="field">
+          <span class="field__label">Correo (usuario)</span><input v-model="form.email" type="email" required autocomplete="off" />
+          <span class="field__hint">Ingresa al panel con un código que llega a este correo.</span>
+        </label>
         <label class="field"><span class="field__label">Teléfono</span><input v-model="form.phone" type="tel" /></label>
       </div>
       <div class="form-row">
@@ -80,10 +81,6 @@ async function save() {
         </label>
         <span v-if="form.role === 'admin'" class="field__hint">Gerencia ve todas las sucursales.</span>
       </fieldset>
-      <label class="field">
-        <span class="field__label">{{ user ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</span>
-        <input v-model="form.password" type="password" :required="!user" minlength="8" autocomplete="new-password" />
-      </label>
       <label class="check"><input v-model="form.active" type="checkbox" /> Activo (puede ingresar al panel)</label>
     </form>
     <template #footer>

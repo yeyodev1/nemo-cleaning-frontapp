@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import BrandLogo from '@/components/brand/BrandLogo.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import { useCustomerStore } from '@/stores/customer'
 
 defineProps<{ minimal?: boolean }>()
 const route = useRoute()
 const open = ref(false)
 const scrolled = ref(false)
+const customer = useCustomerStore()
+// "Ingresar" o "Mi cuenta" según la sesión del cliente (no la del personal).
+const account = computed(() =>
+  customer.isAuthenticated
+    ? { to: '/mi-cuenta', label: 'Mi cuenta' }
+    : { to: '/ingresar', label: 'Ingresar' },
+)
 
 const links = [
   { to: '/#servicios', label: 'Servicios' },
@@ -18,7 +26,10 @@ const links = [
 ]
 
 const onScroll = () => (scrolled.value = window.scrollY > 8)
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  customer.restore()
+})
 onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 watch(() => route.fullPath, () => (open.value = false))
 watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
@@ -34,6 +45,9 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
       </nav>
 
       <div class="header__actions">
+        <RouterLink v-if="!minimal" :to="account.to" class="header__account" :aria-label="account.label">
+          <AppIcon name="user" :size="20" /><span class="header__account-label">{{ account.label }}</span>
+        </RouterLink>
         <RouterLink v-if="!minimal" to="/reservar" class="btn btn--primary btn--sm header__cta">Reservar</RouterLink>
         <RouterLink v-else to="/" class="btn btn--ghost btn--sm">
           <AppIcon name="x" :size="16" /> Salir
@@ -56,6 +70,10 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
       <nav v-if="open" id="menu-movil" class="header__menu" aria-label="Menú móvil">
         <RouterLink v-for="l in links" :key="l.to" :to="l.to" class="header__mlink">
           {{ l.label }} <AppIcon name="chevron-right" :size="18" />
+        </RouterLink>
+        <RouterLink :to="account.to" class="header__mlink">
+          <span class="header__mlabel"><AppIcon name="user" :size="20" /> {{ account.label }}</span>
+          <AppIcon name="chevron-right" :size="18" />
         </RouterLink>
         <RouterLink to="/reservar" class="btn btn--primary btn--lg btn--block">Reserva tu limpieza</RouterLink>
         <RouterLink to="/admin/login" class="header__staff">Acceso del personal</RouterLink>
@@ -86,7 +104,7 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   &__brand {
@@ -118,11 +136,52 @@ watch(open, (v) => (document.body.style.overflow = v ? 'hidden' : ''))
   &__actions {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.2rem;
+
+    @include from('md') {
+      gap: 0.4rem;
+    }
   }
 
   &__cta {
     min-height: 40px;
+  }
+
+  &__account {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-width: $tap;
+    min-height: $tap;
+    padding: 0 0.6rem;
+    border-radius: $radius-pill;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $navy;
+
+    &:hover {
+      background: $sky-2;
+    }
+
+    &.router-link-active {
+      color: $aqua-ink;
+    }
+  }
+
+  // En móvil solo el ícono (con aria-label); el texto aparece desde md.
+  &__account-label {
+    display: none;
+
+    @include from('md') {
+      display: inline;
+    }
+  }
+
+  &__mlabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   &__burger {

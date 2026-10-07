@@ -19,5 +19,9 @@ declare module 'vue-router' {
     requiresAuth?: boolean
     roles?: Role[]
     guestOnly?: boolean
+    /** Requiere sesión de cliente ("Mi cuenta"). */
+    requiresCustomer?: boolean
+    /** Solo sin sesión de cliente (/ingresar). */
+    customerGuestOnly?: boolean
   }
 }

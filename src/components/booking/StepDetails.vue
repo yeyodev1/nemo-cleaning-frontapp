@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { draft } from '@/composables/booking/useBookingDraft'
+import { useCustomerStore } from '@/stores/customer'
+
+const customer = useCustomerStore()
 </script>
 
 <template>
@@ -60,8 +63,12 @@ import { draft } from '@/composables/booking/useBookingDraft'
             inputmode="email"
             autocomplete="email"
             placeholder="tu@correo.com"
+            :readonly="customer.isAuthenticated"
             required
           />
+          <span v-if="customer.isAuthenticated" class="field__hint">
+            Ingresaste con este correo: el pedido quedará en Mi cuenta.
+          </span>
         </label>
       </div>
       <label class="field">
@@ -132,6 +139,11 @@ import { draft } from '@/composables/booking/useBookingDraft'
       border-radius: $radius-md;
       background: $sky;
     }
+  }
+
+  input[readonly] {
+    background: $sky;
+    color: $ink-soft;
   }
 
   &__toggle {

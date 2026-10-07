@@ -7,7 +7,7 @@ import { usePaymentConfirm } from '@/composables/booking/usePaymentConfirm'
 import { site } from '@/config/site'
 import { whatsappUrl } from '@/utils/format'
 
-/** /pago/respuesta: Payphone vuelve aquí con ?id=&clientTransactionId=. */
+/** /pay-response (URL de respuesta en Payphone): vuelve aquí con ?id=&clientTransactionId=. */
 const route = useRoute()
 const router = useRouter()
 const { phase, message, code, token, confirm } = usePaymentConfirm()

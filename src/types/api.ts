@@ -77,6 +77,19 @@ export interface Customer {
   createdAt: string
 }
 
+/** Ficha del cliente con sesión ("Mi cuenta"). */
+export interface CustomerAccount {
+  _id: ID
+  name: string
+  email: string
+  phone: string
+  documentId: string
+  address: string
+  createdAt?: string
+}
+
+export type CustomerProfileInput = Partial<Pick<CustomerAccount, 'name' | 'phone' | 'documentId' | 'address'>>
+
 // ---------- Pedidos ----------
 export type BookingStatus =
   | 'pending'
@@ -153,6 +166,26 @@ export interface Booking {
   history?: HistoryEntry[]
   createdAt: string
   updatedAt: string
+}
+
+/** Pedido en "Mis pedidos": resumen + token para abrir el seguimiento. */
+export interface CustomerBooking {
+  _id: ID
+  code: string
+  branch: ID
+  branchName: string
+  items: { name: string; quantity: number }[]
+  total: number
+  amountPaid: number
+  balance: number
+  date: string
+  time: string
+  status: BookingStatus
+  paymentMethod: PaymentMethod
+  paymentStatus: PaymentStatus
+  accessToken: string
+  trackingUrl: string
+  createdAt: string
 }
 
 export interface PersonRef {

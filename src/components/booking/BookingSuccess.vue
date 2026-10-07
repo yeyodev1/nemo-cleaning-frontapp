@@ -5,10 +5,12 @@ import AnimatedCheck from './AnimatedCheck.vue'
 import PayphoneBox from '@/components/payment/PayphoneBox.vue'
 import { longDate, money } from '@/utils/format'
 import type { CreateBookingResult } from '@/types/api'
+import { useCustomerStore } from '@/stores/customer'
 
 const props = defineProps<{ result: CreateBookingResult }>()
 const emit = defineEmits<{ again: [] }>()
 
+const customer = useCustomerStore()
 const b = computed(() => props.result.booking)
 const paying = ref(Boolean(props.result.payment) && props.result.booking.paymentMethod === 'card')
 const trackTo = computed(() => ({
@@ -70,7 +72,10 @@ const next = computed(() => {
           Hacer otra reserva
         </button>
       </div>
-      <p class="done__link">
+      <p v-if="customer.isAuthenticated" class="done__link">
+        También lo tienes en <RouterLink to="/mi-cuenta">Mi cuenta</RouterLink>, con el resto de tus pedidos.
+      </p>
+      <p v-else class="done__link">
         Guarda este enlace para ver tu pedido: <a :href="trackUrl">{{ trackUrl }}</a>
       </p>
     </template>

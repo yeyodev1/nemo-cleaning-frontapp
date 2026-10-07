@@ -23,9 +23,9 @@ onMounted(() => load(1))
     <ul v-else class="rows">
       <li v-for="c in items" :key="c._id">
         <RouterLink :to="`/admin/clientes/${c._id}`" class="cc">
-          <span class="cc__avatar" aria-hidden="true">{{ c.name.charAt(0) }}</span>
+          <span class="cc__avatar" aria-hidden="true">{{ (c.name || c.email).charAt(0) }}</span>
           <span class="cc__main">
-            <strong>{{ c.name }}</strong>
+            <strong>{{ c.name || 'Sin nombre' }}</strong>
             <span class="cc__meta">{{ c.phone }}<template v-if="c.email"> · {{ c.email }}</template></span>
           </span>
           <span class="cc__end">
