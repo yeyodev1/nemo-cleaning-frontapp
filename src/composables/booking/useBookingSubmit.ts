@@ -28,6 +28,7 @@ export function useBookingSubmit() {
         documentId: draft.customer.documentId.trim(),
       },
       address: draft.address.trim(),
+      zone: draft.zone.trim(),
       reference: draft.reference.trim(),
       notes: draft.notes.trim(),
       paymentMethod: method,

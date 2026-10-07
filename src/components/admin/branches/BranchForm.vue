@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
+import ZonesEditor from '@/components/admin/operation/ZonesEditor.vue'
 import { managementService, type BranchInput } from '@/services/management.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
@@ -27,6 +28,7 @@ const blank = (): BranchInput => ({
   closingTime: '18:00',
   slotMinutes: 60,
   workDays: [1, 2, 3, 4, 5, 6],
+  zones: [],
 })
 const form = reactive<BranchInput>(blank())
 
@@ -35,7 +37,7 @@ watch(
   (o) => {
     if (!o) return
     const b = props.branch
-    Object.assign(form, b ? { ...blank(), ...b, workDays: [...(b.workDays || [])] } : blank())
+    Object.assign(form, b ? { ...blank(), ...b, workDays: [...(b.workDays || [])], zones: [...(b.zones || [])] } : blank())
   },
 )
 
@@ -83,6 +85,11 @@ async function save() {
           </label>
         </div>
       </fieldset>
+      <div class="field">
+        <span class="field__label">Urbanizaciones que atiende</span>
+        <ZonesEditor :model-value="form.zones || []" @update:model-value="form.zones = $event" />
+        <span class="field__hint">Aparecen al reservar en la web y en el registro de producción.</span>
+      </div>
       <label class="check"><input v-model="form.active" type="checkbox" /> Activa (recibe reservas)</label>
     </form>
     <template #footer>

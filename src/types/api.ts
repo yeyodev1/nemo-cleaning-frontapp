@@ -29,6 +29,8 @@ export interface Branch {
   closingTime: string
   slotMinutes: number
   workDays: number[]
+  /** Urbanizaciones / zonas que atiende (fase 2). */
+  zones?: string[]
 }
 
 export type Role = 'admin' | 'manager' | 'operator'
@@ -43,6 +45,12 @@ export interface User {
   active: boolean
   color?: string
   createdAt?: string
+  /** Fase 2: cargo, sueldo (centavos), si gana FEE y quién cobra su FEE supervisor. */
+  position?: '' | 'supervisor' | 'base_assistant' | 'washer'
+  monthlySalary?: number
+  commissions?: boolean
+  supervisor?: ID | null
+  hasPanelAccess?: boolean
 }
 
 /** "autos" = línea NEMO CAR; el resto = NEMO HOME & OFFICE. */
@@ -203,6 +211,22 @@ export interface Booking {
   history?: HistoryEntry[]
   createdAt: string
   updatedAt: string
+  /** Fase 2 (Base del Excel): urbanización, propina, cuenta del pago, confirmación y novedades. */
+  zone?: string
+  tip?: number
+  paymentAccount?: string
+  paymentConfirmation?: PaymentConfirmation
+  novedades?: Novedad[]
+}
+
+export type PaymentConfirmation = 'pending_confirmation' | 'confirmed' | 'pending_payment' | 'lost' | 'exchange'
+
+export interface Novedad {
+  _id: ID
+  text: string
+  operator: ID | null
+  by?: PersonRef
+  at: string
 }
 
 /** Pedido en "Mis pedidos": resumen + token para abrir el seguimiento. */
@@ -243,6 +267,8 @@ export interface Payment {
   status: PaymentRecordStatus
   proofUrl?: string
   reference?: string
+  /** Cuenta donde entró el dinero ("Transferencia Pichincha"…), fase 2. */
+  account?: string
   clientTransactionId?: string
   transactionId?: string
   note?: string
@@ -414,6 +440,8 @@ export interface CreateBookingInput {
   paymentMethod: PaymentMethod
   transferProofUrl?: string
   invoice?: InvoiceData
+  /** Urbanización elegida (lista de la sucursal o "Otra"). */
+  zone?: string
 }
 
 export interface AdminCreateBookingInput extends CreateBookingInput {

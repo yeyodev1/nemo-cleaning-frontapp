@@ -22,6 +22,13 @@ const adminRoutes: RouteRecordRaw[] = [
       { path: 'pedidos', name: 'AdminBookings', component: () => import('@/views/admin/BookingsView.vue'), meta: { title: 'Pedidos', roles: AM } },
       { path: 'pedidos/nuevo', name: 'AdminBookingNew', component: () => import('@/views/admin/BookingNewView.vue'), meta: { title: 'Nuevo pedido', roles: AM } },
       { path: 'pedidos/:id', name: 'AdminBooking', component: () => import('@/views/admin/BookingDetailView.vue'), meta: { title: 'Pedido', roles: AM } },
+      // Operación (fase 2)
+      { path: 'produccion', name: 'AdminProduction', component: () => import('@/views/admin/operation/ProductionBaseView.vue'), meta: { title: 'Producción del día', roles: AM } },
+      { path: 'produccion/registrar', name: 'AdminQuickEntry', component: () => import('@/views/admin/operation/QuickEntryView.vue'), meta: { title: 'Registrar servicio', roles: AM } },
+      { path: 'turnos', name: 'AdminShifts', component: () => import('@/views/admin/operation/ShiftsView.vue'), meta: { title: 'Turnos', roles: AM } },
+      { path: 'metas', name: 'AdminGoals', component: () => import('@/views/admin/operation/GoalsView.vue'), meta: { title: 'Metas mensuales', roles: AM } },
+      { path: 'comisiones', name: 'AdminCommissions', component: () => import('@/views/admin/operation/CommissionsView.vue'), meta: { title: 'Comisiones (FEE)', roles: AM } },
+      { path: 'novedades', name: 'AdminNovedades', component: () => import('@/views/admin/operation/NovedadesView.vue'), meta: { title: 'Novedades', roles: AM } },
       { path: 'pagos', name: 'AdminPayments', component: () => import('@/views/admin/PaymentsView.vue'), meta: { title: 'Pagos y conciliación', roles: AM } },
       { path: 'gastos', name: 'AdminExpenses', component: () => import('@/views/admin/ExpensesView.vue'), meta: { title: 'Gastos', roles: AM } },
       { path: 'caja', name: 'AdminCash', component: () => import('@/views/admin/CashView.vue'), meta: { title: 'Caja del día', roles: AM } },

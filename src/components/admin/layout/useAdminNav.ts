@@ -15,7 +15,10 @@ export function useAdminNav() {
 
   function isActive(to: string) {
     const path = router.currentRoute.value.path
-    return to === '/admin' ? path === '/admin' : path.startsWith(to)
+    if (to === '/admin') return path === '/admin'
+    const hit = (t: string) => path === t || path.startsWith(`${t}/`)
+    // Gana la ruta más específica: "Registrar servicio" no enciende también "Producción".
+    return hit(to) && !items.value.some((i) => i.to.length > to.length && hit(i.to))
   }
 
   function logout() {

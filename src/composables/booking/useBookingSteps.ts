@@ -37,6 +37,8 @@ export function useStepValidation() {
       if (!EMAIL.test(c.email.trim())) return 'Revisa tu correo electrónico.'
       if (c.phone.replace(/\D/g, '').length < 9)
         return 'Escribe un celular válido (ej. 0991234567).'
+      if ((catalog.branchById(draft.branch)?.zones?.length ?? 0) > 0 && !draft.zone.trim())
+        return 'Elige tu urbanización (o escríbela en "Otra").'
       if (draft.address.trim().length < 5) return 'Escribe la dirección donde haremos la limpieza.'
       if (draft.invoice.required) {
         const i = draft.invoice

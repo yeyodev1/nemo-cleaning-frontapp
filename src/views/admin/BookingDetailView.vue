@@ -9,6 +9,7 @@ import DetailStatus from '@/components/admin/bookings/DetailStatus.vue'
 import DetailPayments from '@/components/admin/bookings/DetailPayments.vue'
 import DetailHistory from '@/components/admin/bookings/DetailHistory.vue'
 import PaymentFormSheet from '@/components/admin/bookings/PaymentFormSheet.vue'
+import DetailOperation from '@/components/admin/operation/DetailOperation.vue'
 import { useBookingDetail } from '@/composables/admin/useBookingDetail'
 import type { ManualPaymentInput } from '@/services/bookings.service'
 
@@ -54,6 +55,7 @@ async function onPay(body: ManualPaymentInput) {
             @reschedule="(date, time) => update({ date, time }, 'Pedido reprogramado')"
             @operators="(ids) => update({ operators: ids }, 'Operadores asignados')"
           />
+          <DetailOperation :booking="booking" @changed="load" />
         </div>
       </div>
       <PaymentFormSheet :open="payOpen" :balance="booking.balance" :saving="saving" @close="payOpen = false" @submit="onPay" />

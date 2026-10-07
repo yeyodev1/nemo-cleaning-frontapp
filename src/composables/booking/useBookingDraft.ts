@@ -16,6 +16,8 @@ export interface BookingDraft {
   date: string
   time: string
   address: string
+  /** Urbanización / zona (lista de la sucursal o escrita en "Otra"). */
+  zone: string
   reference: string
   notes: string
   customer: { name: string; email: string; phone: string; documentId: string }
@@ -32,6 +34,7 @@ function empty(): BookingDraft {
     date: '',
     time: '',
     address: '',
+    zone: '',
     reference: '',
     notes: '',
     customer: { name: '', email: '', phone: '', documentId: '' },

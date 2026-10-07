@@ -1,14 +1,39 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { draft } from '@/composables/booking/useBookingDraft'
+import { useCatalogStore } from '@/stores/catalog'
 import { useCustomerStore } from '@/stores/customer'
 
 const customer = useCustomerStore()
+const catalog = useCatalogStore()
+// Urbanizaciones de la sucursal elegida; "Otra" deja escribirla.
+const zones = computed(() => catalog.branchById(draft.branch)?.zones || [])
+const other = ref(!!draft.zone && !zones.value.includes(draft.zone))
+const zoneSelect = computed({
+  get: () => (other.value ? '__other' : draft.zone),
+  set: (v: string) => {
+    other.value = v === '__other'
+    draft.zone = other.value ? '' : v
+  },
+})
 </script>
 
 <template>
   <div class="details">
     <fieldset class="details__group">
       <legend>Dirección del servicio</legend>
+      <label v-if="zones.length" class="field">
+        <span class="field__label">Urbanización / zona *</span>
+        <select v-model="zoneSelect" required>
+          <option value="" disabled>Elige tu urbanización</option>
+          <option v-for="z in zones" :key="z" :value="z">{{ z }}</option>
+          <option value="__other">Otra</option>
+        </select>
+      </label>
+      <label v-if="zones.length && other" class="field">
+        <span class="field__label">¿Cuál urbanización? *</span>
+        <input v-model="draft.zone" type="text" placeholder="Nombre de tu urbanización" required />
+      </label>
       <label class="field">
         <span class="field__label">Dirección *</span>
         <input

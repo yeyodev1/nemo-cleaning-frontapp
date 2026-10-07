@@ -7,6 +7,7 @@ import { useCrudList } from '@/composables/admin/useCrudList'
 import { managementService } from '@/services/management.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { roleLabel } from '@/config/labels'
+import { positionLabel } from '@/config/operationLabels'
 import type { Role } from '@/types/api'
 
 const scope = useAdminScope()
@@ -21,7 +22,7 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
   <section>
     <div class="bar">
       <p class="muted">{{ items.length }} {{ items.length === 1 ? 'persona' : 'personas' }}</p>
-      <button type="button" class="btn btn--primary" @click="open(null)"><AppIcon name="plus" /> Nuevo usuario</button>
+      <button type="button" class="btn btn--primary" @click="open(null)"><AppIcon name="plus" /> Nueva persona</button>
     </div>
     <div v-if="loading && !items.length" class="list"><span v-for="i in 5" :key="i" class="skeleton" style="height: 68px"></span></div>
     <ul v-else class="list">
@@ -30,7 +31,9 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
           <span class="person__avatar" :style="{ background: u.color || '#1E2D3A' }" aria-hidden="true">{{ u.name.charAt(0) }}</span>
           <span class="person__main">
             <strong>{{ u.name }}</strong>
-            <span class="muted">{{ u.email }}<template v-if="u.branches?.length"> · {{ branchNames(u.branches) }}</template></span>
+            <span class="muted">
+              <template v-if="u.position">{{ positionLabel[u.position] }} · </template>{{ u.email || 'Sin acceso al panel' }}<template v-if="u.branches?.length"> · {{ branchNames(u.branches) }}</template>
+            </span>
           </span>
           <span class="person__end">
             <StatusBadge :tone="tone[u.role]" :label="roleLabel[u.role]" />
@@ -39,7 +42,7 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
         </button>
       </li>
     </ul>
-    <UserForm :open="formOpen" :user="editing" @close="formOpen = false" @saved="onSaved" />
+    <UserForm :open="formOpen" :user="editing" :people="items" @close="formOpen = false" @saved="onSaved" />
   </section>
 </template>
 

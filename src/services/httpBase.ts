@@ -130,6 +130,15 @@ export default class APIBase {
     }
   }
 
+  protected async put<T>(endpoint: string, body?: unknown): Promise<T> {
+    try {
+      const { data } = await http.put<T>(this.url(endpoint), body ?? {}, { authAs: this.authAs })
+      return data
+    } catch (e) {
+      throw toApiError(e)
+    }
+  }
+
   protected async delete<T>(endpoint: string): Promise<T> {
     try {
       const { data } = await http.delete<T>(this.url(endpoint), { authAs: this.authAs })
