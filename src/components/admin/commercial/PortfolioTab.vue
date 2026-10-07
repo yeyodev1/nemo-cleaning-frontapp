@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, toRef } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import KpiCard from '@/components/admin/common/KpiCard.vue'
 import KpiRow from '@/components/admin/sheet/KpiRow.vue'
 import EmptyState from '@/components/admin/sheet/EmptyState.vue'
@@ -9,6 +9,7 @@ import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
 import { useReport } from '@/composables/admin/useReport'
+import { useShowMore } from '@/composables/admin/useShowMore'
 import { followUpResult } from '@/config/financeLabels'
 import { errorMessage, money, shortDate, whatsappUrl } from '@/utils/format'
 import type { FollowUpResult, PortfolioItem } from '@/types/finance'
@@ -19,6 +20,7 @@ const toast = useToastStore()
 const branch = toRef(scope, 'branch')
 const result = ref<FollowUpResult | ''>('')
 const { data, loading, load } = useReport(() => ledgerService.portfolio(scope.query, result.value), [branch, result])
+const { visible, remaining, more, step } = useShowMore(computed(() => data.value?.items ?? []))
 const results = Object.keys(followUpResult) as FollowUpResult[]
 const notes = ref<Record<string, string>>({})
 
@@ -65,7 +67,7 @@ const msg = (name: string) => `Hola ${name}, te escribimos de Nemo Cleaning. Hac
       </label>
       <EmptyState v-if="!data.items.length" title="Nadie en la cartera" text="Todos tus clientes tuvieron un servicio en los últimos 60 días." icon="check-circle" />
       <TransitionGroup v-else name="fade-up" tag="ul" class="list">
-        <li v-for="i in data.items" :key="i.customer._id" class="pf">
+        <li v-for="i in visible" :key="i.customer._id" class="pf">
           <div class="pf__top">
             <div>
               <RouterLink :to="`/admin/clientes/${i.customer._id}`" class="pf__name">{{ i.customer.name }}</RouterLink>
@@ -105,11 +107,16 @@ const msg = (name: string) => `Hola ${name}, te escribimos de Nemo Cleaning. Hac
           </div>
         </li>
       </TransitionGroup>
+      <button v-if="remaining" type="button" class="btn btn--ghost more" @click="more">Ver {{ Math.min(remaining, step) }} más · quedan {{ remaining }}</button>
     </template>
   </div>
 </template>
 
 <style scoped lang="scss">
+.more {
+  display: flex;
+  margin: 1rem auto 0;
+}
 .hint {
   font-size: $text-sm;
   color: $ink-muted;

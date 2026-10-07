@@ -10,6 +10,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useReport } from '@/composables/admin/useReport'
+import { useShowMore } from '@/composables/admin/useShowMore'
 import { agingBucket } from '@/config/financeLabels'
 import { money, shortDate, whatsappUrl } from '@/utils/format'
 import type { AgingBucket } from '@/types/finance'
@@ -24,6 +25,7 @@ const tabs = computed(() => [
   ...buckets.map((b) => ({ value: b, label: agingBucket[b].label, count: data.value?.items.filter((i) => i.bucket === b).length || 0 })),
 ])
 const items = computed(() => (data.value?.items ?? []).filter((i) => !filter.value || i.bucket === filter.value))
+const { visible, remaining, more, step } = useShowMore(items)
 const open = ref<string | null>(null)
 const keyOf = (i: { customer: { _id: string | null; name: string } }) => i.customer._id || i.customer.name
 function remind(i: (typeof items.value)[number]) {
@@ -54,7 +56,7 @@ function remind(i: (typeof items.value)[number]) {
       />
       <p v-else-if="!items.length" class="empty">No hay clientes en este rango.</p>
       <TransitionGroup v-else name="fade-up" tag="ul" class="list">
-        <li v-for="i in items" :key="keyOf(i)" class="cx">
+        <li v-for="i in visible" :key="keyOf(i)" class="cx">
           <button type="button" class="cx__head" :aria-expanded="open === keyOf(i)" @click="open = open === keyOf(i) ? null : keyOf(i)">
             <span class="cx__who">
               <strong>{{ i.customer.name }}</strong>
@@ -81,11 +83,16 @@ function remind(i: (typeof items.value)[number]) {
           </div>
         </li>
       </TransitionGroup>
+      <button v-if="remaining" type="button" class="btn btn--ghost more" @click="more">Ver {{ Math.min(remaining, step) }} más · quedan {{ remaining }}</button>
     </template>
   </section>
 </template>
 
 <style scoped lang="scss">
+.more {
+  display: flex;
+  margin: 1rem auto 0;
+}
 .lost {
   font-size: $text-sm;
   color: $ink-muted;

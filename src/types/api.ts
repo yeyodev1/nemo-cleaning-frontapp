@@ -189,7 +189,8 @@ export interface Booking {
   code: string
   branch: ID | Branch
   customer: CustomerRef
-  source: 'web' | 'admin'
+  /** 'import' = fila del Excel histórico (código HIS-…). */
+  source: 'web' | 'admin' | 'import'
   items: BookingItem[]
   subtotal: number
   discount: number

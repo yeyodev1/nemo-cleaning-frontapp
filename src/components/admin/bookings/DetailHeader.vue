@@ -15,7 +15,7 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
   <header class="dh card">
     <div class="dh__top">
       <div>
-        <p class="dh__code">{{ booking.code }} <span v-if="booking.source === 'web'" class="badge badge--aqua">Web</span></p>
+        <p class="dh__code">{{ booking.code }} <span v-if="booking.source === 'web'" class="badge badge--aqua">Web</span><span v-else-if="booking.source === 'import'" class="badge">Histórico</span></p>
         <h2 class="dh__when">{{ longDate(booking.date) }} · {{ booking.time }}</h2>
         <p class="muted dh__branch"><AppIcon name="store" :size="14" /> {{ branch() }} · {{ booking.durationMinutes }} min</p>
       </div>

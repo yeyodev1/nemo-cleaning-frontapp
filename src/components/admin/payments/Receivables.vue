@@ -5,6 +5,7 @@ import BookingBadges from '@/components/admin/common/BookingBadges.vue'
 import { bookingsService } from '@/services/bookings.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
+import { useShowMore } from '@/composables/admin/useShowMore'
 import { errorMessage, intlPhone, money, shortDate, whatsappUrl } from '@/utils/format'
 import type { Booking } from '@/types/api'
 
@@ -12,6 +13,7 @@ const scope = useAdminScope()
 const toast = useToastStore()
 const items = ref<Booking[]>([])
 const loading = ref(false)
+const { visible, remaining, more, step } = useShowMore(items)
 const total = computed(() => items.value.reduce((s, b) => s + (b.balance || 0), 0))
 
 async function load() {
@@ -42,7 +44,7 @@ const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de
     </div>
     <p v-else-if="!items.length" class="empty">No hay cuentas por cobrar. Todo al día.</p>
     <ul v-else class="rows">
-      <li v-for="b in items" :key="b._id" class="rc">
+      <li v-for="b in visible" :key="b._id" class="rc">
         <div class="rc__main">
           <RouterLink :to="`/admin/pedidos/${b._id}`" class="rc__code">{{ b.code }}</RouterLink>
           <span class="rc__name">{{ b.customer?.name }}</span>
@@ -62,10 +64,15 @@ const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de
         </div>
       </li>
     </ul>
+    <button v-if="remaining" type="button" class="btn btn--ghost more" @click="more">Ver {{ Math.min(remaining, step) }} más · quedan {{ remaining }}</button>
   </div>
 </template>
 
 <style scoped lang="scss">
+.more {
+  display: flex;
+  margin: 1rem auto 0;
+}
 .sum {
   @include card(1rem 1.1rem);
   display: flex;
