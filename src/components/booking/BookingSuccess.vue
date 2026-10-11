@@ -5,7 +5,7 @@ import AnimatedCheck from './AnimatedCheck.vue'
 import PayphoneBox from '@/components/payment/PayphoneBox.vue'
 import WhatsappHandoff from './WhatsappHandoff.vue'
 import { useBookingSubmit } from '@/composables/booking/useBookingSubmit'
-import { longDate, money } from '@/utils/format'
+import { clock12, longDate, money } from '@/utils/format'
 import type { CreateBookingResult } from '@/types/api'
 import { useCustomerStore } from '@/stores/customer'
 
@@ -61,7 +61,7 @@ const next = computed(() => {
         </div>
         <div>
           <dt>Hora</dt>
-          <dd>{{ b.time }}</dd>
+          <dd>{{ clock12(b.time) }}</dd>
         </div>
         <div>
           <dt>Total</dt>
