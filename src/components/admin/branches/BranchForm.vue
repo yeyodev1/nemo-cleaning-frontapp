@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import ZonesEditor from '@/components/admin/operation/ZonesEditor.vue'
+import SlotTimesEditor from './SlotTimesEditor.vue'
 import { managementService, type BranchInput } from '@/services/management.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
@@ -26,7 +27,8 @@ const blank = (): BranchInput => ({
   active: true,
   openingTime: '08:00',
   closingTime: '18:00',
-  slotMinutes: 60,
+  slotMinutes: 90,
+  slotTimes: ['08:00', '09:30', '11:00', '13:00', '14:30', '16:00'],
   workDays: [1, 2, 3, 4, 5, 6],
   zones: [],
 })
@@ -37,7 +39,7 @@ watch(
   (o) => {
     if (!o) return
     const b = props.branch
-    Object.assign(form, b ? { ...blank(), ...b, workDays: [...(b.workDays || [])], zones: [...(b.zones || [])] } : blank())
+    Object.assign(form, b ? { ...blank(), ...b, workDays: [...(b.workDays || [])], zones: [...(b.zones || [])], slotTimes: [...(b.slotTimes || [])] } : blank())
   },
 )
 
@@ -75,7 +77,12 @@ async function save() {
       <div class="form-row">
         <label class="field"><span class="field__label">Abre</span><input v-model="form.openingTime" type="time" required /></label>
         <label class="field"><span class="field__label">Cierra</span><input v-model="form.closingTime" type="time" required /></label>
-        <label class="field"><span class="field__label">Turno (min)</span><input v-model.number="form.slotMinutes" type="number" min="15" step="15" required /></label>
+        <label class="field"><span class="field__label">Duración del turno (min)</span><input v-model.number="form.slotMinutes" type="number" min="15" step="15" required /></label>
+      </div>
+      <div class="field">
+        <span class="field__label">Horas de los turnos</span>
+        <SlotTimesEditor :model-value="form.slotTimes || []" :every="form.slotMinutes" @update:model-value="form.slotTimes = $event" />
+        <span class="field__hint">Son las horas que el cliente puede elegir en la web. Cada turno ocupa la duración de arriba.</span>
       </div>
       <fieldset class="field">
         <legend class="field__label">Días de atención</legend>
