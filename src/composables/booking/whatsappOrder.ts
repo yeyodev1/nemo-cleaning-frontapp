@@ -1,6 +1,7 @@
 import { useCatalogStore } from '@/stores/catalog'
 import { localLines, type Cart } from './cart'
 import { cartMessage, nemoWhatsappUrl, webOrderMessage } from '@/utils/whatsapp'
+import { gpsUrl } from '@/utils/location'
 import type { CreateBookingResult } from '@/types/api'
 
 /** Enlace de seguimiento público del pedido (el mismo que llega por correo). */
@@ -14,7 +15,7 @@ export function orderWhatsapp(result: CreateBookingResult) {
   const b = result.booking
   const text = webOrderMessage({
     code: b.code,
-    items: b.items.map((i) => ({ name: i.name, variant: i.variant, quantity: i.quantity, unit: i.unit, subtotal: i.subtotal })),
+    items: b.items.map((i) => ({ name: i.name, variant: i.variant, choice: i.choice, quantity: i.quantity, unit: i.unit, subtotal: i.subtotal })),
     date: b.date,
     time: b.time,
     total: b.total,
@@ -22,6 +23,7 @@ export function orderWhatsapp(result: CreateBookingResult) {
     address: b.address,
     reference: b.reference,
     zone: b.zone,
+    mapsUrl: gpsUrl(b.location) || undefined,
     customerName: b.customer?.name,
     trackingUrl: trackingLink(b.code, result.accessToken),
   })
@@ -33,7 +35,7 @@ export function cartWhatsapp(input: { cart: Cart; branch?: string; date?: string
   const catalog = useCatalogStore()
   const lines = localLines(input.cart, catalog.services)
   const text = cartMessage({
-    items: lines.map((l) => ({ name: l.name, variant: l.variant, quantity: l.quantity, unit: l.unit, subtotal: l.subtotal })),
+    items: lines.map((l) => ({ name: l.name, variant: l.variant, choice: l.choice, quantity: l.quantity, unit: l.unit, subtotal: l.subtotal })),
     total: lines.reduce((s, l) => s + l.subtotal, 0),
     branchName: input.branch ? catalog.branchById(input.branch)?.name : undefined,
     date: input.date,
