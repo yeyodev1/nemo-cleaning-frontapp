@@ -24,17 +24,19 @@ export function useBookingForm() {
   const form = reactive({
     branch: scope.branch || '',
     date: todayISO(1),
-    time: '09:00',
+    time: '08:00',
     customer: { name: '', email: '', phone: '', documentId: '' },
     address: '',
     reference: '',
+    // Enlace de Google Maps que el cliente mandó por WhatsApp (opcional).
+    mapsLink: '',
     notes: '',
     paymentMethod: 'cash' as PaymentMethod,
     transferProofUrl: '',
     discount: '',
     operators: [] as string[],
     status: 'confirmed' as BookingStatus,
-    invoice: { required: false, name: '', documentId: '', email: '', address: '' },
+    invoice: { required: false, name: '', documentId: '', email: '', phone: '', address: '' },
   })
 
   managementService
@@ -106,6 +108,7 @@ export function useBookingForm() {
         customer: { ...form.customer },
         address: form.address,
         reference: form.reference,
+        location: form.mapsLink.trim() ? { lat: null, lng: null, accuracy: 0, url: form.mapsLink.trim() } : undefined,
         notes: form.notes,
         paymentMethod: form.paymentMethod,
         transferProofUrl: form.transferProofUrl || undefined,
