@@ -2,7 +2,7 @@ import { reactive, watch } from 'vue'
 import { DRAFT_KEY } from '@/config/site'
 import { readJSON, removeKey, writeJSON } from '@/utils/storage'
 import { todayISO } from '@/utils/format'
-import type { InvoiceData, PaymentMethod } from '@/types/api'
+import type { BookingLocation, InvoiceData, PaymentMethod } from '@/types/api'
 import type { Cart } from './cart'
 
 /**
@@ -19,6 +19,8 @@ export interface BookingDraft {
   /** Urbanización / zona (lista de la sucursal o escrita en "Otra"). */
   zone: string
   reference: string
+  /** Ubicación GPS compartida (recomendada en Vía a la Costa); null = no la compartió. */
+  location: BookingLocation | null
   notes: string
   customer: { name: string; email: string; phone: string; documentId: string }
   invoice: InvoiceData
@@ -36,9 +38,10 @@ function empty(): BookingDraft {
     address: '',
     zone: '',
     reference: '',
+    location: null,
     notes: '',
     customer: { name: '', email: '', phone: '', documentId: '' },
-    invoice: { required: false, name: '', documentId: '', email: '', address: '' },
+    invoice: { required: false, name: '', documentId: '', email: '', phone: '', address: '' },
     paymentMethod: '',
     transferProofUrl: '',
   }
