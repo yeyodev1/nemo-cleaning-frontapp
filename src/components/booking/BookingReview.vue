@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { draft } from '@/composables/booking/useBookingDraft'
-import { longDate } from '@/utils/format'
+import { clock12, longDate } from '@/utils/format'
 
 defineEmits<{ edit: [step: number] }>()
 const catalog = useCatalogStore()
@@ -21,6 +21,7 @@ const branch = computed(() => catalog.branchById(draft.branch))
           >{{ draft.reference }}<template v-if="draft.reference && branch"> · </template>Sucursal
           {{ branch?.name }}</small
         >
+        <small v-if="draft.location" class="review__gps">Con ubicación GPS</small>
       </dd>
     </div>
     <div class="review__row">
@@ -28,7 +29,7 @@ const branch = computed(() => catalog.branchById(draft.branch))
       <dt class="sr-only">Fecha y hora</dt>
       <dd>
         <strong class="review__cap">{{ longDate(draft.date) }}</strong>
-        <small>A las {{ draft.time }}</small>
+        <small>A las {{ clock12(draft.time) }}</small>
       </dd>
     </div>
     <div class="review__row">
@@ -80,5 +81,9 @@ const branch = computed(() => catalog.branchById(draft.branch))
   &__cap::first-letter {
     text-transform: uppercase;
   }
+}
+.review__row small.review__gps {
+  font-weight: 700;
+  color: $success;
 }
 </style>
