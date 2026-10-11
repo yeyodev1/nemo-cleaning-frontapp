@@ -67,7 +67,9 @@ transform/opacity (y `grid-template-rows` para alturas, p. ej. el FAQ). Transici
 
 Catálogo: variantes (tamaño/medida/plan), rangos (`priceMax`, se cobra el menor), tramos por cantidad y m² con decimales.
 `utils/pricing.ts` replica EXACTO `pricing.service.ts#priceLine` del back; el carrito usa claves `id::variante`
-(`composables/booking/cart.ts`). `composables/office/officePricing.ts` replica `computeEstimate` del back.
+(`composables/booking/cart.ts`) y `id::variante::opción` cuando el servicio pide una opción incluida (`choices`, techo o
+asientos: `IncludedChoice.vue` + `useIncludedChoice.ts`). Ubicación GPS del servicio: `LocationPicker.vue`
+(`useGeoLocation.ts`, `utils/location.ts`); turnos al cliente en "8:00 am" con `clock12()`. `composables/office/officePricing.ts` replica `computeEstimate` del back.
 
 ## Arquitectura
 
