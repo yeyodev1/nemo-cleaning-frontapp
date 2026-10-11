@@ -4,27 +4,29 @@ import { priceLine } from '@/utils/pricing'
 /**
  * Carrito = { clave: cantidad }. La clave es el id del servicio, o `id::opción` cuando el
  * servicio tiene variantes (tamaño, medida, plan…): así se pueden pedir dos sofás de distinto tamaño.
+ * Si además pide una opción incluida (techo o asientos) va al final: `id::opción::incluida`.
  * Las cantidades por m² pueden tener decimales.
  */
 export type Cart = Record<string, number>
 
 const SEP = '::'
 
-export function cartKey(service: string, variant = ''): string {
+export function cartKey(service: string, variant = '', choice = ''): string {
+  if (choice) return [service, variant, choice].join(SEP)
   return variant ? `${service}${SEP}${variant}` : service
 }
 
-export function parseKey(key: string): { service: string; variant: string } {
-  const i = key.indexOf(SEP)
-  return i < 0 ? { service: key, variant: '' } : { service: key.slice(0, i), variant: key.slice(i + SEP.length) }
+export function parseKey(key: string): { service: string; variant: string; choice: string } {
+  const [service = '', variant = '', choice = ''] = key.split(SEP)
+  return { service, variant, choice }
 }
 
 export function cartItems(cart: Cart): QuoteItemInput[] {
   return Object.entries(cart)
     .filter(([, q]) => q > 0)
     .map(([key, quantity]) => {
-      const { service, variant } = parseKey(key)
-      return variant ? { service, variant, quantity } : { service, quantity }
+      const { service, variant, choice } = parseKey(key)
+      return { service, quantity, ...(variant ? { variant } : {}), ...(choice ? { choice } : {}) }
     })
 }
 
@@ -38,6 +40,7 @@ export interface LocalLine {
   service: string
   name: string
   variant: string
+  choice: string
   unit: Service['unit']
   quantity: number
   unitPrice: number
@@ -51,11 +54,11 @@ export function localLines(cart: Cart, services: Service[]): LocalLine[] {
   const out: LocalLine[] = []
   for (const [key, quantity] of Object.entries(cart)) {
     if (!(quantity > 0)) continue
-    const { service, variant } = parseKey(key)
+    const { service, variant, choice } = parseKey(key)
     const s = services.find((x) => x._id === service)
     if (!s) continue
     const p = priceLine(s, variant, quantity)
-    out.push({ key, service, name: s.name, variant, unit: s.unit, quantity, isExtra: s.isExtra, ...p })
+    out.push({ key, service, name: s.name, variant, choice, unit: s.unit, quantity, isExtra: s.isExtra, ...p })
   }
   return out
 }
