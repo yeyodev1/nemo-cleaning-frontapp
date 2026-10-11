@@ -26,6 +26,13 @@ export function useStepValidation() {
         return q > 0 && s && !s.isExtra
       })
       if (!hasMain) return 'Agrega al menos un servicio (los adicionales van junto a un servicio).'
+      // Servicios con opción incluida (techo o asientos): sin elegir no se puede atender bien.
+      for (const [key, q] of Object.entries(draft.cart)) {
+        const { service, choice } = parseKey(key)
+        const s = catalog.byId(service)
+        if (q > 0 && s?.choices?.length && !choice)
+          return `${s.name}: elige si incluye ${s.choices.map((c) => c.toLowerCase()).join(' o ')}.`
+      }
     }
     if (step === 3) {
       if (!draft.date) return 'Elige el día de tu limpieza.'
@@ -45,6 +52,7 @@ export function useStepValidation() {
         if (!i.name.trim() || !i.documentId.trim())
           return 'Completa el nombre y la cédula/RUC de la factura.'
         if (!EMAIL.test(i.email.trim())) return 'Revisa el correo para la factura.'
+        if (i.phone.replace(/\D/g, '').length < 9) return 'Escribe el teléfono para la factura (ej. 0991234567).'
       }
     }
     if (step === 5) {
