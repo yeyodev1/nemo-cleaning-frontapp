@@ -38,9 +38,16 @@ const hasMain = computed(() =>
 )
 
 function set(key: string, value: number) {
+  patch({ [key]: value })
+}
+
+/** Varios cambios a la vez (mover unidades al cambiar techo/asientos): un solo emit. */
+function patch(changes: Cart) {
   const next = { ...props.modelValue }
-  if (value > 0) next[key] = value
-  else delete next[key]
+  for (const [key, value] of Object.entries(changes)) {
+    if (value > 0) next[key] = value
+    else delete next[key]
+  }
   emit('update:modelValue', next)
 }
 </script>
@@ -66,7 +73,7 @@ function set(key: string, value: number) {
     </div>
 
     <ul class="picker__list">
-      <ServiceOption v-for="s in visible" :key="s._id" :service="s" :cart="modelValue" :compact="compact" @set="set" />
+      <ServiceOption v-for="s in visible" :key="s._id" :service="s" :cart="modelValue" :compact="compact" @set="set" @patch="patch" />
       <li v-if="!visible.length" class="empty">No hay servicios en esta categoría.</li>
     </ul>
 
@@ -76,7 +83,7 @@ function set(key: string, value: number) {
         <small v-if="!hasMain">Se agregan junto a un servicio principal</small>
       </h3>
       <ul class="picker__list">
-        <ServiceOption v-for="s in extras" :key="s._id" :service="s" :cart="modelValue" :compact="compact" @set="set" />
+        <ServiceOption v-for="s in extras" :key="s._id" :service="s" :cart="modelValue" :compact="compact" @set="set" @patch="patch" />
       </ul>
     </section>
 
