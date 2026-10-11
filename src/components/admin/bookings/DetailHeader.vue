@@ -4,6 +4,7 @@ import BookingBadges from '@/components/admin/common/BookingBadges.vue'
 import { paymentMethod } from '@/config/labels'
 import { useAdminScope } from '@/stores/adminScope'
 import { longDate, mapsUrl, money, whatsappUrl, settledLabel } from '@/utils/format'
+import { gpsUrl } from '@/utils/location'
 import type { BookingDetail } from '@/types/api'
 
 const props = defineProps<{ booking: BookingDetail }>()
@@ -35,11 +36,13 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
         <strong>{{ booking.customer?.name }}</strong>
         <span class="muted">{{ booking.customer?.phone }}<template v-if="booking.customer?.email"> · {{ booking.customer.email }}</template></span>
         <span class="dh__addr"><AppIcon name="pin" :size="14" /> {{ booking.address }}<template v-if="booking.reference"> · {{ booking.reference }}</template></span>
+        <span v-if="gpsUrl(booking.location)" class="dh__gps"><AppIcon name="check-circle" :size="14" /> El cliente compartió su ubicación GPS</span>
       </div>
       <div class="dh__links">
         <a v-if="booking.customer?.phone" :href="`tel:${booking.customer.phone}`" class="btn btn--ghost btn--sm"><AppIcon name="phone" /> Llamar</a>
         <a v-if="booking.customer?.phone" :href="whatsappUrl(booking.customer.phone, `Hola ${booking.customer.name}, te escribimos de Nemo Cleaning por tu pedido ${booking.code}.`)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="whatsapp" /> WhatsApp</a>
-        <a :href="mapsUrl(booking.address)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="pin" /> Mapa</a>
+        <a v-if="gpsUrl(booking.location)" :href="gpsUrl(booking.location)" target="_blank" rel="noopener" class="btn btn--primary btn--sm"><AppIcon name="navigation" /> Ubicación GPS</a>
+        <a v-else :href="mapsUrl(booking.address)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="pin" /> Mapa</a>
         <RouterLink v-if="booking.customer?._id" :to="`/admin/clientes/${booking.customer._id}`" class="btn btn--ghost btn--sm"><AppIcon name="user" /> Ficha</RouterLink>
       </div>
     </div>
@@ -49,7 +52,7 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
     <div v-if="booking.invoice?.required" class="dh__invoice">
       <strong>Factura</strong>
       <span>{{ booking.invoice.name }} · {{ booking.invoice.documentId }}</span>
-      <span class="muted">{{ booking.invoice.email }} · {{ booking.invoice.address }}</span>
+      <span class="muted">{{ [booking.invoice.email, booking.invoice.phone, booking.invoice.address].filter(Boolean).join(' · ') }}</span>
     </div>
   </header>
 </template>
@@ -129,6 +132,15 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
     display: flex;
     flex-direction: column;
     font-size: $text-sm;
+  }
+
+  &__gps {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: $text-xs;
+    font-weight: 600;
+    color: $success;
   }
 
   &__addr {
