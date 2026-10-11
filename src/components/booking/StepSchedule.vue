@@ -4,7 +4,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { draft } from '@/composables/booking/useBookingDraft'
 import { useAvailability } from '@/composables/booking/useAvailability'
-import { longDate, todayISO, addDays } from '@/utils/format'
+import { clock12, longDate, todayISO, addDays } from '@/utils/format'
 
 const catalog = useCatalogStore()
 const branch = computed(() => catalog.branchById(draft.branch))
@@ -78,7 +78,7 @@ const freeCount = computed(() => slots.value.filter((s) => s.available).length)
           :aria-checked="draft.time === s.time"
           @click="draft.time = s.time"
         >
-          {{ s.time }}
+          {{ clock12(s.time) }}
         </button>
       </div>
     </section>
