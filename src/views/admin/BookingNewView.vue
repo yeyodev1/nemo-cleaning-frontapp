@@ -49,6 +49,11 @@ const methods = options(paymentMethod)
       </div>
       <label class="field"><span class="field__label">Dirección del servicio *</span><input v-model="form.address" required /></label>
       <label class="field"><span class="field__label">Referencia</span><input v-model="form.reference" placeholder="Junto a…, casa color…" /></label>
+      <label class="field">
+        <span class="field__label">Ubicación GPS (enlace de Google Maps)</span>
+        <input v-model="form.mapsLink" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/…" />
+        <span class="field__hint">Pega la ubicación que mandó el cliente por WhatsApp: el lavador la abre con un toque.</span>
+      </label>
       <label class="field"><span class="field__label">Notas</span><textarea v-model="form.notes" rows="2"></textarea></label>
       <label class="check"><input v-model="form.invoice.required" type="checkbox" /> Requiere factura</label>
       <template v-if="form.invoice.required">
@@ -58,8 +63,9 @@ const methods = options(paymentMethod)
         </div>
         <div class="form-row">
           <label class="field"><span class="field__label">Correo de facturación</span><input v-model="form.invoice.email" type="email" /></label>
-          <label class="field"><span class="field__label">Dirección fiscal</span><input v-model="form.invoice.address" /></label>
+          <label class="field"><span class="field__label">Teléfono de facturación</span><input v-model="form.invoice.phone" type="tel" inputmode="tel" /></label>
         </div>
+        <label class="field"><span class="field__label">Dirección fiscal</span><input v-model="form.invoice.address" /></label>
       </template>
     </section>
 
