@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { gpsUrl } from '@/utils/location'
+import { choiceText } from '@/utils/pricing'
 import { computed, toRef } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
@@ -45,9 +47,13 @@ const pending = computed(() => o.value?.status === 'pending')
       <section class="wos__sum">
         <p><AppIcon name="calendar" :size="15" /> <span class="cap">{{ shortDate(o.date) }}</span> · {{ o.time }}<template v-if="scope.branchName(o.branch)"> · {{ scope.branchName(o.branch) }}</template></p>
         <p v-if="o.address || o.zone"><AppIcon name="pin" :size="15" /> {{ [o.address, o.zone].filter(Boolean).join(' · ') }}</p>
+        <p v-if="gpsUrl(o.location)">
+          <AppIcon name="navigation" :size="15" />
+          <a :href="gpsUrl(o.location)" target="_blank" rel="noopener" class="wos__map">Ubicación GPS · abrir en Maps</a>
+        </p>
         <ul>
           <li v-for="(i, n) in o.items" :key="n">
-            <span>{{ i.name }}<template v-if="i.variant"> · {{ i.variant }}</template> <small>x{{ i.quantity }}</small></span>
+            <span>{{ i.name }}<template v-if="i.variant"> · {{ i.variant }}</template><template v-if="i.choice"> · {{ choiceText(i.choice) }}</template> <small>x{{ i.quantity }}</small></span>
             <span class="money">{{ money(i.subtotal) }}</span>
           </li>
         </ul>
@@ -172,6 +178,13 @@ const pending = computed(() => o.value?.status === 'pending')
     small {
       color: $ink-muted;
     }
+  }
+
+  &__map {
+    font-weight: 700;
+    color: $navy;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   &__total {
