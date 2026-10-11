@@ -1,4 +1,5 @@
 import type {
+  BookingLocation,
   BookingStatus,
   ID,
   PaymentConfirmation,
@@ -17,7 +18,7 @@ export interface WaOrder {
   fromWeb: boolean
   branch: ID
   customer: { _id: ID; name: string; phone?: string; email?: string } | null
-  items: { name: string; variant?: string; quantity: number; unit?: ServiceUnit; subtotal: number }[]
+  items: { name: string; variant?: string; choice?: string; quantity: number; unit?: ServiceUnit; subtotal: number }[]
   total: number
   discount: number
   amountPaid: number
@@ -27,6 +28,7 @@ export interface WaOrder {
   address: string
   reference: string
   zone: string
+  location?: BookingLocation | null
   notes: string
   status: BookingStatus
   operators: { _id: ID; name: string; color?: string }[]
