@@ -18,7 +18,7 @@ const discount = ref('')
 
 async function startEdit() {
   cart.value = Object.fromEntries(
-    props.booking.items.filter((i) => i.service).map((i) => [cartKey(i.service!, i.variant), i.quantity]),
+    props.booking.items.filter((i) => i.service).map((i) => [cartKey(i.service!, i.variant, i.choice), i.quantity]),
   )
   discount.value = fromCents(props.booking.discount)
   editing.value = true
