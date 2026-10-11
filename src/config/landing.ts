@@ -153,7 +153,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: '¿Cuánto tarda la entrega de una alfombra?',
-    a: 'El tiempo de entrega de la limpieza de alfombras es de 24 a 48 horas.',
+    a: 'El tiempo de entrega de la limpieza de alfombras es de 48 a 72 horas.',
   },
   {
     q: '¿El precio del colchón incluye las almohadas?',
