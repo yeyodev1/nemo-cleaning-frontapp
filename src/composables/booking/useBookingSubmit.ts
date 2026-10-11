@@ -53,12 +53,13 @@ export function useBookingSubmit() {
       address: draft.address.trim(),
       zone: draft.zone.trim(),
       reference: draft.reference.trim(),
+      location: draft.location ?? undefined,
       notes: draft.notes.trim(),
       paymentMethod: method,
       transferProofUrl: method === 'transfer' ? draft.transferProofUrl : undefined,
       invoice: draft.invoice.required
         ? { ...draft.invoice }
-        : { required: false, name: '', documentId: '', email: '', address: '' },
+        : { required: false, name: '', documentId: '', email: '', phone: '', address: '' },
     }
   }
 
