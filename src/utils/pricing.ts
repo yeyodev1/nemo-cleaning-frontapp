@@ -104,8 +104,13 @@ export function qtyLabel(quantity: number, unit?: string): string {
   return unit === 'm2' ? `${quantity} m²` : String(quantity)
 }
 
-/** "2× Limpieza de sofás · Sofá 2 puestos", "Patios · Plan Basic · 12.5 m²". */
-export function itemLabel(i: { name: string; variant?: string; unit?: string; quantity: number }): string {
-  const name = `${i.name}${i.variant ? ` · ${i.variant}` : ''}`
+/** "con techo" para la opción incluida elegida (Detailing Interior). */
+export function choiceText(choice?: string): string {
+  return choice ? `incluye ${choice.toLowerCase()}` : ''
+}
+
+/** "2× Limpieza de sofás · Sofá 2 puestos", "Patios · Plan Basic · 12.5 m²", "1× Detailing Interior · Grande · incluye techo". */
+export function itemLabel(i: { name: string; variant?: string; choice?: string; unit?: string; quantity: number }): string {
+  const name = `${i.name}${i.variant ? ` · ${i.variant}` : ''}${i.choice ? ` · ${choiceText(i.choice)}` : ''}`
   return i.unit === 'm2' ? `${name} · ${i.quantity} m²` : `${i.quantity}× ${name}`
 }
