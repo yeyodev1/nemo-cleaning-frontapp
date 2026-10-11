@@ -10,6 +10,7 @@ import { longDate, money, whatsappUrl } from './format'
 export interface MessageLine {
   name: string
   variant?: string
+  choice?: string
   quantity: number
   unit?: string
   subtotal?: number
@@ -25,6 +26,8 @@ export interface MessageOrder {
   address?: string
   reference?: string
   zone?: string
+  /** Enlace de Google Maps de la ubicación GPS (si el cliente la compartió). */
+  mapsUrl?: string
   customerName?: string
   trackingUrl?: string
 }
@@ -39,7 +42,7 @@ function qty(l: MessageLine): string {
 }
 
 function lineText(l: MessageLine, prices = true): string {
-  const name = l.variant ? `${l.name} · ${l.variant}` : l.name
+  const name = [l.name, l.variant, l.choice && `incluye ${l.choice.toLowerCase()}`].filter(Boolean).join(' · ')
   const price = prices && l.subtotal !== undefined ? ` — ${money(l.subtotal)}` : ''
   return `• ${name} ${qty(l)}${price}`
 }
@@ -49,6 +52,7 @@ function placeText(o: MessageOrder): string[] {
   if (o.branchName) out.push(`*Sucursal:* ${o.branchName}`)
   const where = [o.address, o.zone && !o.address?.includes(o.zone) ? `(${o.zone})` : ''].filter(Boolean).join(' ')
   if (where) out.push(`*Dirección:* ${where}${o.reference ? ` — Ref.: ${o.reference}` : ''}`)
+  if (o.mapsUrl) out.push(`*Ubicación GPS:* ${o.mapsUrl}`)
   return out
 }
 
