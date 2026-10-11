@@ -14,7 +14,7 @@ const scope = useAdminScope()
 
 const o = computed(() => props.order)
 const services = computed(() =>
-  o.value.items.map((i) => `${i.name}${i.variant ? ` · ${i.variant}` : ''}${i.quantity > 1 ? ` x${i.quantity}` : ''}`).join(', '),
+  o.value.items.map((i) => `${i.name}${i.variant ? ` · ${i.variant}` : ''}${i.choice ? ` · ${i.choice.toLowerCase()}` : ''}${i.quantity > 1 ? ` x${i.quantity}` : ''}`).join(', '),
 )
 const chat = computed(() =>
   o.value.customer?.phone
