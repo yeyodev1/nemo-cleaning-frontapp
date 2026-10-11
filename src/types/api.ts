@@ -28,6 +28,8 @@ export interface Branch {
   openingTime: string
   closingTime: string
   slotMinutes: number
+  /** Horas fijas de los turnos ("08:00", "09:30"…); si hay, mandan sobre apertura–cierre. */
+  slotTimes?: string[]
   workDays: number[]
   /** Urbanizaciones / zonas que atiende (fase 2). */
   zones?: string[]
@@ -98,6 +100,10 @@ export interface Service {
   variants: ServiceVariant[]
   priceTiers: PriceTier[]
   minQty: number
+  /** Opción incluida sin costo que elige el cliente (Detailing Interior: techo o asientos). */
+  choices?: string[]
+  /** Pregunta de la opción: "Incluye limpieza de". */
+  choiceLabel?: string
   isExtra: boolean
   active: boolean
   order: number
@@ -150,6 +156,8 @@ export interface BookingItem {
   service: ID | null
   name: string
   variant?: string
+  /** Opción incluida elegida (techo o asientos); '' si el servicio no la pide. */
+  choice?: string
   unitPrice: number
   /** Tope del rango (solo informativo); 0 = precio fijo. */
   unitPriceMax?: number
@@ -164,7 +172,18 @@ export interface InvoiceData {
   name: string
   documentId: string
   email: string
+  /** Teléfono de contacto para la factura (obligatorio en la web). */
+  phone: string
   address: string
+}
+
+/** Ubicación GPS del servicio: coordenadas del celular y/o enlace de Google Maps. */
+export interface BookingLocation {
+  lat: number | null
+  lng: number | null
+  /** Precisión del GPS en metros (0 = desconocida / enlace pegado). */
+  accuracy: number
+  url: string
 }
 
 export interface HistoryEntry {
@@ -212,6 +231,7 @@ export interface Booking {
   balance: number
   transferProofUrl?: string
   invoice?: InvoiceData
+  location?: BookingLocation | null
   history?: HistoryEntry[]
   createdAt: string
   updatedAt: string
@@ -430,6 +450,7 @@ export interface Availability {
 export interface QuoteItemInput {
   service: ID
   variant?: string
+  choice?: string
   quantity: number
 }
 
@@ -476,6 +497,7 @@ export interface CreateBookingInput {
   invoice?: InvoiceData
   /** Urbanización elegida (lista de la sucursal o "Otra"). */
   zone?: string
+  location?: BookingLocation
 }
 
 export interface AdminCreateBookingInput extends CreateBookingInput {
