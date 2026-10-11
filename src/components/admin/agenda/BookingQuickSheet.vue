@@ -8,6 +8,7 @@ import { bookingsService } from '@/services/bookings.service'
 import { useToastStore } from '@/stores/toast'
 import { bookingStatus, options, paymentMethod } from '@/config/labels'
 import { errorMessage, longDate, mapsUrl, money, whatsappUrl, settledLabel } from '@/utils/format'
+import { gpsUrl } from '@/utils/location'
 import type { Booking, BookingStatus } from '@/types/api'
 
 const props = defineProps<{ booking: Booking | null }>()
@@ -45,7 +46,8 @@ async function save() {
         <div class="quick__links">
           <a v-if="booking.customer?.phone" :href="`tel:${booking.customer.phone}`" class="btn btn--ghost btn--sm"><AppIcon name="phone" /> Llamar</a>
           <a v-if="booking.customer?.phone" :href="whatsappUrl(booking.customer.phone)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="whatsapp" /> WhatsApp</a>
-          <a :href="mapsUrl(booking.address)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="pin" /> Mapa</a>
+          <a v-if="gpsUrl(booking.location)" :href="gpsUrl(booking.location)" target="_blank" rel="noopener" class="btn btn--primary btn--sm"><AppIcon name="navigation" /> GPS</a>
+          <a v-else :href="mapsUrl(booking.address)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="pin" /> Mapa</a>
         </div>
         <p class="muted">{{ booking.address }}<template v-if="booking.reference"> · {{ booking.reference }}</template></p>
       </div>
