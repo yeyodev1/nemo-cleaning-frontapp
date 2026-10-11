@@ -18,6 +18,8 @@ const saving = ref(false)
 const slugTouched = ref(false)
 // "Qué incluye": una viñeta por línea.
 const featuresText = ref('')
+// Opción incluida a elegir sin costo (techo o asientos): separadas por coma.
+const choicesText = ref('')
 
 const blank = (): ServiceInput => ({
   name: '',
@@ -36,6 +38,8 @@ const blank = (): ServiceInput => ({
   variants: [],
   priceTiers: [],
   minQty: 1,
+  choices: [],
+  choiceLabel: '',
   isExtra: false,
   active: true,
   order: props.nextOrder,
@@ -50,6 +54,7 @@ watch(
     // Copias profundas: editar una opción no debe tocar la lista hasta guardar.
     Object.assign(form, s ? { ...blank(), ...JSON.parse(JSON.stringify(s)) } : blank())
     featuresText.value = (form.features || []).join('\n')
+    choicesText.value = (form.choices || []).join(', ')
     slugTouched.value = Boolean(s)
   },
 )
@@ -66,6 +71,7 @@ async function save() {
     const body: ServiceInput = {
       ...form,
       features: featuresText.value.split('\n').map((f) => f.trim()).filter(Boolean),
+      choices: choicesText.value.split(',').map((c) => c.trim()).filter(Boolean),
     }
     delete (body as Partial<Service>)._id
     delete (body as Partial<Service> & { createdAt?: string }).createdAt
@@ -132,12 +138,23 @@ async function save() {
       </div>
       <label class="field">
         <span class="field__label">Nota de entrega (opcional)</span>
-        <input v-model="form.deliveryNote" type="text" maxlength="120" placeholder="Tiempo de entrega: 24 – 48 horas" />
+        <input v-model="form.deliveryNote" type="text" maxlength="120" placeholder="Tiempo de entrega: 48 – 72 horas" />
       </label>
       <label class="field">
         <span class="field__label">Nota de precio (opcional)</span>
         <input v-model="form.priceNote" type="text" maxlength="200" />
       </label>
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Opción incluida a elegir (opcional)</span>
+          <input v-model="choicesText" type="text" maxlength="200" placeholder="Techo, Asientos" />
+          <span class="field__hint">Separadas por coma. El cliente elige una sin costo extra.</span>
+        </label>
+        <label class="field">
+          <span class="field__label">Pregunta de la opción</span>
+          <input v-model="form.choiceLabel" type="text" maxlength="80" placeholder="Incluye limpieza de" />
+        </label>
+      </div>
       <label class="field"><span class="field__label">Descripción</span><textarea v-model="form.description" maxlength="1000"></textarea></label>
       <label class="field">
         <span class="field__label">Qué incluye (una línea por punto)</span>
