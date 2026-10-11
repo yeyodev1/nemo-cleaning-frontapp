@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import LocationPicker from './LocationPicker.vue'
 import { draft } from '@/composables/booking/useBookingDraft'
 import { useCatalogStore } from '@/stores/catalog'
 import { useCustomerStore } from '@/stores/customer'
@@ -8,6 +9,15 @@ const customer = useCustomerStore()
 const catalog = useCatalogStore()
 // Urbanizaciones de la sucursal elegida; "Otra" deja escribirla.
 const zones = computed(() => catalog.branchById(draft.branch)?.zones || [])
+// En Vía a la Costa muchas casas no tienen dirección clara: ahí el GPS se destaca.
+// Al pedir factura se propone el celular ya escrito (casi siempre es el mismo); se puede cambiar.
+watch(
+  () => draft.invoice.required,
+  (on) => {
+    if (on && !draft.invoice.phone) draft.invoice.phone = draft.customer.phone
+  },
+)
+const gpsRecommended = computed(() => catalog.branchById(draft.branch)?.slug === 'via-a-la-costa')
 const other = ref(!!draft.zone && !zones.value.includes(draft.zone))
 const zoneSelect = computed({
   get: () => (other.value ? '__other' : draft.zone),
@@ -52,6 +62,7 @@ const zoneSelect = computed({
           placeholder="Junto al parque, casa esquinera blanca…"
         />
       </label>
+      <LocationPicker v-model="draft.location" :recommended="gpsRecommended" />
       <label class="field">
         <span class="field__label">Notas para el equipo</span>
         <textarea
@@ -128,13 +139,23 @@ const zoneSelect = computed({
         <div class="form-row">
           <label class="field">
             <span class="field__label">Correo para la factura *</span>
-            <input v-model="draft.invoice.email" type="email" inputmode="email" />
+            <input v-model="draft.invoice.email" type="email" inputmode="email" autocomplete="email" />
           </label>
           <label class="field">
-            <span class="field__label">Dirección</span>
-            <input v-model="draft.invoice.address" type="text" />
+            <span class="field__label">Teléfono *</span>
+            <input
+              v-model="draft.invoice.phone"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel"
+              placeholder="0991234567"
+            />
           </label>
         </div>
+        <label class="field">
+          <span class="field__label">Dirección</span>
+          <input v-model="draft.invoice.address" type="text" />
+        </label>
       </fieldset>
     </Transition>
   </div>
