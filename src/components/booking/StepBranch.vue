@@ -2,6 +2,7 @@
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { draft } from '@/composables/booking/useBookingDraft'
+import { clock12 } from '@/utils/format'
 
 const catalog = useCatalogStore()
 
@@ -34,7 +35,8 @@ function pick(id: string) {
       <span class="branch__info">
         <strong>{{ b.name }}</strong>
         <small v-if="b.address">{{ b.address }}</small>
-        <small v-if="b.openingTime">Horario de reservas: {{ b.openingTime }} a {{ b.closingTime }}</small>
+        <small v-if="b.slotTimes?.length">Turnos: {{ b.slotTimes.map(clock12).join(' · ') }}</small>
+        <small v-else-if="b.openingTime">Horario de reservas: {{ b.openingTime }} a {{ b.closingTime }}</small>
       </span>
       <span class="branch__check" aria-hidden="true"><AppIcon name="check" :size="16" /></span>
     </button>
