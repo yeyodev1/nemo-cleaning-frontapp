@@ -176,3 +176,10 @@ export function timeAgo(iso?: string, now = Date.now()): string {
   const d = Math.round(h / 24)
   return `hace ${d} ${d === 1 ? 'día' : 'días'}`
 }
+
+/** "13:00" → "1:00 pm": los turnos se muestran al cliente como los anuncia Nemo. */
+export function clock12(time: string): string {
+  const [h = 0, m = 0] = time.split(':').map(Number)
+  const suffix = h < 12 ? 'am' : 'pm'
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${suffix}`
+}
