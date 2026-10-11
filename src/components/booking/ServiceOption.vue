@@ -4,7 +4,9 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import QuantityStepper from '@/components/ui/QuantityStepper.vue'
 import M2Input from '@/components/ui/M2Input.vue'
 import VehicleSizeHelp from './VehicleSizeHelp.vue'
-import { cartKey, type Cart } from '@/composables/booking/cart'
+import IncludedChoice from './IncludedChoice.vue'
+import { type Cart } from '@/composables/booking/cart'
+import { useIncludedChoice } from '@/composables/booking/useIncludedChoice'
 import { money } from '@/utils/format'
 import { priceLine, priceSummary, serviceMinQty, tierRanges, unitSuffix, variantLabel } from '@/utils/pricing'
 import type { Service } from '@/types/api'
@@ -15,13 +17,14 @@ import type { Service } from '@/types/api'
  * los de tramos muestran la tabla de precios por cantidad.
  */
 const props = defineProps<{ service: Service; cart: Cart; compact?: boolean }>()
-const emit = defineEmits<{ set: [key: string, value: number] }>()
+const emit = defineEmits<{ set: [key: string, value: number]; patch: [changes: Cart] }>()
 
 const s = computed(() => props.service)
+const inc = useIncludedChoice(s, computed(() => props.cart), (changes) => emit('patch', changes))
 const rows = computed(() =>
   s.value.variants?.length
-    ? s.value.variants.map((v) => ({ key: cartKey(s.value._id, v.label), label: v.label, price: variantLabel(v) }))
-    : [{ key: cartKey(s.value._id), label: '', price: s.value.priceTiers?.length ? '' : money(s.value.price) }],
+    ? s.value.variants.map((v) => ({ key: inc.keyFor(v.label), label: v.label, price: variantLabel(v) }))
+    : [{ key: inc.keyFor(), label: '', price: s.value.priceTiers?.length ? '' : money(s.value.price) }],
 )
 const minQty = computed(() => serviceMinQty(s.value))
 const on = computed(() => rows.value.some((r) => (props.cart[r.key] || 0) > 0))
@@ -71,6 +74,16 @@ function setQty(key: string, value: number) {
     </details>
 
     <VehicleSizeHelp v-if="isCarSized" />
+
+    <IncludedChoice
+      v-if="inc.options.value.length"
+      :model-value="inc.choice.value"
+      :label="s.choiceLabel || 'Incluye'"
+      :options="inc.options.value"
+      :missing="inc.missing.value"
+      :name="`inc-${s._id}`"
+      @update:model-value="inc.pick"
+    />
 
     <ul v-if="s.priceTiers?.length" class="opt__tiers" aria-label="Precio por cantidad">
       <li v-for="t in tierRanges(s.priceTiers)" :key="t.label">
