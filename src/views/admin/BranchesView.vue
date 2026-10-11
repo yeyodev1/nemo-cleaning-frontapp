@@ -4,6 +4,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue'
 import BranchForm from '@/components/admin/branches/BranchForm.vue'
 import { useCrudList } from '@/composables/admin/useCrudList'
 import { managementService } from '@/services/management.service'
+import { clock12 } from '@/utils/format'
 
 const { items, loading, editing, formOpen, open, onSaved } = useCrudList(() => managementService.branches())
 const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -28,7 +29,8 @@ const dayList = (d: number[]) => [...(d || [])].sort().map((i) => days[i]).join(
           <li v-if="b.address"><AppIcon name="pin" :size="16" /> {{ b.address }}</li>
           <li v-if="b.phone || b.whatsapp"><AppIcon name="phone" :size="16" /> {{ b.phone }}<template v-if="b.whatsapp"> · WA {{ b.whatsapp }}</template></li>
           <li v-if="b.email"><AppIcon name="mail" :size="16" /> {{ b.email }}</li>
-          <li><AppIcon name="clock" :size="16" /> {{ b.openingTime }}–{{ b.closingTime }} · turnos de {{ b.slotMinutes }} min</li>
+          <li v-if="b.slotTimes?.length"><AppIcon name="clock" :size="16" /> Turnos: {{ b.slotTimes.map(clock12).join(' · ') }}</li>
+          <li v-else><AppIcon name="clock" :size="16" /> {{ b.openingTime }}–{{ b.closingTime }} · turnos de {{ b.slotMinutes }} min</li>
           <li><AppIcon name="calendar" :size="16" /> {{ dayList(b.workDays) }}</li>
         </ul>
         <button type="button" class="btn btn--soft btn--block" @click="open(b)"><AppIcon name="edit" /> Editar</button>
