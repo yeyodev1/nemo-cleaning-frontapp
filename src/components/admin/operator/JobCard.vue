@@ -5,6 +5,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { bookingStatus, paymentMethod } from '@/config/labels'
 import { mapsUrl, money, whatsappUrl } from '@/utils/format'
+import { directionsUrl } from '@/utils/location'
 import type { Booking } from '@/types/api'
 import type { JobStatus } from '@/composables/admin/useMyJobs'
 
@@ -13,6 +14,8 @@ const emit = defineEmits<{ status: [status: JobStatus, note?: string] }>()
 const note = ref('')
 const showNote = ref(false)
 
+// Con GPS del cliente el lavador va directo al punto (indicaciones de manejo), no a la dirección escrita.
+const navUrl = computed(() => directionsUrl(props.job.location) || mapsUrl(props.job.address))
 const done = computed(() => ['completed', 'cancelled', 'no_show'].includes(props.job.status))
 const canGo = computed(() => ['pending', 'confirmed'].includes(props.job.status))
 const canStart = computed(() => ['pending', 'confirmed', 'on_the_way'].includes(props.job.status))
@@ -37,9 +40,12 @@ function send(status: JobStatus) {
       <span class="muted">{{ job.code }}</span>
     </div>
 
-    <a :href="mapsUrl(job.address)" target="_blank" rel="noopener" class="job__addr">
-      <AppIcon name="pin" :size="20" />
-      <span>{{ job.address }}<small v-if="job.reference">{{ job.reference }}</small></span>
+    <a :href="navUrl" target="_blank" rel="noopener" class="job__addr" :class="{ 'job__addr--gps': job.location }">
+      <AppIcon :name="job.location ? 'navigation' : 'pin'" :size="20" />
+      <span>
+        {{ job.address }}<small v-if="job.reference">{{ job.reference }}</small>
+        <small v-if="job.location" class="job__gps">Ubicación GPS del cliente · Cómo llegar</small>
+      </span>
       <AppIcon name="external" :size="16" />
     </a>
 
@@ -130,6 +136,11 @@ function send(status: JobStatus) {
     small {
       font-weight: 500;
       color: $ink-soft;
+    }
+
+    .job__gps {
+      font-weight: 700;
+      color: $success;
     }
   }
 
