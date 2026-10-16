@@ -167,6 +167,38 @@ export interface CommissionRule {
   supervisorMode?: 'percent' | 'fixed'
   /** Monto fijo del supervisor por período (centavos). */
   supervisorFixed?: number
+  /** Comisión por meta: % de cada dólar sobre la meta, por sucursal. */
+  branchPercents?: BranchPercent[]
+}
+
+export interface BranchPercent {
+  branch: ID
+  name: string
+  percent: number
+}
+
+/** Comisión por meta mensual de un operador (centavos). */
+export interface GoalCommissionRow {
+  operator: ID
+  name: string
+  color: string
+  /** null = sin meta puesta ese mes. */
+  goal: number | null
+  production: number
+  excess: number
+  progress: number | null
+  branches: { branch: ID; name: string; production: number; excess: number; percent: number; commission: number }[]
+  commission: number
+}
+
+export interface GoalCommissionSheet {
+  month: string
+  from: string
+  to: string
+  percents: BranchPercent[]
+  basis: 'total' | 'subtotal'
+  items: GoalCommissionRow[]
+  summary: { production: number; commission: number; withGoal: number; withoutGoal: number; overGoal: number }
 }
 
 export interface CommissionCell {

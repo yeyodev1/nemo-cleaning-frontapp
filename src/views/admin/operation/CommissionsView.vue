@@ -2,22 +2,29 @@
 import { ref } from 'vue'
 import SegTabs from '@/components/admin/finance/SegTabs.vue'
 import CommissionGrid from '@/components/admin/operation/CommissionGrid.vue'
-import FeeReference from '@/components/admin/operation/FeeReference.vue'
+import CommissionGoalCalc from '@/components/admin/operation/CommissionGoalCalc.vue'
 import CommissionHowTo from '@/components/admin/operation/CommissionHowTo.vue'
 
 /**
- * Comisiones como la hoja del Excel: gerencia escribe el monto de cada colaborador por mes
- * (eso usan los reportes). La calculadora FEE queda aparte, solo como referencia.
+ * Comisiones: la hoja (lo que se paga y usan los reportes), el cálculo por meta mensual
+ * ((producción − meta) × % de la sucursal) y la explicación con sus parámetros.
  */
-const tab = ref('manual')
+const tab = ref('calc')
 </script>
 
 <template>
   <section>
-    <SegTabs v-model="tab" :tabs="[{ value: 'manual', label: 'Comisiones' }, { value: 'fee', label: 'FEE (referencia)' }, { value: 'how', label: '¿Cómo se calcula?' }]" />
+    <SegTabs
+      v-model="tab"
+      :tabs="[
+        { value: 'calc', label: 'Cálculo por meta' },
+        { value: 'manual', label: 'Hoja de comisiones' },
+        { value: 'how', label: '¿Cómo se calcula?' },
+      ]"
+    />
     <Transition name="fade" mode="out-in">
-      <CommissionGrid v-if="tab === 'manual'" key="m" />
-      <FeeReference v-else-if="tab === 'fee'" key="f" />
+      <CommissionGoalCalc v-if="tab === 'calc'" key="c" @how="tab = 'how'" />
+      <CommissionGrid v-else-if="tab === 'manual'" key="m" />
       <CommissionHowTo v-else key="h" />
     </Transition>
   </section>

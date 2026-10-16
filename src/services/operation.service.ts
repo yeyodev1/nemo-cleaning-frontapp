@@ -5,6 +5,7 @@ import type { MonthGridData } from '@/types/grid'
 import type {
   CommissionRule,
   CommissionSheet,
+  GoalCommissionSheet,
   GoalMonth,
   NovedadRow,
   StaffIncident,
@@ -91,6 +92,11 @@ class OperationService extends APIBase {
   }
   removeCommissionRow(body: { year: number; user?: ID | null; name?: string; branch?: string | null }) {
     return this.post<{ ok: boolean; deleted: number }>('admin/commissions/entries/remove-row', body)
+  }
+
+  /** Comisión por meta mensual (producción − meta) × % de la sucursal. */
+  commissionGoalSheet(month: string, branch?: string) {
+    return this.get<GoalCommissionSheet>('admin/commissions/goal-sheet', { month, branch })
   }
 
   /** Calculadora FEE: solo referencia. */
