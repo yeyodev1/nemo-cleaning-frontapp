@@ -1,10 +1,13 @@
 import { ref } from 'vue'
-import { bookingsService } from '@/services/bookings.service'
+import { bookingsService, type PaymentReviewEvidence } from '@/services/bookings.service'
 import { useToastStore } from '@/stores/toast'
 import { errorMessage } from '@/utils/format'
 import type { Payment } from '@/types/api'
 
-/** Cola de transferencias por revisar: aprobar o rechazar con nota opcional. */
+/**
+ * Cola de transferencias por revisar: aprobar o rechazar con nota opcional.
+ * Aprobar manda el papel (`evidence`): comprobante subido si el pago no tenía, o efectivo recibido.
+ */
 export function usePaymentReview(branch: () => string | undefined) {
   const items = ref<Payment[]>([])
   const total = ref(0)
@@ -33,16 +36,18 @@ export function usePaymentReview(branch: () => string | undefined) {
     }
   }
 
-  async function review(p: Payment, approved: boolean, note?: string) {
+  async function review(p: Payment, approved: boolean, note?: string, evidence?: PaymentReviewEvidence) {
     busy.value = p._id
     try {
-      await bookingsService.reviewPayment(p._id, approved, note || undefined)
+      await bookingsService.reviewPayment(p._id, approved, note || undefined, approved ? evidence : undefined)
       items.value = items.value.filter((x) => x._id !== p._id)
       total.value = Math.max(0, total.value - 1)
       totalAmount.value = Math.max(0, totalAmount.value - p.amount)
-      toast.success(approved ? 'Transferencia aprobada' : 'Transferencia rechazada')
+      toast.success(approved ? 'Pago aprobado' : 'Pago rechazado')
+      return true
     } catch (e) {
       toast.error(errorMessage(e))
+      return false
     } finally {
       busy.value = ''
     }

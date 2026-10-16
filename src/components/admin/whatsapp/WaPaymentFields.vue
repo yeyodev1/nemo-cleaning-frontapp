@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import FileDrop from '@/components/ui/FileDrop.vue'
+import ToggleSwitch from '@/components/ui/ToggleSwitch.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
 import ChoiceChips from '@/components/admin/operation/ChoiceChips.vue'
 import { managementService } from '@/services/management.service'
@@ -11,12 +12,13 @@ import { errorMessage, money } from '@/utils/format'
 
 /**
  * Forma de pago con cuenta (Efectivo, Transferencia Pichincha…, Tarjeta, Plan mensual, Canje,
- * Cortesía) o "Por coordinar", y si ya pagó: monto, referencia y comprobante opcional.
+ * Cortesía) o "Por coordinar", y si ya pagó: monto, referencia y el papel obligatorio
+ * (comprobante, o "Recibí el efectivo" si es efectivo).
  */
 const props = defineProps<{ balance: number }>()
 const pay = defineModel<WaPayState>('state', { required: true })
 const toast = useToastStore()
-const { accounts, chargeable } = useWaOptions()
+const { accounts, chargeable, methodOf } = useWaOptions()
 const uploading = ref(false)
 
 const choices = computed(() => [
@@ -31,6 +33,7 @@ const account = computed({
   },
 })
 const canCharge = computed(() => chargeable(pay.value.account))
+const isCash = computed(() => methodOf(pay.value.account) === 'cash')
 
 async function upload(file: File) {
   uploading.value = true
@@ -64,7 +67,13 @@ async function upload(file: File) {
               <span class="field__label">Referencia (opcional)</span>
               <input v-model="pay.reference" type="text" placeholder="N.º de comprobante" />
             </label>
-            <FileDrop label="Comprobante (opcional)" :url="pay.proofUrl" :busy="uploading" @pick="upload" @error="toast.error" />
+            <ToggleSwitch
+              v-if="isCash"
+              v-model="pay.cashConfirmed"
+              label="Recibí el efectivo"
+              hint="Obligatorio para registrar el cobro"
+            />
+            <FileDrop v-else label="Comprobante (obligatorio)" :url="pay.proofUrl" :busy="uploading" @pick="upload" @error="toast.error" />
           </div>
         </Transition>
       </div>

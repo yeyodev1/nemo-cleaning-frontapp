@@ -43,8 +43,14 @@ class OperationService extends APIBase {
   register(body: ProductionInput) {
     return this.post<Booking>('admin/production', body)
   }
-  setConfirmation(id: ID, paymentConfirmation: string, paymentAccount?: string) {
-    return this.patch<Booking>(`admin/bookings/${id}/confirmation`, { paymentConfirmation, paymentAccount })
+  /** `evidence`: comprobante (transferencia) o efectivo recibido al pasar a "confirmado". */
+  setConfirmation(
+    id: ID,
+    paymentConfirmation: string,
+    paymentAccount?: string,
+    evidence?: { proofUrl?: string; cashConfirmed?: boolean },
+  ) {
+    return this.patch<Booking>(`admin/bookings/${id}/confirmation`, { paymentConfirmation, paymentAccount, ...evidence })
   }
 
   novedades(q: { branch?: string; from?: string; to?: string; operator?: string }) {
@@ -60,7 +66,7 @@ class OperationService extends APIBase {
   collections(status: 'pending' | 'done', branch?: string, mine?: boolean) {
     return this.get<{ items: OperatorCollection[]; summary: { cashCount: number; cashTotal: number; transferCount: number } }>('admin/collections', { status, branch, mine: mine ? '1' : undefined })
   }
-  receiveCollection(id: ID, body: { amount?: number; proofUrl?: string; note?: string }) {
+  receiveCollection(id: ID, body: { amount?: number; proofUrl?: string; note?: string; excessAs?: 'tip' | 'credit' }) {
     return this.post<OperatorCollection>(`admin/collections/${id}/receive`, body)
   }
 

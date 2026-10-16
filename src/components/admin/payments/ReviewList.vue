@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, reactive, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import ProofLink from './ProofLink.vue'
+import ApprovePaymentSheet from './ApprovePaymentSheet.vue'
 import { usePaymentReview } from '@/composables/admin/usePaymentReview'
 import { useAdminScope } from '@/stores/adminScope'
 import { dateTime, money, shortDate } from '@/utils/format'
 import { paymentMethod } from '@/config/labels'
+import type { PaymentReviewEvidence } from '@/services/bookings.service'
+import type { Payment } from '@/types/api'
 
 const emit = defineEmits<{ count: [n: number] }>()
 const scope = useAdminScope()
@@ -15,6 +18,13 @@ const notes = reactive<Record<string, string>>({})
 onMounted(() => load())
 watch(() => scope.branch, () => load())
 watch(total, (n) => emit('count', n), { immediate: true })
+
+// Aprobar siempre pasa por la hoja de confirmación (comprobante o efectivo recibido).
+const approving = ref<Payment | null>(null)
+async function approve(evidence: PaymentReviewEvidence) {
+  const p = approving.value
+  if (p && (await review(p, true, notes[p._id], evidence))) approving.value = null
+}
 </script>
 
 <template>
@@ -54,7 +64,7 @@ watch(total, (n) => emit('count', n), { immediate: true })
             <button type="button" class="btn btn--danger btn--sm" :disabled="busy === p._id" @click="review(p, false, notes[p._id])">
               <AppIcon name="x" /> Rechazar
             </button>
-            <button type="button" class="btn btn--primary btn--sm" :disabled="busy === p._id" @click="review(p, true, notes[p._id])">
+            <button type="button" class="btn btn--primary btn--sm" :disabled="busy === p._id" @click="approving = p">
               <AppIcon name="check" /> Aprobar
             </button>
           </div>
@@ -65,6 +75,7 @@ watch(total, (n) => emit('count', n), { immediate: true })
       {{ loading ? 'Cargando…' : `Ver más (${total - items.length} restantes)` }}
     </button>
     </template>
+    <ApprovePaymentSheet :payment="approving" :busy="!!approving && busy === approving._id" @close="approving = null" @confirm="approve" />
   </div>
 </template>
 

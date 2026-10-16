@@ -59,6 +59,8 @@ export interface WaPaymentInput {
   amount?: number
   proofUrl?: string
   reference?: string
+  /** Efectivo: el dinero ya se recibió (sin papel no hay pago). */
+  cashConfirmed?: boolean
 }
 
 export interface WaHandleInput {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
 import PageIntro from '@/components/admin/sheet/PageIntro.vue'
@@ -9,12 +9,14 @@ import TimePicker from '@/components/ui/TimePicker.vue'
 import CustomerPicker from '@/components/admin/operation/CustomerPicker.vue'
 import ServiceLinePicker from '@/components/admin/operation/ServiceLinePicker.vue'
 import SessionList from '@/components/admin/operation/SessionList.vue'
+import ConfirmationEvidence from '@/components/admin/operation/ConfirmationEvidence.vue'
 import { useQuickEntry } from '@/composables/operation/useQuickEntry'
 import { paymentConfirmation } from '@/config/operationLabels'
 import { addDays, longDate, money, todayISO } from '@/utils/format'
 
 const q = useQuickEntry()
 const { form } = q
+const uploading = ref(false)
 const today = todayISO()
 const dayChoices = [
   { value: today, label: 'Hoy' },
@@ -111,6 +113,12 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
         <ChoiceChips v-model="form.confirmation" :options="confirmationChoices" label="Confirmación del pago" small />
         <span class="field__hint">{{ paymentConfirmation[form.confirmation].hint }}</span>
       </div>
+      <ConfirmationEvidence
+        v-model:proof-url="form.proofUrl"
+        v-model:cash-confirmed="form.cashConfirmed"
+        v-model:uploading="uploading"
+        :kind="q.evidence.value"
+      />
       <div class="form-row">
         <MoneyField v-model="form.tip" label="Propina (opcional)" hint="No suma a la producción." />
         <label class="field"><span class="field__label">Observaciones</span><input v-model="form.notes" type="text" placeholder="Ej.: se quejó por los vidrios" /></label>
@@ -122,7 +130,7 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
         <small>{{ form.lines.length ? `${form.lines.length} servicio(s)` : 'Sin servicios' }}<template v-if="form.discount"> · desc. −{{ money(form.discount) }}</template></small>
         <strong class="money">{{ money(q.total.value) }}</strong>
       </div>
-      <button type="submit" class="btn btn--lg qe__save" :disabled="q.busy.value">
+      <button type="submit" class="btn btn--lg qe__save" :disabled="q.busy.value || uploading">
         <AppIcon name="check" /> {{ q.busy.value ? 'Guardando…' : q.isFuture.value ? 'Agendar y seguir' : 'Guardar y seguir' }}
       </button>
     </div>

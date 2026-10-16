@@ -1,5 +1,10 @@
 import { ref } from 'vue'
-import { bookingsService, type BookingPatch, type ManualPaymentInput } from '@/services/bookings.service'
+import {
+  bookingsService,
+  type BookingPatch,
+  type ManualPaymentInput,
+  type PaymentReviewEvidence,
+} from '@/services/bookings.service'
 import { useToastStore } from '@/stores/toast'
 import { errorMessage } from '@/utils/format'
 import type { BookingDetail, BookingStatus } from '@/types/api'
@@ -55,11 +60,11 @@ export function useBookingDetail(id: string) {
       booking.value = await bookingsService.detail(id)
     }, 'Pago registrado')
 
-  const reviewPayment = (paymentId: string, approved: boolean) =>
+  const reviewPayment = (paymentId: string, approved: boolean, evidence?: PaymentReviewEvidence) =>
     run(async () => {
-      await bookingsService.reviewPayment(paymentId, approved)
+      await bookingsService.reviewPayment(paymentId, approved, undefined, evidence)
       booking.value = await bookingsService.detail(id)
-    }, approved ? 'Transferencia aprobada' : 'Transferencia rechazada')
+    }, approved ? 'Pago aprobado' : 'Pago rechazado')
 
   load()
   return { booking, loading, error, saving, load, update, setStatus, addPayment, reviewPayment }

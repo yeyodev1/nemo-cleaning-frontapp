@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { managementService } from '@/services/management.service'
+import { money } from '@/utils/format'
 import type { Customer } from '@/types/api'
 
 /**
@@ -53,6 +54,7 @@ function close() {
       <span>
         <strong>{{ picked.name || 'Sin nombre' }}</strong>
         <small>Cliente registrado · {{ picked.totalOrders || 0 }} servicio(s). Sus datos ya están puestos abajo.</small>
+        <small v-if="picked.credit" class="cs__credit">Tiene {{ money(picked.credit) }} de saldo a favor: descuéntalo en el pago.</small>
       </span>
       <button type="button" class="btn btn--ghost btn--sm" @click="emit('pick', null)">Cambiar</button>
     </div>
@@ -145,6 +147,11 @@ function close() {
   &__none {
     font-size: $text-sm;
     color: $ink-soft;
+  }
+
+  &__credit {
+    color: $success !important;
+    font-weight: 700;
   }
 
   &__picked {

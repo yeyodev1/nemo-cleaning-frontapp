@@ -17,10 +17,11 @@ export interface WaPayState {
   amount: number
   reference: string
   proofUrl: string
+  cashConfirmed: boolean
 }
 
 export function emptyPay(account = ''): WaPayState {
-  return { account, paid: false, amount: 0, reference: '', proofUrl: '' }
+  return { account, paid: false, amount: 0, reference: '', proofUrl: '', cashConfirmed: false }
 }
 
 export function useWaOptions() {
@@ -42,6 +43,15 @@ export function useWaOptions() {
     return Boolean(options.value?.accounts.find((a) => a.label === account)?.method)
   }
 
+  const methodOf = (account: string) => options.value?.accounts.find((a) => a.label === account)?.method ?? null
+
+  /** Sin papel no hay pago: efectivo recibido o comprobante. Vacío = listo (o no hay cobro). */
+  function paymentMissing(p: WaPayState): string {
+    if (!p.paid || !chargeable(p.account)) return ''
+    if (methodOf(p.account) === 'cash') return p.cashConfirmed ? '' : 'Confirma que recibiste el efectivo'
+    return p.proofUrl ? '' : 'Sube el comprobante del pago'
+  }
+
   /** Lo que se manda al API como `payment` (solo si ya pagó y la cuenta cobra). */
   function paymentPayload(p: WaPayState): WaPaymentInput | undefined {
     if (!p.paid || !chargeable(p.account)) return undefined
@@ -49,6 +59,7 @@ export function useWaOptions() {
       amount: p.amount > 0 ? p.amount : undefined,
       reference: p.reference.trim() || undefined,
       proofUrl: p.proofUrl || undefined,
+      cashConfirmed: methodOf(p.account) === 'cash' ? p.cashConfirmed : undefined,
     }
   }
 
@@ -60,6 +71,8 @@ export function useWaOptions() {
     services,
     load,
     chargeable,
+    methodOf,
+    paymentMissing,
     paymentPayload,
     operatorsOf,
     accounts: computed(() => options.value?.accounts || []),

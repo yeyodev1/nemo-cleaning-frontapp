@@ -73,6 +73,8 @@ export function useWaOrderSheet(order: Ref<WaOrder | null>, onSaved: (o: WaOrder
 
   async function save(confirm: boolean) {
     if (!order.value) return
+    const missing = wa.paymentMissing(pay.value)
+    if (missing) return toast.error(missing)
     const body = changes(confirm)
     if (!Object.keys(body).length) return toast.info('No hay cambios para guardar')
     saving.value = true

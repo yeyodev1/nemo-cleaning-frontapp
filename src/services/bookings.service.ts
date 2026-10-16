@@ -44,6 +44,16 @@ export interface ManualPaymentInput {
   reference?: string
   note?: string
   proofUrl?: string
+  /** Efectivo: confirmación de que el dinero se recibió (sin papel no hay pago). */
+  cashConfirmed?: boolean
+  /** Si entra más de lo que se debe: propina o saldo a favor del cliente. */
+  excessAs?: 'tip' | 'credit'
+}
+
+/** Aprobar exige el papel: comprobante (si el pago no lo tiene) o efectivo confirmado. */
+export interface PaymentReviewEvidence {
+  proofUrl?: string
+  cashConfirmed?: boolean
 }
 
 export interface PaymentFilters {
@@ -94,8 +104,8 @@ class BookingsService extends APIBase {
     return this.get<Paginated<Payment>>('admin/payments', { ...q })
   }
 
-  reviewPayment(id: string, approved: boolean, note?: string) {
-    return this.patch<Payment>(`admin/payments/${id}/review`, { approved, note })
+  reviewPayment(id: string, approved: boolean, note?: string, evidence?: PaymentReviewEvidence) {
+    return this.patch<Payment>(`admin/payments/${id}/review`, { approved, note, ...evidence })
   }
 
   /** El back responde `{ items, total, totalBalance }` (contrato); devolvemos solo los pedidos. */

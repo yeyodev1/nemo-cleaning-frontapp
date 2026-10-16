@@ -33,8 +33,8 @@ const pendingConf = computed(() => totals.value?.byConfirmation.pending_confirma
 const multiDay = computed(() => filters.from !== filters.to)
 const selected = ref<ProductionRow | null>(null)
 
-async function onConfirm(row: ProductionRow, confirmation: string, account: string) {
-  if (await b.changeConfirmation(row, confirmation, account)) selected.value = null
+async function onConfirm(row: ProductionRow, confirmation: string, account: string, evidence: { proofUrl?: string; cashConfirmed?: boolean }) {
+  if (await b.changeConfirmation(row, confirmation, account, evidence)) selected.value = null
 }
 function onChanged() {
   selected.value = null

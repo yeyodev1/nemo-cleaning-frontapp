@@ -2,7 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import BookingBadges from '@/components/admin/common/BookingBadges.vue'
-import { bookingsService } from '@/services/bookings.service'
+import PaymentFormSheet from '@/components/admin/bookings/PaymentFormSheet.vue'
+import { bookingsService, type ManualPaymentInput } from '@/services/bookings.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
 import { useShowMore } from '@/composables/admin/useShowMore'
@@ -29,6 +30,24 @@ async function load() {
 
 onMounted(load)
 watch(() => scope.branch, load)
+
+// Cobrar desde la lista: misma hoja (y mismo endpoint) que el detalle de la reserva.
+const paying = ref<Booking | null>(null)
+const saving = ref(false)
+async function onPay(body: ManualPaymentInput) {
+  if (!paying.value) return
+  saving.value = true
+  try {
+    await bookingsService.addPayment(paying.value._id, body)
+    toast.success(`Pago registrado en ${paying.value.code}`)
+    paying.value = null
+    await load()
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    saving.value = false
+  }
+}
 const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de Nemo Cleaning por el saldo pendiente de tu servicio ${b.code}: ${money(b.balance)}.`
 </script>
 
@@ -62,9 +81,20 @@ const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de
             </a>
           </div>
         </div>
+        <button type="button" class="btn btn--primary rc__pay" @click="paying = b">
+          <AppIcon name="upload" /> Registrar pago / subir comprobante
+        </button>
       </li>
     </ul>
     <button v-if="remaining" type="button" class="btn btn--ghost more" @click="more">Ver {{ Math.min(remaining, step) }} más · quedan {{ remaining }}</button>
+    <PaymentFormSheet
+      :open="!!paying"
+      :balance="paying?.balance ?? 0"
+      :saving="saving"
+      :title="paying ? `Registrar pago · ${paying.code}` : undefined"
+      @close="paying = null"
+      @submit="onPay"
+    />
   </div>
 </template>
 
@@ -104,6 +134,7 @@ const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de
 .rc {
   @include card(0.85rem 0.9rem);
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: space-between;
 
@@ -145,6 +176,10 @@ const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de
   &__links {
     display: flex;
     gap: 0.4rem;
+  }
+
+  &__pay {
+    width: 100%;
   }
 }
 </style>

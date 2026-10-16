@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import ChoiceChips from './ChoiceChips.vue'
 import NovedadForm from './NovedadForm.vue'
+import ConfirmationEvidence from './ConfirmationEvidence.vue'
 import { paymentConfirmation } from '@/config/operationLabels'
 import { money, shortDate } from '@/utils/format'
+import { evidenceKind, evidenceMissing, evidencePayload } from '@/utils/paymentEvidence'
 import type { PaymentAccountOption, ProductionRow } from '@/types/operation'
 
 /** Acciones de una fila de la Base: confirmar el pago, cambiar la cuenta y anotar una novedad. */
 const props = defineProps<{ row: ProductionRow | null; accounts: PaymentAccountOption[] }>()
-const emit = defineEmits<{ close: []; confirm: [row: ProductionRow, confirmation: string, account: string]; changed: [] }>()
+const emit = defineEmits<{
+  close: []
+  confirm: [row: ProductionRow, confirmation: string, account: string, evidence: { proofUrl?: string; cashConfirmed?: boolean }]
+  changed: []
+}>()
 const confirmation = ref('')
 const account = ref('')
+const proofUrl = ref('')
+const cashConfirmed = ref(false)
+const uploading = ref(false)
 const choices = Object.entries(paymentConfirmation).map(([value, c]) => ({ value, label: c.label }))
 
 watch(
@@ -20,13 +29,22 @@ watch(
   (r) => {
     confirmation.value = r?.paymentConfirmation || ''
     account.value = r?.paymentAccount || ''
+    proofUrl.value = ''
+    cashConfirmed.value = false
   },
 )
+// Solo pide papel cuando "confirmado" registra un cobro (hay saldo).
+const kind = computed(() => (props.row && props.row.balance > 0 ? evidenceKind(account.value, confirmation.value) : null))
+const missing = computed(() => evidenceMissing(kind.value, proofUrl.value, cashConfirmed.value))
+function save() {
+  if (!props.row) return
+  emit('confirm', props.row, confirmation.value, account.value, evidencePayload(kind.value, proofUrl.value, cashConfirmed.value))
+}
 const dirty = () => props.row && (confirmation.value !== props.row.paymentConfirmation || account.value !== props.row.paymentAccount)
 </script>
 
 <template>
-  <BaseSheet :open="!!row" :title="row ? `${row.customer?.name || 'Servicio'} · ${money(row.total)}` : ''" @close="emit('close')">
+  <BaseSheet :open="!!row" :dirty="!!dirty() || !!proofUrl" :title="row ? `${row.customer?.name || 'Servicio'} · ${money(row.total)}` : ''" @close="emit('close')">
     <div v-if="row" class="rs">
       <p class="rs__meta">
         {{ row.code }} · {{ shortDate(row.date) }} · {{ row.operators.map((o) => o.name).join(', ') }}<template v-if="row.zone"> · {{ row.zone }}</template>
@@ -48,7 +66,13 @@ const dirty = () => props.row && (confirmation.value !== props.row.paymentConfir
             <template v-if="confirmation === 'confirmed' && row.balance > 0"> · Se registra el cobro de {{ money(row.balance) }}.</template>
           </span>
         </div>
-        <button type="button" class="btn btn--primary" :disabled="!dirty()" @click="emit('confirm', row, confirmation, account)">Guardar pago</button>
+        <ConfirmationEvidence
+          v-model:proof-url="proofUrl"
+          v-model:cash-confirmed="cashConfirmed"
+          v-model:uploading="uploading"
+          :kind="kind"
+        />
+        <button type="button" class="btn btn--primary" :disabled="!dirty() || !!missing || uploading" @click="save">Guardar pago</button>
       </section>
       <section class="rs__sec">
         <h3>Anotar novedad</h3>

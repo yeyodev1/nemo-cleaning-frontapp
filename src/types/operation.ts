@@ -38,6 +38,9 @@ export interface ProductionInput {
   paymentConfirmation: PaymentConfirmation
   tip?: number
   notes?: string
+  /** "Confirmado" en transferencia: comprobante subido. En efectivo: dinero recibido. */
+  proofUrl?: string
+  cashConfirmed?: boolean
 }
 
 export interface ProductionRow {

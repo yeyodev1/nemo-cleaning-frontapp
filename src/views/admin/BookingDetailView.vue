@@ -9,9 +9,10 @@ import DetailStatus from '@/components/admin/bookings/DetailStatus.vue'
 import DetailPayments from '@/components/admin/bookings/DetailPayments.vue'
 import DetailHistory from '@/components/admin/bookings/DetailHistory.vue'
 import PaymentFormSheet from '@/components/admin/bookings/PaymentFormSheet.vue'
+import ApprovePaymentSheet from '@/components/admin/payments/ApprovePaymentSheet.vue'
 import DetailOperation from '@/components/admin/operation/DetailOperation.vue'
 import { useBookingDetail } from '@/composables/admin/useBookingDetail'
-import type { ManualPaymentInput } from '@/services/bookings.service'
+import type { ManualPaymentInput, PaymentReviewEvidence } from '@/services/bookings.service'
 
 const route = useRoute()
 const { booking, loading, error, saving, load, update, setStatus, addPayment, reviewPayment } = useBookingDetail(String(route.params.id))
@@ -21,6 +22,17 @@ const locked = computed(() => ['completed', 'cancelled', 'no_show'].includes(boo
 
 async function onPay(body: ManualPaymentInput) {
   if (await addPayment(body)) payOpen.value = false
+}
+
+// Rechazar es directo; aprobar pasa por la hoja de confirmación (comprobante o efectivo recibido).
+const approvingId = ref('')
+const approving = computed(() => booking.value?.payments?.find((p) => p._id === approvingId.value) ?? null)
+function onReview(id: string, approved: boolean) {
+  if (approved) approvingId.value = id
+  else reviewPayment(id, false)
+}
+async function onApprove(evidence: PaymentReviewEvidence) {
+  if (await reviewPayment(approvingId.value, true, evidence)) approvingId.value = ''
 }
 </script>
 
@@ -43,7 +55,7 @@ async function onPay(body: ManualPaymentInput) {
       <div class="detail__grid">
         <div class="detail__col">
           <DetailItems :booking="booking" :saving="saving" :locked="locked" @save="update($event, 'Servicios actualizados')" />
-          <DetailPayments :booking="booking" :saving="saving" @add="payOpen = true" @review="reviewPayment" />
+          <DetailPayments :booking="booking" :saving="saving" @add="payOpen = true" @review="onReview" />
           <DetailHistory :history="booking.history" />
         </div>
         <div class="detail__col">
@@ -59,6 +71,13 @@ async function onPay(body: ManualPaymentInput) {
         </div>
       </div>
       <PaymentFormSheet :open="payOpen" :balance="booking.balance" :saving="saving" @close="payOpen = false" @submit="onPay" />
+      <ApprovePaymentSheet
+        :payment="approving"
+        :busy="saving"
+        :fallback-proof="booking.transferProofUrl"
+        @close="approvingId = ''"
+        @confirm="onApprove"
+      />
     </template>
   </div>
 </template>

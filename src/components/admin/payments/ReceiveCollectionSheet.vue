@@ -4,6 +4,7 @@ import BaseSheet from '@/components/ui/BaseSheet.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import FileDrop from '@/components/ui/FileDrop.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
+import ChoiceChips from '@/components/admin/operation/ChoiceChips.vue'
 import { operationService } from '@/services/operation.service'
 import { managementService } from '@/services/management.service'
 import { useToastStore } from '@/stores/toast'
@@ -22,6 +23,8 @@ const note = ref('')
 const proofUrl = ref('')
 const uploading = ref(false)
 const saving = ref(false)
+const excessAs = ref<'' | 'tip' | 'credit'>('')
+const excess = computed(() => (props.item ? Math.max(0, amount.value - Math.max(0, props.item.balance)) : 0))
 
 watch(
   () => props.item,
@@ -30,6 +33,7 @@ watch(
     amount.value = it.method === 'cash' ? it.cashReceived : it.balance
     note.value = ''
     proofUrl.value = ''
+    excessAs.value = ''
   },
 )
 
@@ -51,9 +55,10 @@ async function upload(file: File) {
 async function confirm() {
   if (!props.item) return
   if (!isCash.value && !proofUrl.value) return toast.error('Sube la imagen del comprobante')
+  if (excess.value > 0 && !excessAs.value) return toast.error(`Hay ${money(excess.value)} de más: elige si es propina o saldo a favor`)
   saving.value = true
   try {
-    const r = await operationService.receiveCollection(props.item._id, { amount: amount.value, proofUrl: proofUrl.value || undefined, note: note.value.trim() || undefined })
+    const r = await operationService.receiveCollection(props.item._id, { amount: amount.value, proofUrl: proofUrl.value || undefined, note: note.value.trim() || undefined, excessAs: excess.value > 0 ? excessAs.value || undefined : undefined })
     toast.success(isCash.value ? `Recibiste ${money(amount.value)} de ${who.value}` : 'Transferencia confirmada con comprobante')
     emit('done', r)
   } catch (e) {
@@ -86,6 +91,19 @@ async function confirm() {
         <MoneyField v-model="amount" label="Monto de la transferencia" />
       </template>
 
+      <div v-if="excess > 0" class="rc__diff rc__diff--col">
+        <span><b>Excedente: {{ money(excess) }}</b> sobre el saldo de {{ money(item.balance) }}. ¿Qué es lo que sobra?</span>
+        <ChoiceChips
+          :model-value="excessAs"
+          :options="[
+            { value: 'tip', label: 'Propina para el equipo' },
+            { value: 'credit', label: 'Saldo a favor del cliente', hint: 'Se descuenta en su próximo servicio' },
+          ]"
+          label="Qué es el excedente"
+          small
+          @update:model-value="excessAs = $event as 'tip' | 'credit'"
+        />
+      </div>
       <label class="field">
         <span class="field__label">Nota (opcional)</span>
         <input v-model="note" type="text" :placeholder="isCash ? 'Ej.: entregó en la base a las 18:00' : 'Ej.: transferencia Pichincha #12345'" />
@@ -141,6 +159,12 @@ async function confirm() {
     color: $warning;
     font-size: $text-sm;
     font-weight: 600;
+  }
+
+  &__diff--col {
+    flex-direction: column;
+    align-items: stretch;
+    color: $ink;
   }
 
   &__hint {

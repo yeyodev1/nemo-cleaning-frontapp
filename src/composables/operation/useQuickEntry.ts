@@ -6,6 +6,7 @@ import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
 import { readJSON, writeJSON } from '@/utils/storage'
 import { errorMessage, todayISO } from '@/utils/format'
+import { evidenceKind, evidenceMissing, evidencePayload } from '@/utils/paymentEvidence'
 import type { Booking, Customer, PaymentConfirmation, Service } from '@/types/api'
 import type { ProductionItemInput, ProductionOptions } from '@/types/operation'
 
@@ -62,6 +63,9 @@ export function useQuickEntry() {
     confirmation: defaultConfirmation(saved.account || 'Efectivo'),
     tip: 0,
     notes: '',
+    // Papel del cobro confirmado: comprobante (transferencia) o efectivo recibido.
+    proofUrl: '',
+    cashConfirmed: false,
   })
 
   Promise.all([operationService.productionOptions(), managementService.services()])
@@ -80,8 +84,14 @@ export function useQuickEntry() {
   const total = computed(() => Math.max(0, subtotal.value - form.discount))
   /** Fecha futura: el servicio no está hecho, se agenda. */
   const isFuture = computed(() => form.date > todayISO())
+  const evidence = computed(() => evidenceKind(form.account, form.confirmation))
 
   watch(() => form.account, (a) => (form.confirmation = defaultConfirmation(a)))
+  // Otra cuenta u otra confirmación: el papel de antes ya no corresponde.
+  watch(
+    () => [form.account, form.confirmation],
+    () => Object.assign(form, { proofUrl: '', cashConfirmed: false }),
+  )
   watch(
     () => [form.date, form.branch, form.operators.join(','), form.account],
     () => writeJSON(SESSION_KEY, { date: form.date, branch: form.branch, operators: form.operators, account: form.account }),
@@ -149,7 +159,7 @@ export function useQuickEntry() {
   }
 
   function resetClient() {
-    Object.assign(form, { bookingId: '', customerId: '', customerName: '', customerPhone: '', lines: [], discount: 0, tip: 0, notes: '' })
+    Object.assign(form, { bookingId: '', customerId: '', customerName: '', customerPhone: '', lines: [], discount: 0, tip: 0, notes: '', proofUrl: '', cashConfirmed: false })
   }
 
   function validate(): string {
@@ -158,7 +168,7 @@ export function useQuickEntry() {
     if (!form.customerName.trim()) return 'Escribe el nombre del cliente'
     if (!form.lines.length) return 'Agrega el servicio'
     if (form.discount > subtotal.value) return 'El descuento no puede ser mayor que el total'
-    return ''
+    return evidenceMissing(evidence.value, form.proofUrl, form.cashConfirmed)
   }
 
   function itemsPayload(): ProductionItemInput[] {
@@ -191,6 +201,7 @@ export function useQuickEntry() {
         paymentConfirmation: form.confirmation,
         tip: form.tip || undefined,
         notes: form.notes || undefined,
+        ...evidencePayload(evidence.value, form.proofUrl, form.cashConfirmed),
       })
       session.value.unshift(booking)
       scheduled.value = scheduled.value.filter((b) => b._id !== booking._id)
@@ -205,5 +216,5 @@ export function useQuickEntry() {
     }
   }
 
-  return { form, options, services, zones, operators, subtotal, total, isFuture, busy, session, scheduled, addService, addFree, removeLine, pickCustomer, useScheduled, submit, resetClient }
+  return { form, options, services, zones, operators, subtotal, total, isFuture, evidence, busy, session, scheduled, addService, addFree, removeLine, pickCustomer, useScheduled, submit, resetClient }
 }

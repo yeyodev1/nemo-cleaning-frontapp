@@ -123,7 +123,7 @@ export function useWaQuickOrder() {
   }
 
   async function submit() {
-    const err = validate()
+    const err = validate() || wa.paymentMissing(pay.value)
     if (err) return toast.error(err)
     busy.value = true
     try {

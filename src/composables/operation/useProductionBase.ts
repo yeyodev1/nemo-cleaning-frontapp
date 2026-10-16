@@ -72,9 +72,14 @@ export function useProductionBase() {
   })
 
   /** Cambia la confirmación desde la Base (pasar a confirmado registra el cobro). */
-  async function changeConfirmation(row: ProductionRow, confirmation: string, account?: string) {
+  async function changeConfirmation(
+    row: ProductionRow,
+    confirmation: string,
+    account?: string,
+    evidence?: { proofUrl?: string; cashConfirmed?: boolean },
+  ) {
     try {
-      await operationService.setConfirmation(row._id, confirmation, account)
+      await operationService.setConfirmation(row._id, confirmation, account, evidence)
       toast.success('Confirmación actualizada')
       await load()
       return true

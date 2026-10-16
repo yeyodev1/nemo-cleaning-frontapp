@@ -118,6 +118,8 @@ export interface Customer {
   phone: string
   documentId?: string
   address?: string
+  /** Saldo a favor (centavos) por excedentes de pagos anteriores. */
+  credit?: number
   /** Última referencia y ubicación usadas: se precargan en el próximo servicio. */
   reference?: string
   location?: BookingLocation | null
