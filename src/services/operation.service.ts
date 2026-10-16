@@ -48,7 +48,7 @@ class OperationService extends APIBase {
   novedades(q: { branch?: string; from?: string; to?: string; operator?: string }) {
     return this.get<{ from: string; to: string; items: NovedadRow[]; total: number }>('admin/novedades', q)
   }
-  addNovedad(bookingId: ID, body: { text: string; operator?: ID }) {
+  addNovedad(bookingId: ID, body: { text: string; operator?: ID; photos?: string[] }) {
     return this.post(`admin/bookings/${bookingId}/novedades`, body)
   }
   deleteNovedad(bookingId: ID, id: ID) {

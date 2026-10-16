@@ -1,34 +1,56 @@
 <script setup lang="ts">
 import { computed, ref, toRef } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import KpiCard from '@/components/admin/common/KpiCard.vue'
 import PageIntro from '@/components/admin/sheet/PageIntro.vue'
-import KpiRow from '@/components/admin/sheet/KpiRow.vue'
-import EmptyState from '@/components/admin/sheet/EmptyState.vue'
 import ConfirmSheet from '@/components/admin/sheet/ConfirmSheet.vue'
+import ServiceNovedadComposer from '@/components/admin/operation/ServiceNovedadComposer.vue'
 import { useReport } from '@/composables/admin/useReport'
 import { operationService } from '@/services/operation.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
-import { addDays, dateTime, errorMessage, shortDate, todayISO, weekdayOf } from '@/utils/format'
+import { addDays, dateTime, errorMessage, longDate, shortDate, todayISO, weekStart } from '@/utils/format'
 import type { NovedadRow } from '@/types/operation'
 
-/** Hoja "NOVEDADES DE LA SEMANA": lunes a domingo, con flechas para ir a otras semanas. */
+/** Novedades de los servicios por semana: registrar aquí mismo, filtrar por operador y ver por día. */
 const scope = useAdminScope()
 const toast = useToastStore()
-const monday = (d: string) => addDays(d, -((weekdayOf(d) + 6) % 7))
-const from = ref(monday(todayISO()))
+const from = ref(weekStart(todayISO()))
 const to = computed(() => addDays(from.value, 6))
 const branch = toRef(scope, 'branch')
 const { data, loading, load } = useReport(() => operationService.novedades({ from: from.value, to: to.value, branch: scope.query }), [from, branch])
+const isThisWeek = computed(() => from.value === weekStart(todayISO()))
+
+const adding = ref(false)
+function onSaved() {
+  adding.value = false
+  // La novedad nueva es de un servicio de algún día: se vuelve a la semana actual para verla.
+  load()
+}
 
 const items = computed(() => data.value?.items || [])
-const byOperator = computed(() => {
-  const map = new Map<string, number>()
-  for (const n of items.value) map.set(n.operator?.name || 'Sin operador', (map.get(n.operator?.name || 'Sin operador') || 0) + 1)
-  return [...map.entries()].sort((a, b) => b[1] - a[1])
+const opFilter = ref('')
+const operators = computed(() => {
+  const map = new Map<string, { _id: string; name: string; color?: string; count: number }>()
+  for (const n of items.value) {
+    const key = n.operator?._id || '__none'
+    const cur = map.get(key) || { _id: key, name: n.operator?.name || 'Sin operador', color: n.operator?.color, count: 0 }
+    cur.count++
+    map.set(key, cur)
+  }
+  return [...map.values()].sort((a, b) => b.count - a.count)
 })
-const isThisWeek = computed(() => from.value === monday(todayISO()))
+const shown = computed(() => (opFilter.value ? items.value.filter((n) => (n.operator?._id || '__none') === opFilter.value) : items.value))
+
+/** Agrupadas por el día en que se registraron. */
+const byDay = computed(() => {
+  const groups = new Map<string, NovedadRow[]>()
+  for (const n of shown.value) {
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guayaquil' }).format(new Date(n.at))
+    groups.set(day, [...(groups.get(day) || []), n])
+  }
+  return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]))
+})
+const time = (iso: string) => dateTime(iso).split(', ').pop()
 
 const removing = ref<NovedadRow | null>(null)
 const busy = ref(false)
@@ -49,46 +71,81 @@ async function remove() {
 </script>
 
 <template>
-  <section>
-    <PageIntro text="Quejas e incidencias de los servicios de la semana: qué pasó, con qué cliente y con qué operador. Se anotan desde la Base o desde la reserva." />
+  <section class="novs">
+    <PageIntro text="Quejas e incidencias de los servicios: qué pasó, con qué cliente y con qué operador. Regístralas aquí, desde la Base o desde la reserva.">
+      <button v-if="!adding" type="button" class="btn btn--primary" @click="adding = true"><AppIcon name="plus" /> Registrar novedad</button>
+    </PageIntro>
 
-    <div class="week">
+    <Transition name="fade-up">
+      <section v-if="adding" class="card novs__form">
+        <h2><AppIcon name="alert" :size="20" /> Nueva novedad de un servicio</h2>
+        <ServiceNovedadComposer @saved="onSaved" @cancel="adding = false" />
+      </section>
+    </Transition>
+
+    <div class="novs__week">
       <button type="button" class="btn btn--ghost btn--icon" aria-label="Semana anterior" @click="from = addDays(from, -7)"><AppIcon name="chevron-left" /></button>
-      <strong class="week__label">{{ isThisWeek ? 'Esta semana' : 'Semana' }} · {{ shortDate(from) }} al {{ shortDate(to) }}</strong>
+      <div class="novs__week-label">
+        <strong>{{ isThisWeek ? 'Esta semana' : 'Semana' }}</strong>
+        <span>{{ shortDate(from) }} al {{ shortDate(to) }}</span>
+      </div>
       <button type="button" class="btn btn--ghost btn--icon" aria-label="Semana siguiente" :disabled="isThisWeek" @click="from = addDays(from, 7)"><AppIcon name="chevron-right" /></button>
+      <button v-if="!isThisWeek" type="button" class="btn btn--soft btn--sm" @click="from = weekStart(todayISO())">Hoy</button>
     </div>
 
-    <KpiRow v-if="data">
-      <KpiCard label="Novedades" :value="items.length" icon="alert" tone="warning" />
-      <KpiCard label="Operador con más" :value="byOperator[0]?.[0] || '—'" icon="user" :hint="byOperator[0] ? `${byOperator[0][1]} novedad(es)` : 'Sin novedades'" />
-    </KpiRow>
+    <div v-if="operators.length" class="novs__filters" role="radiogroup" aria-label="Filtrar por operador">
+      <button type="button" class="novs__chip" :class="{ 'is-on': !opFilter }" role="radio" :aria-checked="!opFilter" @click="opFilter = ''">
+        Todas <b>{{ items.length }}</b>
+      </button>
+      <button
+        v-for="o in operators"
+        :key="o._id"
+        type="button"
+        class="novs__chip"
+        :class="{ 'is-on': opFilter === o._id }"
+        role="radio"
+        :aria-checked="opFilter === o._id"
+        @click="opFilter = o._id"
+      >
+        <span class="novs__dot" :style="{ background: o.color || '#5F6B77' }"></span>{{ o.name }} <b>{{ o.count }}</b>
+      </button>
+    </div>
 
-    <div v-if="loading && !data" class="list"><span v-for="i in 3" :key="i" class="skeleton" style="height: 90px"></span></div>
-    <EmptyState v-else-if="!items.length" title="Sin novedades esta semana" text="Para anotar una, abre la Base de producción, toca el servicio y escribe la novedad." icon="check">
-      <RouterLink to="/admin/produccion" class="btn btn--primary"><AppIcon name="list" /> Ir a la Base</RouterLink>
-    </EmptyState>
-    <TransitionGroup v-else name="fade-up" tag="ul" class="list">
-      <li v-for="n in items" :key="n._id" class="nov">
-        <div class="nov__head">
-          <strong>{{ n.customer || 'Cliente' }}</strong>
-          <span v-if="n.operator" class="nov__op"><span class="nov__dot" :style="{ background: n.operator.color || '#12263F' }"></span>{{ n.operator.name }}</span>
-        </div>
-        <p v-if="n.text" class="nov__text">{{ n.text }}</p>
-        <div v-if="n.photos?.length" class="nov__pics">
-          <a v-for="p in n.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
-        </div>
-        <div class="nov__foot">
-          <RouterLink :to="`/admin/pedidos/${n.bookingId}`">{{ n.code }} · servicio del {{ shortDate(n.date) }}</RouterLink>
-          <span>{{ n.by?.name }} · {{ dateTime(n.at) }}</span>
-          <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar novedad" @click="removing = n"><AppIcon name="trash" :size="16" /></button>
-        </div>
-      </li>
-    </TransitionGroup>
+    <div v-if="loading && !data" class="novs__skel"><span v-for="i in 3" :key="i" class="skeleton" style="height: 96px"></span></div>
+    <div v-else-if="!items.length" class="card novs__empty">
+      <span class="novs__empty-icon"><AppIcon name="check" :size="28" /></span>
+      <strong>Sin novedades esta semana</strong>
+      <p class="muted">Cuando un cliente se queje o pase algo en un servicio, regístralo aquí.</p>
+      <button v-if="!adding" type="button" class="btn btn--primary" @click="adding = true"><AppIcon name="plus" /> Registrar novedad</button>
+    </div>
+    <div v-else class="novs__days">
+      <section v-for="[day, list] in byDay" :key="day" class="novs__day">
+        <h3 class="novs__day-title">{{ longDate(day) }} <small>{{ list.length }}</small></h3>
+        <ul class="novs__list">
+          <li v-for="n in list" :key="n._id" class="novs__item" :style="{ '--op': n.operator?.color || '#C8CDD4' }">
+            <div class="novs__head">
+              <strong class="novs__customer">{{ n.customer || 'Cliente' }}</strong>
+              <span v-if="n.operator" class="novs__op"><span class="novs__dot" :style="{ background: n.operator.color || '#12263F' }"></span>{{ n.operator.name }}</span>
+              <span v-else class="novs__op novs__op--none">Sin operador</span>
+            </div>
+            <p v-if="n.text" class="novs__text">{{ n.text }}</p>
+            <div v-if="n.photos?.length" class="novs__pics">
+              <a v-for="p in n.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
+            </div>
+            <div class="novs__foot">
+              <RouterLink :to="`/admin/pedidos/${n.bookingId}`" class="novs__link"><AppIcon name="external" :size="14" /> {{ n.code }} · servicio del {{ shortDate(n.date) }}</RouterLink>
+              <span>{{ n.by?.name }} · {{ time(n.at) }}</span>
+              <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar novedad" @click="removing = n"><AppIcon name="trash" :size="16" /></button>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
 
     <ConfirmSheet
       :open="!!removing"
       title="Eliminar novedad"
-      :message="removing ? `Se borra la novedad de ${removing.customer || 'este cliente'}: “${removing.text}”.` : ''"
+      :message="removing ? `Se borra la novedad de ${removing.customer || 'este cliente'}${removing.text ? `: “${removing.text}”` : ''}.` : ''"
       confirm-label="Eliminar"
       danger
       :busy="busy"
@@ -99,53 +156,192 @@ async function remove() {
 </template>
 
 <style scoped lang="scss">
-.week {
+.novs {
+  max-width: 900px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  @include card(0.4rem);
+  flex-direction: column;
+  gap: 1rem;
 
-  &__label {
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: $text-lg;
+      color: $navy;
+    }
+  }
+
+  &__week {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__week-label {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+
+    strong {
+      color: $navy;
+    }
+
+    span {
+      font-size: $text-sm;
+      color: $ink-muted;
+    }
+  }
+
+  &__filters {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  &__chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 40px;
+    padding: 0 0.85rem;
+    border-radius: $radius-pill;
+    border: 1.5px solid $line;
+    background: $surface;
     font-size: $text-sm;
+    font-weight: 700;
+    color: $ink-soft;
+
+    b {
+      min-width: 1.3rem;
+      padding: 0 0.35rem;
+      border-radius: $radius-pill;
+      background: $navy-soft;
+      color: $navy;
+      font-size: $text-xs;
+      text-align: center;
+    }
+
+    &.is-on {
+      border-color: $navy;
+      background: $navy;
+      color: #fff;
+
+      b {
+        background: #fff;
+      }
+    }
+  }
+
+  &__dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  &__skel,
+  &__days {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2rem 1rem;
     text-align: center;
   }
-}
 
-.list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
+  &__empty-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: $success-bg;
+    color: $success;
+  }
 
-.nov {
-  @include card(0.9rem 1rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  &__day-title {
+    margin-bottom: 0.5rem;
+    font-size: $text-sm;
+    color: $navy;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
+
+    small {
+      margin-left: 0.3rem;
+      padding: 0 0.45rem;
+      border-radius: $radius-pill;
+      background: $navy-soft;
+      font-size: $text-xs;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: $radius-md;
+    border: 1px solid $line;
+    border-left: 4px solid var(--op);
+    background: $surface;
+    box-shadow: $shadow-sm;
+  }
 
   &__head {
     display: flex;
-    justify-content: space-between;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  &__customer {
+    font-size: $text-base;
   }
 
   &__op {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: $text-sm;
-    font-weight: 600;
-    color: $ink-soft;
+    padding: 0.2rem 0.65rem;
+    border-radius: $radius-pill;
+    background: $navy-soft;
+    color: $navy;
+    font-size: $text-xs;
+    font-weight: 700;
+
+    &--none {
+      background: $line;
+      color: $ink-muted;
+    }
   }
 
-  &__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+  &__text {
+    font-size: $text-sm;
+    color: $ink;
+    line-height: 1.5;
   }
 
   &__pics {
@@ -154,16 +350,11 @@ async function remove() {
     gap: 0.35rem;
 
     img {
-      width: 72px;
-      height: 72px;
+      width: 76px;
+      height: 76px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: 8px;
     }
-  }
-
-  &__text {
-    color: $ink;
-    line-height: 1.5;
   }
 
   &__foot {
@@ -174,14 +365,17 @@ async function remove() {
     font-size: $text-xs;
     color: $ink-muted;
 
-    a {
-      color: $navy;
-      font-weight: 600;
-    }
-
     .btn {
       margin-left: auto;
     }
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 700;
+    color: $navy;
   }
 }
 </style>
