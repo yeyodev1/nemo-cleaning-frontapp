@@ -2,6 +2,8 @@
 import { computed, reactive, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
+import DatePicker from '@/components/ui/DatePicker.vue'
+import ChoiceChips from '@/components/admin/operation/ChoiceChips.vue'
 import { ledgerService } from '@/services/ledger.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
@@ -43,6 +45,15 @@ watch(
   },
 )
 const pending = computed(() => Math.max(0, form.amount - form.paidAmount))
+// Opciones como botones (sin selects nativos). "General" = de toda la empresa.
+const GENERAL = '__general'
+const branchChoices = computed(() => [{ value: GENERAL, label: 'General de la empresa' }, ...scope.visibleBranches.map((b) => ({ value: b._id, label: b.name }))])
+const categoryChoices = options(payableCategory)
+const methodChoices = options(payableMethod)
+const fortnightChoices = [
+  { value: '1', label: 'Q1 (1–15)' },
+  { value: '2', label: 'Q2 (16–fin de mes)' },
+]
 
 async function save() {
   if (!form.beneficiary.trim()) return toast.error('Escribe a quién se le paga o el concepto')
@@ -69,47 +80,38 @@ async function save() {
         <span class="field__label">Beneficiario / concepto</span>
         <input v-model="form.beneficiary" type="text" maxlength="160" required placeholder="Ej. Alquiler bodega, Crédito motos VISA" />
       </label>
-      <div class="form-row">
-        <label class="field">
-          <span class="field__label">Categoría</span>
-          <select v-model="form.category">
-            <option v-for="o in options(payableCategory)" :key="o.value" :value="o.value">{{ o.label }}</option>
-          </select>
-        </label>
-        <MoneyField v-model="form.amount" label="Valor" required />
+      <div class="field">
+        <span class="field__label">Categoría</span>
+        <ChoiceChips :model-value="form.category" :options="categoryChoices" label="Categoría" small @update:model-value="form.category = $event as typeof form.category" />
       </div>
-      <div class="form-row">
-        <label class="field">
-          <span class="field__label">Quincena</span>
-          <select v-model.number="form.fortnight">
-            <option :value="1">Q1 (1–15)</option>
-            <option :value="2">Q2 (16–fin de mes)</option>
-          </select>
-        </label>
-        <label class="field"><span class="field__label">Fecha prevista (opcional)</span><input v-model="form.dueDate" type="date" /></label>
+      <MoneyField v-model="form.amount" label="Valor" required />
+      <div class="field">
+        <span class="field__label">Quincena</span>
+        <ChoiceChips :model-value="String(form.fortnight)" :options="fortnightChoices" label="Quincena" @update:model-value="form.fortnight = Number($event) as 1 | 2" />
       </div>
-      <label class="field">
+      <div class="field">
+        <span class="field__label">Fecha prevista (opcional)</span>
+        <DatePicker v-model="form.dueDate" clearable placeholder="Sin fecha prevista" label="Fecha prevista" />
+      </div>
+      <div class="field">
         <span class="field__label">Sucursal</span>
-        <select v-model="form.branch">
-          <option :value="null">General de la empresa</option>
-          <option v-for="b in scope.visibleBranches" :key="b._id" :value="b._id">{{ b.name }}</option>
-        </select>
-      </label>
+        <ChoiceChips :model-value="form.branch || GENERAL" :options="branchChoices" label="Sucursal" small @update:model-value="form.branch = $event === GENERAL ? null : String($event)" />
+      </div>
 
       <fieldset class="paid">
         <legend>Pago</legend>
         <div class="form-row">
           <MoneyField v-model="form.paidAmount" label="Pagado" :hint="`Pendiente: ${money(pending)}`" />
-          <label class="field"><span class="field__label">Fecha de pago</span><input v-model="form.paidDate" type="date" /></label>
+          <div class="field">
+            <span class="field__label">Fecha de pago</span>
+            <DatePicker v-model="form.paidDate" clearable placeholder="Aún no se paga" label="Fecha de pago" />
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label">Método</span>
+          <ChoiceChips :model-value="form.method" :options="methodChoices" label="Método de pago" small @update:model-value="form.method = $event as typeof form.method" />
         </div>
         <div class="form-row">
-          <label class="field">
-            <span class="field__label">Método</span>
-            <select v-model="form.method">
-              <option value="">—</option>
-              <option v-for="o in options(payableMethod)" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </label>
           <label class="field">
             <span class="field__label">Cuenta / caja</span>
             <input v-model="form.account" type="text" maxlength="80" placeholder="Ej. Pichincha, Caja gerencia" />

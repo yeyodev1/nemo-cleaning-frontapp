@@ -11,6 +11,8 @@ import KpiRow from '@/components/admin/sheet/KpiRow.vue'
 import MonthNav from '@/components/admin/sheet/MonthNav.vue'
 import PageIntro from '@/components/admin/sheet/PageIntro.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import ToggleSwitch from '@/components/ui/ToggleSwitch.vue'
+import ChoiceChips from '@/components/admin/operation/ChoiceChips.vue'
 import { usePagedList } from '@/composables/admin/usePagedList'
 import { financeService, type ExpenseFilters, type ExpensePage } from '@/services/finance.service'
 import { ledgerService } from '@/services/ledger.service'
@@ -113,27 +115,20 @@ async function repeatFixed() {
 
     <FilterBar>
       <MonthNav v-model="month" class="month" />
-      <label class="field">
-        <span class="field__label">Categoría</span>
-        <select v-model="filters.category">
-          <option value="">Todas</option>
-          <option v-for="o in options(expenseCategory)" :key="o.value" :value="o.value">{{ o.label }}</option>
-        </select>
-      </label>
-      <label class="field">
+      <div class="field fchips">
         <span class="field__label">Tipo</span>
-        <select v-model="filters.kind">
-          <option value="">Fijos y variables</option>
-          <option v-for="o in options(expenseKind)" :key="o.value" :value="o.value">{{ o.label }}</option>
-        </select>
-      </label>
-      <label v-if="user.isAdmin" class="field">
+        <ChoiceChips :model-value="filters.kind || ''" :options="[{ value: '', label: 'Fijos y variables' }, ...options(expenseKind)]" label="Tipo" small @update:model-value="filters.kind = $event as typeof filters.kind" />
+      </div>
+      <div v-if="user.isAdmin" class="field fchips">
         <span class="field__label">Pagado desde</span>
-        <select v-model="filters.paidFrom">
-          <option value="">Todos</option>
-          <option v-for="o in options(paidFrom)" :key="o.value" :value="o.value">{{ o.label }}</option>
-        </select>
-      </label>
+        <ChoiceChips :model-value="filters.paidFrom || ''" :options="[{ value: '', label: 'Todos' }, ...options(paidFrom)]" label="Pagado desde" small @update:model-value="filters.paidFrom = $event as typeof filters.paidFrom" />
+      </div>
+      <div class="field fchips fchips--wide">
+        <span class="field__label">Categoría</span>
+        <div class="fchips__scroll">
+          <ChoiceChips :model-value="filters.category || ''" :options="[{ value: '', label: 'Todas' }, ...options(expenseCategory)]" label="Categoría" small @update:model-value="filters.category = $event as typeof filters.category" />
+        </div>
+      </div>
     </FilterBar>
 
     <div v-if="loading && !items.length" class="rows"><span v-for="i in 5" :key="i" class="skeleton" style="height: 72px"></span></div>
@@ -156,14 +151,29 @@ async function repeatFixed() {
       @close="toDelete = null"
       @confirm="confirmDelete"
     >
-      <label v-if="toDelete?.installment" class="check series">
-        <input v-model="deleteSeries" type="checkbox" /> Eliminar las {{ toDelete.installment.count }} cuotas de este diferido
-      </label>
+      <ToggleSwitch v-if="toDelete?.installment" v-model="deleteSeries" class="series" :label="`Eliminar las ${toDelete.installment.count} cuotas de este diferido`" />
     </ConfirmSheet>
   </section>
 </template>
 
 <style scoped lang="scss">
+.fchips {
+  min-width: 0;
+
+  &--wide {
+    flex-basis: 100%;
+  }
+
+  &__scroll {
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+
+    :deep(.chips) {
+      flex-wrap: nowrap;
+    }
+  }
+}
+
 .rows {
   list-style: none;
   display: flex;

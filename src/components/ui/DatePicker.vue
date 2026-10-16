@@ -4,23 +4,28 @@ import AppIcon from './AppIcon.vue'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { addDays, todayISO, weekStart } from '@/utils/format'
 
-/** Fecha con el calendario de Nemo (sin el selector nativo del navegador). Valor "YYYY-MM-DD". */
-const props = defineProps<{ label?: string; min?: string; max?: string }>()
+/**
+ * Fecha con el calendario de Nemo (sin el selector nativo del navegador). Valor "YYYY-MM-DD".
+ * Con `clearable` puede quedar vacía ("") y muestra `placeholder`.
+ */
+const props = defineProps<{ label?: string; min?: string; max?: string; clearable?: boolean; placeholder?: string }>()
 const model = defineModel<string>({ required: true })
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 useClickOutside(root, open)
 
-const view = ref(model.value.slice(0, 7))
-watch(open, (o) => o && (view.value = model.value.slice(0, 7)))
+const view = ref((model.value || todayISO()).slice(0, 7))
+watch(open, (o) => o && (view.value = (model.value || todayISO()).slice(0, 7)))
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const today = todayISO()
 const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat('es-EC', { ...opts, timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`)).replace(/\./g, '')
 
-const display = computed(() => fmt(model.value, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }))
+const display = computed(() =>
+  model.value ? fmt(model.value, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : props.placeholder || 'Elegir fecha',
+)
 const monthTitle = computed(() => fmt(`${view.value}-01`, { month: 'long', year: 'numeric' }))
 const cells = computed(() => {
   const from = weekStart(`${view.value}-01`)
@@ -47,7 +52,7 @@ function pick(iso: string) {
   <div ref="root" class="dp">
     <button type="button" class="dp__trigger" :class="{ 'is-open': open }" :aria-expanded="open" :aria-label="label || 'Elegir fecha'" @click="open = !open">
       <AppIcon name="calendar" :size="18" />
-      <span class="dp__value">{{ display }}</span>
+      <span class="dp__value" :class="{ 'is-empty': !model }">{{ display }}</span>
       <AppIcon name="chevron-down" :size="16" class="dp__caret" />
     </button>
 
@@ -75,6 +80,7 @@ function pick(iso: string) {
           </button>
         </div>
         <footer class="dp__foot">
+          <button v-if="clearable && model" type="button" class="dp__link" @click="pick('')">Sin fecha</button>
           <button type="button" class="dp__link" @click="pick(today)">Hoy</button>
         </footer>
       </div>
@@ -116,6 +122,11 @@ function pick(iso: string) {
 
     &::first-letter {
       text-transform: uppercase;
+    }
+
+    &.is-empty {
+      color: $ink-muted;
+      font-weight: 500;
     }
   }
 
@@ -210,6 +221,7 @@ function pick(iso: string) {
   &__foot {
     display: flex;
     justify-content: flex-end;
+    gap: 0.25rem;
     margin-top: 0.4rem;
   }
 

@@ -80,13 +80,24 @@ function saveBank() {
     </button>
     <ul v-if="open" class="acc__list">
       <li v-for="p in acc.payments" :key="p._id">
-        <label class="check">
-          <input type="checkbox" :checked="p.verified" :disabled="busyId === p._id" @change="emit('verify', p)" />
+        <div class="acc__row">
+          <button
+            type="button"
+            class="acc__verify"
+            :class="{ 'is-on': p.verified }"
+            role="switch"
+            :aria-checked="p.verified"
+            :aria-label="p.verified ? 'Quitar verificado' : 'Marcar como verificado en el banco'"
+            :disabled="busyId === p._id"
+            @click="emit('verify', p)"
+          >
+            <AppIcon :name="p.verified ? 'check' : 'plus'" :size="16" /> {{ p.verified ? 'Verificado' : 'Verificar' }}
+          </button>
           <span class="acc__p">
             <strong>{{ money(p.amount) }}</strong> · {{ p.customer || 'Cliente' }}
             <small>{{ shortDate(p.date) }} · {{ p.bookingCode }}<template v-if="p.reference"> · Ref. {{ p.reference }}</template><template v-if="p.verified && p.verifiedBy"> · verificó {{ p.verifiedBy }}</template></small>
           </span>
-        </label>
+        </div>
         <a v-if="p.proofUrl" :href="p.proofUrl" target="_blank" rel="noopener" class="acc__proof"><AppIcon name="file" :size="14" /> Comprobante</a>
       </li>
     </ul>
@@ -136,6 +147,35 @@ function saveBank() {
 
     dd {
       font-weight: 800;
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__verify {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    min-height: 36px;
+    padding: 0 0.7rem;
+    border-radius: $radius-pill;
+    border: 1.5px solid $line;
+    background: $surface;
+    font-size: $text-xs;
+    font-weight: 700;
+    color: $ink-soft;
+
+    &.is-on {
+      border-color: $success;
+      background: $success-bg;
+      color: $success;
     }
   }
 
