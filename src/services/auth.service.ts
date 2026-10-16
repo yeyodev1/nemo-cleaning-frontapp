@@ -7,6 +7,10 @@ class AuthService extends APIBase {
     return this.post<{ ok: true }>('auth/request-code', { email })
   }
 
+  login(email: string, password: string) {
+    return this.post<{ token: string; user: User }>('auth/login', { email, password })
+  }
+
   verify(email: string, code: string) {
     return this.post<{ token: string; user: User }>('auth/verify', { email, code })
   }

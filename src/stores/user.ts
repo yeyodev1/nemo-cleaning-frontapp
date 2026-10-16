@@ -25,9 +25,17 @@ export const useUserStore = defineStore('user', {
       return Boolean(this.user && roles.includes(this.user.role))
     },
 
+    /** Acceso con correo y contraseña. */
+    async loginWithPassword(email: string, password: string) {
+      return this.saveSession(await authService.login(email, password))
+    },
+
     /** Segundo paso del acceso por código: guarda el token y la cuenta. */
     async verifyCode(email: string, code: string) {
-      const { token, user } = await authService.verify(email, code)
+      return this.saveSession(await authService.verify(email, code))
+    },
+
+    saveSession({ token, user }: { token: string; user: User }) {
       try {
         localStorage.setItem(TOKEN_KEY, token)
       } catch {
