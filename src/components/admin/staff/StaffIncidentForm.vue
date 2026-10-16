@@ -4,16 +4,20 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import DatePicker from '@/components/ui/DatePicker.vue'
 import { operationService } from '@/services/operation.service'
 import { useToastStore } from '@/stores/toast'
+import { useAdminScope } from '@/stores/adminScope'
 import { staffIncidentLabel } from '@/config/operationLabels'
 import { errorMessage, todayISO } from '@/utils/format'
 import type { User } from '@/types/api'
 import type { StaffIncident, StaffIncidentType } from '@/types/operation'
 
 /**
- * Registrar una novedad del personal: quién, qué pasó (botones grandes), cuándo y detalle.
- * Con `person` fijo (perfil) no se pregunta a quién.
+ * Registrar una novedad: quién, qué pasó (botones grandes), cuándo y detalle.
+ * Con `person` fijo (perfil) no se pregunta a quién; con `general` no es de nadie en
+ * particular (atraso, inconsistencia de la sucursal) y se pregunta la sucursal.
  */
-const props = defineProps<{ people?: User[]; person?: { _id: string; name: string } | null }>()
+const props = defineProps<{ people?: User[]; person?: { _id: string; name: string } | null; general?: boolean }>()
+const scope = useAdminScope()
+const branch = ref(scope.branch || scope.visibleBranches[0]?._id || '')
 const emit = defineEmits<{ saved: [item: StaffIncident]; cancel: [] }>()
 const toast = useToastStore()
 
@@ -24,7 +28,13 @@ const date = ref(todayISO())
 const text = ref('')
 const saving = ref(false)
 
-const types = Object.entries(staffIncidentLabel) as [StaffIncidentType, (typeof staffIncidentLabel)[StaffIncidentType]][]
+// En una general no aplican faltas ni peleas (esas son de una persona).
+const types = computed(() =>
+  (Object.entries(staffIncidentLabel) as [StaffIncidentType, (typeof staffIncidentLabel)[StaffIncidentType]][]).filter(
+    ([k]) => !props.general || !['absence', 'fight'].includes(k),
+  ),
+)
+const steps = computed(() => (props.person || props.general ? 0 : 1))
 const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const visiblePeople = computed(() =>
   (props.people || []).filter((p) => p.active && (!query.value.trim() || norm(p.name).includes(norm(query.value.trim())))),
@@ -36,16 +46,23 @@ const placeholder = computed(() =>
       ? 'Ej.: discutió con un compañero en la base'
       : type.value === 'customer_issue'
         ? 'Ej.: el cliente se quejó por el trato'
-        : 'Cuenta qué pasó',
+        : type.value === 'inconsistency'
+          ? 'Ej.: la caja no cuadra con lo registrado en la Base ($15 de diferencia)'
+          : 'Cuenta qué pasó',
 )
 
 async function save() {
-  if (!userId.value) return toast.error('Elige a la persona')
+  if (!props.general && !userId.value) return toast.error('Elige a la persona')
   if (!type.value) return toast.error('Elige qué pasó')
-  if (type.value === 'other' && !text.value.trim()) return toast.error('Describe qué pasó')
+  if ((props.general || type.value === 'other') && !text.value.trim()) return toast.error('Describe qué pasó')
   saving.value = true
   try {
-    const item = await operationService.addStaffIncident({ user: userId.value, type: type.value, date: date.value, text: text.value.trim() })
+    const item = await operationService.addStaffIncident({
+      ...(props.general ? { branch: branch.value || undefined } : { user: userId.value }),
+      type: type.value,
+      date: date.value,
+      text: text.value.trim(),
+    })
     toast.success('Novedad guardada')
     emit('saved', item)
     type.value = ''
@@ -61,7 +78,25 @@ async function save() {
 
 <template>
   <form class="sif" novalidate @submit.prevent="save">
-    <div v-if="!person" class="field">
+    <div v-if="general && scope.visibleBranches.length > 1" class="field">
+      <span class="field__label">Sucursal</span>
+      <div class="sif__people" role="radiogroup" aria-label="Sucursal">
+        <button
+          v-for="b in scope.visibleBranches"
+          :key="b._id"
+          type="button"
+          class="sif__person"
+          :class="{ 'is-on': branch === b._id }"
+          role="radio"
+          :aria-checked="branch === b._id"
+          @click="branch = b._id"
+        >
+          {{ b.name }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="!person && !general" class="field">
       <span class="field__label">1. ¿Quién?</span>
       <div class="sif__search">
         <AppIcon name="search" :size="18" class="sif__search-icon" />
@@ -86,7 +121,7 @@ async function save() {
     </div>
 
     <div class="field">
-      <span class="field__label">{{ person ? '1.' : '2.' }} ¿Qué pasó?</span>
+      <span class="field__label">{{ 1 + steps }}. ¿Qué pasó?</span>
       <div class="sif__types" role="radiogroup" aria-label="Tipo de novedad">
         <button
           v-for="[key, t] in types"
@@ -105,12 +140,12 @@ async function save() {
     </div>
 
     <div class="field">
-      <span class="field__label">{{ person ? '2.' : '3.' }} ¿Cuándo?</span>
+      <span class="field__label">{{ 2 + steps }}. ¿Cuándo?</span>
       <DatePicker v-model="date" :max="todayISO()" label="Fecha de la novedad" />
     </div>
 
     <label class="field">
-      <span class="field__label">{{ person ? '3.' : '4.' }} Detalle {{ type === 'other' ? '' : '(opcional)' }}</span>
+      <span class="field__label">{{ 3 + steps }}. Detalle {{ general || type === 'other' ? '' : '(opcional)' }}</span>
       <textarea v-model="text" rows="3" :placeholder="placeholder"></textarea>
     </label>
 

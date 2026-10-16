@@ -95,12 +95,14 @@ export interface NovedadRow {
   operator: { _id: ID; name: string; color?: string } | null
 }
 
-export type StaffIncidentType = 'late' | 'absence' | 'fight' | 'customer_issue' | 'damage' | 'other'
+export type StaffIncidentType = 'late' | 'absence' | 'fight' | 'customer_issue' | 'damage' | 'inconsistency' | 'complaint' | 'other'
 
 /** Novedad del personal (no de un servicio): llegó tarde, pelea, problema con cliente… */
 export interface StaffIncident {
   _id: ID
-  user: { _id: ID; name: string; color?: string }
+  /** null = novedad general (no es de una persona). */
+  user: { _id: ID; name: string; color?: string } | null
+  branch: ID | null
   type: StaffIncidentType
   date: string
   text: string

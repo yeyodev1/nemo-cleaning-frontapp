@@ -4,66 +4,148 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import PageIntro from '@/components/admin/sheet/PageIntro.vue'
 import ConfirmSheet from '@/components/admin/sheet/ConfirmSheet.vue'
 import ServiceNovedadComposer from '@/components/admin/operation/ServiceNovedadComposer.vue'
+import StaffIncidentForm from '@/components/admin/staff/StaffIncidentForm.vue'
 import { useReport } from '@/composables/admin/useReport'
 import { operationService } from '@/services/operation.service'
+import { managementService } from '@/services/management.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
+import { useUserStore } from '@/stores/user'
+import { staffIncidentLabel } from '@/config/operationLabels'
 import { addDays, dateTime, errorMessage, longDate, shortDate, todayISO, weekStart } from '@/utils/format'
-import type { NovedadRow } from '@/types/operation'
+import type { User } from '@/types/api'
+import type { NovedadRow, StaffIncident } from '@/types/operation'
 
-/** Novedades de los servicios por semana: registrar aquí mismo, filtrar por operador y ver por día. */
+/**
+ * Todas las novedades de la semana en un lugar: de un servicio, de una persona del equipo
+ * o generales (un atraso, una inconsistencia). Se registran aquí mismo.
+ */
 const scope = useAdminScope()
 const toast = useToastStore()
+const me = useUserStore()
 const from = ref(weekStart(todayISO()))
 const to = computed(() => addDays(from.value, 6))
 const branch = toRef(scope, 'branch')
-const { data, loading, load } = useReport(() => operationService.novedades({ from: from.value, to: to.value, branch: scope.query }), [from, branch])
+const { data, loading, load } = useReport(
+  () =>
+    Promise.all([
+      operationService.novedades({ from: from.value, to: to.value, branch: scope.query }),
+      operationService.staffIncidents({ from: from.value, to: to.value }),
+    ]).then(([services, incidents]) => ({ services: services.items, incidents: incidents.items })),
+  [from, branch],
+)
 const isThisWeek = computed(() => from.value === weekStart(todayISO()))
 
+// Registrar: primero "¿sobre qué es?".
+type Mode = 'service' | 'person' | 'general'
 const adding = ref(false)
+const mode = ref<Mode | ''>('')
+const MODES: { value: Mode; label: string; hint: string; icon: 'list' | 'user' | 'layers' }[] = [
+  { value: 'service', label: 'Un servicio', hint: 'Queja de un cliente, trabajo incompleto, daño en un servicio', icon: 'list' },
+  { value: 'person', label: 'Una persona del equipo', hint: 'Llegó tarde, faltó, pelea, problema con un cliente', icon: 'user' },
+  { value: 'general', label: 'Otra cosa', hint: 'Un atraso, una inconsistencia en caja o registros, algo de la sucursal', icon: 'layers' },
+]
+const people = ref<User[]>([])
+managementService.users().then((list) => (people.value = list.filter((u) => u.role !== 'admin').sort((a, b) => a.name.localeCompare(b.name))))
+
+function startAdding() {
+  adding.value = true
+  mode.value = ''
+}
 function onSaved() {
   adding.value = false
-  // La novedad nueva es de un servicio de algún día: se vuelve a la semana actual para verla.
+  mode.value = ''
   load()
 }
 
-const items = computed(() => data.value?.items || [])
-const opFilter = ref('')
-const operators = computed(() => {
-  const map = new Map<string, { _id: string; name: string; color?: string; count: number }>()
-  for (const n of items.value) {
-    const key = n.operator?._id || '__none'
-    const cur = map.get(key) || { _id: key, name: n.operator?.name || 'Sin operador', color: n.operator?.color, count: 0 }
-    cur.count++
-    map.set(key, cur)
-  }
-  return [...map.values()].sort((a, b) => b.count - a.count)
-})
-const shown = computed(() => (opFilter.value ? items.value.filter((n) => (n.operator?._id || '__none') === opFilter.value) : items.value))
+/** Entrada común para la lista (servicio, persona o general). */
+interface Entry {
+  key: string
+  kind: Mode
+  day: string
+  at: string
+  title: string
+  tag: string
+  tone: 'warning' | 'danger' | 'info' | 'navy'
+  text: string
+  photos: string[]
+  color?: string
+  who?: { _id: string; name: string; color?: string } | null
+  link?: { to: string; label: string }
+  by?: string
+  service?: NovedadRow
+  incident?: StaffIncident
+}
 
-/** Agrupadas por el día en que se registraron. */
+const dayOf = (iso: string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guayaquil' }).format(new Date(iso))
+
+const entries = computed<Entry[]>(() => {
+  const d = data.value
+  if (!d) return []
+  const fromServices: Entry[] = d.services.map((n) => ({
+    key: `s-${n._id}`,
+    kind: 'service',
+    day: dayOf(n.at),
+    at: n.at,
+    title: n.customer ? `Servicio de ${n.customer}` : `Servicio ${n.code}`,
+    tag: 'Servicio',
+    tone: 'warning',
+    text: n.text,
+    photos: n.photos || [],
+    color: n.operator?.color,
+    who: n.operator,
+    link: { to: `/admin/pedidos/${n.bookingId}`, label: `${n.code} · servicio del ${shortDate(n.date)}` },
+    by: n.by?.name,
+    service: n,
+  }))
+  const fromIncidents: Entry[] = d.incidents.map((i) => ({
+    key: `i-${i._id}`,
+    kind: i.user ? 'person' : 'general',
+    day: i.date,
+    at: i.createdAt,
+    title: staffIncidentLabel[i.type].label,
+    tag: i.user ? 'Persona' : `General${i.branch ? ` · ${scope.branchName(i.branch)}` : ''}`,
+    tone: staffIncidentLabel[i.type].tone,
+    text: i.text,
+    photos: [],
+    color: i.user?.color,
+    who: i.user,
+    link: i.user ? { to: `/admin/personal/${i.user._id}`, label: `Ver perfil de ${i.user.name}` } : undefined,
+    by: i.by?.name,
+    incident: i,
+  }))
+  return [...fromServices, ...fromIncidents].sort((a, b) => b.day.localeCompare(a.day) || b.at.localeCompare(a.at))
+})
+
+const kindFilter = ref<Mode | ''>('')
+const counts = computed(() => ({
+  service: entries.value.filter((e) => e.kind === 'service').length,
+  person: entries.value.filter((e) => e.kind === 'person').length,
+  general: entries.value.filter((e) => e.kind === 'general').length,
+}))
+const shown = computed(() => (kindFilter.value ? entries.value.filter((e) => e.kind === kindFilter.value) : entries.value))
 const byDay = computed(() => {
-  const groups = new Map<string, NovedadRow[]>()
-  for (const n of shown.value) {
-    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guayaquil' }).format(new Date(n.at))
-    groups.set(day, [...(groups.get(day) || []), n])
-  }
+  const groups = new Map<string, Entry[]>()
+  for (const e of shown.value) groups.set(e.day, [...(groups.get(e.day) || []), e])
   return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]))
 })
 const time = (iso: string) => dateTime(iso).split(', ').pop()
+const canDelete = (e: Entry) => e.kind === 'service' || me.isAdmin || e.incident?.by?.id === me.user?._id
 
-const removing = ref<NovedadRow | null>(null)
+const removing = ref<Entry | null>(null)
 const busy = ref(false)
 async function remove() {
-  if (!removing.value) return
+  const e = removing.value
+  if (!e) return
   busy.value = true
   try {
-    await operationService.deleteNovedad(removing.value.bookingId, removing.value._id)
+    if (e.service) await operationService.deleteNovedad(e.service.bookingId, e.service._id)
+    else if (e.incident) await operationService.deleteStaffIncident(e.incident._id)
     toast.success('Novedad eliminada')
     removing.value = null
     load()
-  } catch (e) {
-    toast.error(errorMessage(e))
+  } catch (err) {
+    toast.error(errorMessage(err))
   } finally {
     busy.value = false
   }
@@ -72,14 +154,29 @@ async function remove() {
 
 <template>
   <section class="novs">
-    <PageIntro text="Quejas e incidencias de los servicios: qué pasó, con qué cliente y con qué operador. Regístralas aquí, desde la Base o desde la reserva.">
-      <button v-if="!adding" type="button" class="btn btn--primary" @click="adding = true"><AppIcon name="plus" /> Registrar novedad</button>
+    <PageIntro text="Todo lo que pasa: en un servicio, con alguien del equipo o en la sucursal (un atraso, una inconsistencia). Regístralo aquí.">
+      <button v-if="!adding" type="button" class="btn btn--primary" @click="startAdding"><AppIcon name="plus" /> Registrar novedad</button>
     </PageIntro>
 
     <Transition name="fade-up">
       <section v-if="adding" class="card novs__form">
-        <h2><AppIcon name="alert" :size="20" /> Nueva novedad de un servicio</h2>
-        <ServiceNovedadComposer @saved="onSaved" @cancel="adding = false" />
+        <div class="novs__form-head">
+          <h2><AppIcon name="alert" :size="20" /> Nueva novedad</h2>
+          <button v-if="mode" type="button" class="btn btn--ghost btn--sm" @click="mode = ''"><AppIcon name="arrow-left" :size="16" /> Cambiar tipo</button>
+        </div>
+
+        <div v-if="!mode" class="novs__modes">
+          <p class="novs__ask">¿Sobre qué es la novedad?</p>
+          <button v-for="m in MODES" :key="m.value" type="button" class="novs__mode" @click="mode = m.value">
+            <span class="novs__mode-icon"><AppIcon :name="m.icon" :size="22" /></span>
+            <span><strong>{{ m.label }}</strong><small>{{ m.hint }}</small></span>
+            <AppIcon name="chevron-right" :size="18" />
+          </button>
+          <button type="button" class="btn btn--ghost novs__cancel" @click="adding = false">Cancelar</button>
+        </div>
+        <ServiceNovedadComposer v-else-if="mode === 'service'" @saved="onSaved" @cancel="adding = false" />
+        <StaffIncidentForm v-else-if="mode === 'person'" :people="people" @saved="onSaved" @cancel="adding = false" />
+        <StaffIncidentForm v-else general @saved="onSaved" @cancel="adding = false" />
       </section>
     </Transition>
 
@@ -93,49 +190,38 @@ async function remove() {
       <button v-if="!isThisWeek" type="button" class="btn btn--soft btn--sm" @click="from = weekStart(todayISO())">Hoy</button>
     </div>
 
-    <div v-if="operators.length" class="novs__filters" role="radiogroup" aria-label="Filtrar por operador">
-      <button type="button" class="novs__chip" :class="{ 'is-on': !opFilter }" role="radio" :aria-checked="!opFilter" @click="opFilter = ''">
-        Todas <b>{{ items.length }}</b>
-      </button>
-      <button
-        v-for="o in operators"
-        :key="o._id"
-        type="button"
-        class="novs__chip"
-        :class="{ 'is-on': opFilter === o._id }"
-        role="radio"
-        :aria-checked="opFilter === o._id"
-        @click="opFilter = o._id"
-      >
-        <span class="novs__dot" :style="{ background: o.color || '#5F6B77' }"></span>{{ o.name }} <b>{{ o.count }}</b>
+    <div v-if="entries.length" class="novs__filters" role="radiogroup" aria-label="Filtrar por tipo">
+      <button type="button" class="novs__chip" :class="{ 'is-on': !kindFilter }" role="radio" :aria-checked="!kindFilter" @click="kindFilter = ''">Todas <b>{{ entries.length }}</b></button>
+      <button v-for="m in MODES" :key="m.value" type="button" class="novs__chip" :class="{ 'is-on': kindFilter === m.value }" role="radio" :aria-checked="kindFilter === m.value" @click="kindFilter = m.value">
+        <AppIcon :name="m.icon" :size="15" /> {{ m.value === 'service' ? 'Servicios' : m.value === 'person' ? 'Personas' : 'Generales' }} <b>{{ counts[m.value] }}</b>
       </button>
     </div>
 
     <div v-if="loading && !data" class="novs__skel"><span v-for="i in 3" :key="i" class="skeleton" style="height: 96px"></span></div>
-    <div v-else-if="!items.length" class="card novs__empty">
+    <div v-else-if="!entries.length" class="card novs__empty">
       <span class="novs__empty-icon"><AppIcon name="check" :size="28" /></span>
       <strong>Sin novedades esta semana</strong>
-      <p class="muted">Cuando un cliente se queje o pase algo en un servicio, regístralo aquí.</p>
-      <button v-if="!adding" type="button" class="btn btn--primary" @click="adding = true"><AppIcon name="plus" /> Registrar novedad</button>
+      <p class="muted">Cuando pase algo (una queja, un atraso, una inconsistencia), regístralo aquí.</p>
+      <button v-if="!adding" type="button" class="btn btn--primary" @click="startAdding"><AppIcon name="plus" /> Registrar novedad</button>
     </div>
     <div v-else class="novs__days">
       <section v-for="[day, list] in byDay" :key="day" class="novs__day">
         <h3 class="novs__day-title">{{ longDate(day) }} <small>{{ list.length }}</small></h3>
         <ul class="novs__list">
-          <li v-for="n in list" :key="n._id" class="novs__item" :style="{ '--op': n.operator?.color || '#C8CDD4' }">
+          <li v-for="e in list" :key="e.key" class="novs__item" :class="`is-${e.tone}`" :style="{ '--op': e.color || '#C8CDD4' }">
             <div class="novs__head">
-              <strong class="novs__customer">{{ n.customer || 'Cliente' }}</strong>
-              <span v-if="n.operator" class="novs__op"><span class="novs__dot" :style="{ background: n.operator.color || '#12263F' }"></span>{{ n.operator.name }}</span>
-              <span v-else class="novs__op novs__op--none">Sin operador</span>
+              <span class="novs__tag">{{ e.tag }}</span>
+              <strong class="novs__customer">{{ e.title }}</strong>
+              <span v-if="e.who" class="novs__op"><span class="novs__dot" :style="{ background: e.who.color || '#12263F' }"></span>{{ e.who.name }}</span>
             </div>
-            <p v-if="n.text" class="novs__text">{{ n.text }}</p>
-            <div v-if="n.photos?.length" class="novs__pics">
-              <a v-for="p in n.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
+            <p v-if="e.text" class="novs__text">{{ e.text }}</p>
+            <div v-if="e.photos.length" class="novs__pics">
+              <a v-for="p in e.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
             </div>
             <div class="novs__foot">
-              <RouterLink :to="`/admin/pedidos/${n.bookingId}`" class="novs__link"><AppIcon name="external" :size="14" /> {{ n.code }} · servicio del {{ shortDate(n.date) }}</RouterLink>
-              <span>{{ n.by?.name }} · {{ time(n.at) }}</span>
-              <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar novedad" @click="removing = n"><AppIcon name="trash" :size="16" /></button>
+              <RouterLink v-if="e.link" :to="e.link.to" class="novs__link"><AppIcon name="external" :size="14" /> {{ e.link.label }}</RouterLink>
+              <span>{{ e.by }} · {{ time(e.at) }}</span>
+              <button v-if="canDelete(e)" type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar novedad" @click="removing = e"><AppIcon name="trash" :size="16" /></button>
             </div>
           </li>
         </ul>
@@ -145,7 +231,7 @@ async function remove() {
     <ConfirmSheet
       :open="!!removing"
       title="Eliminar novedad"
-      :message="removing ? `Se borra la novedad de ${removing.customer || 'este cliente'}${removing.text ? `: “${removing.text}”` : ''}.` : ''"
+      :message="removing ? `Se borra: “${removing.title}${removing.text ? ` — ${removing.text}` : ''}”.` : ''"
       confirm-label="Eliminar"
       danger
       :busy="busy"
@@ -174,6 +260,85 @@ async function remove() {
       font-size: $text-lg;
       color: $navy;
     }
+  }
+
+  &__form-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__modes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__ask {
+    font-weight: 700;
+    color: $ink;
+  }
+
+  &__mode {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 72px;
+    padding: 0.7rem 0.9rem;
+    border-radius: $radius-md;
+    border: 1.5px solid $line;
+    background: $surface;
+    text-align: left;
+    color: $navy;
+    transition:
+      border-color $dur-fast ease,
+      transform $dur-fast $ease-out;
+
+    > span:nth-child(2) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    small {
+      font-size: $text-xs;
+      color: $ink-muted;
+    }
+
+    &:hover {
+      border-color: $navy;
+      background: $navy-soft;
+    }
+
+    &:active {
+      transform: scale(0.99);
+    }
+  }
+
+  &__mode-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: $navy;
+    color: #fff;
+  }
+
+  &__cancel {
+    align-self: flex-end;
+  }
+
+  &__tag {
+    padding: 0.1rem 0.5rem;
+    border-radius: $radius-pill;
+    background: $line;
+    color: $ink-soft;
+    font-size: $text-xs;
+    font-weight: 700;
   }
 
   &__week {
@@ -313,8 +478,15 @@ async function remove() {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
+    gap: 0.4rem 0.5rem;
+
+    .novs__op {
+      margin-left: auto;
+    }
+  }
+
+  &__item.is-danger {
+    border-left-color: $danger;
   }
 
   &__customer {

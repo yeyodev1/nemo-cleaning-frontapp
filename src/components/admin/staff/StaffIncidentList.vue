@@ -2,11 +2,13 @@
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { staffIncidentLabel } from '@/config/operationLabels'
 import { dateTime, longDate } from '@/utils/format'
+import { useAdminScope } from '@/stores/adminScope'
 import type { StaffIncident } from '@/types/operation'
 
 /** Historial de novedades del personal. `showPerson` = muestra a quién (lista general). */
 defineProps<{ items: StaffIncident[]; showPerson?: boolean; canDelete?: (i: StaffIncident) => boolean }>()
 defineEmits<{ remove: [item: StaffIncident] }>()
+const scope = useAdminScope()
 </script>
 
 <template>
@@ -15,7 +17,8 @@ defineEmits<{ remove: [item: StaffIncident] }>()
       <span class="sil__icon"><AppIcon :name="staffIncidentLabel[i.type].icon" :size="20" /></span>
       <div class="sil__body">
         <p class="sil__title">
-          <RouterLink v-if="showPerson" :to="`/admin/personal/${i.user._id}`" class="sil__person">{{ i.user.name }}</RouterLink>
+          <RouterLink v-if="showPerson && i.user" :to="`/admin/personal/${i.user._id}`" class="sil__person">{{ i.user.name }}</RouterLink>
+          <span v-else-if="showPerson" class="sil__general">General{{ i.branch ? ` · ${scope.branchName(i.branch)}` : '' }}</span>
           <strong>{{ staffIncidentLabel[i.type].label }}</strong>
         </p>
         <p v-if="i.text" class="sil__text">{{ i.text }}</p>
@@ -98,6 +101,15 @@ defineEmits<{ remove: [item: StaffIncident] }>()
   &__person {
     font-weight: 800;
     color: $navy;
+  }
+
+  &__general {
+    padding: 0.1rem 0.5rem;
+    border-radius: $radius-pill;
+    background: $line;
+    color: $ink-soft;
+    font-size: $text-xs;
+    font-weight: 700;
   }
 
   &__text {

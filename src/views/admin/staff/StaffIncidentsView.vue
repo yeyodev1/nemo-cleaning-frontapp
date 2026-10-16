@@ -11,7 +11,9 @@ import { staffIncidentLabel } from '@/config/operationLabels'
 import type { User } from '@/types/api'
 import type { StaffIncidentType } from '@/types/operation'
 
-const { items, loading, removing, busy, added, canDelete, remove } = useStaffIncidents()
+const { items: all, loading, removing, busy, added, canDelete, remove } = useStaffIncidents()
+// Aquí solo las de personas; las generales viven en "Novedades".
+const items = computed(() => all.value.filter((i) => i.user))
 const people = ref<User[]>([])
 managementService.users().then((list) => (people.value = list.filter((u) => u.role !== 'admin').sort((a, b) => a.name.localeCompare(b.name))))
 
@@ -68,7 +70,7 @@ const types = Object.entries(staffIncidentLabel) as [StaffIncidentType, (typeof 
     <ConfirmSheet
       :open="!!removing"
       title="Eliminar novedad"
-      :message="removing ? `Se borra la novedad de ${removing.user.name}: “${staffIncidentLabel[removing.type].label}”.` : ''"
+      :message="removing ? `Se borra la novedad de ${removing.user?.name || 'la sucursal'}: “${staffIncidentLabel[removing.type].label}”.` : ''"
       confirm-label="Eliminar"
       danger
       :busy="busy"

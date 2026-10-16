@@ -58,7 +58,7 @@ class OperationService extends APIBase {
   staffIncidents(q: { user?: ID; from?: string; to?: string; type?: StaffIncidentType }) {
     return this.get<{ from: string; to: string; items: StaffIncident[]; total: number }>('admin/staff-incidents', q)
   }
-  addStaffIncident(body: { user: ID; type: StaffIncidentType; date: string; text: string }) {
+  addStaffIncident(body: { user?: ID; branch?: ID; type: StaffIncidentType; date: string; text: string }) {
     return this.post<StaffIncident>('admin/staff-incidents', body)
   }
   deleteStaffIncident(id: ID) {

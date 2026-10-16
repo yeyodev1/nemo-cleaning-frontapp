@@ -14,11 +14,13 @@ export const paymentConfirmation: Record<PaymentConfirmation, { label: string; t
 
 /** Novedades del personal: qué pasó, con su ícono y color. */
 export const staffIncidentLabel: Record<StaffIncidentType, { label: string; icon: IconName; tone: 'warning' | 'danger' | 'info' | 'navy' }> = {
-  late: { label: 'Llegó tarde', icon: 'clock', tone: 'warning' },
+  late: { label: 'Atraso / llegó tarde', icon: 'clock', tone: 'warning' },
   absence: { label: 'Faltó', icon: 'ban', tone: 'danger' },
   fight: { label: 'Pelea o conflicto', icon: 'users', tone: 'danger' },
   customer_issue: { label: 'Problema con cliente', icon: 'user', tone: 'warning' },
   damage: { label: 'Daño o pérdida', icon: 'alert', tone: 'danger' },
+  inconsistency: { label: 'Inconsistencia', icon: 'layers', tone: 'warning' },
+  complaint: { label: 'Queja', icon: 'info', tone: 'info' },
   other: { label: 'Otro', icon: 'edit', tone: 'navy' },
 }
 
