@@ -160,6 +160,13 @@ export interface CommissionRule {
   tiers: CommissionTier[]
   supervisorPercent: number
   exceptions: { operator: ID; name?: string; tiers: CommissionTier[]; note: string }[]
+  /** 1 = mes calendario; 16 = del 16 del mes anterior al 15. */
+  periodStartDay?: 1 | 16
+  /** "total" = lo cobrado (con descuento); "subtotal" = precio de lista. */
+  productionBasis?: 'total' | 'subtotal'
+  supervisorMode?: 'percent' | 'fixed'
+  /** Monto fijo del supervisor por período (centavos). */
+  supervisorFixed?: number
 }
 
 export interface CommissionCell {

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import SegTabs from '@/components/admin/finance/SegTabs.vue'
 import CommissionGrid from '@/components/admin/operation/CommissionGrid.vue'
 import FeeReference from '@/components/admin/operation/FeeReference.vue'
+import CommissionHowTo from '@/components/admin/operation/CommissionHowTo.vue'
 
 /**
  * Comisiones como la hoja del Excel: gerencia escribe el monto de cada colaborador por mes
@@ -13,10 +14,11 @@ const tab = ref('manual')
 
 <template>
   <section>
-    <SegTabs v-model="tab" :tabs="[{ value: 'manual', label: 'Comisiones' }, { value: 'fee', label: 'FEE (referencia)' }]" />
+    <SegTabs v-model="tab" :tabs="[{ value: 'manual', label: 'Comisiones' }, { value: 'fee', label: 'FEE (referencia)' }, { value: 'how', label: '¿Cómo se calcula?' }]" />
     <Transition name="fade" mode="out-in">
       <CommissionGrid v-if="tab === 'manual'" key="m" />
-      <FeeReference v-else key="f" />
+      <FeeReference v-else-if="tab === 'fee'" key="f" />
+      <CommissionHowTo v-else key="h" />
     </Transition>
   </section>
 </template>
