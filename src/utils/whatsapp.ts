@@ -3,8 +3,7 @@ import { longDate, money, whatsappUrl } from './format'
 
 /**
  * Mensajes de WhatsApp de la tienda y del panel. Todos en texto plano con el formato de WhatsApp
- * (*negrita*), sin emojis, y armados en un solo lugar para que el cliente y los asesores vean
- * siempre lo mismo.
+ * (*negrita*) y armados en un solo lugar para que el cliente y los asesores vean siempre lo mismo.
  */
 
 export interface MessageLine {
@@ -117,22 +116,41 @@ export function paymentLinkMessage(o: { code: string; balance: number; customerN
   ].join('\n')
 }
 
-/** Asesor → cliente: confirmación del pedido rápido. */
-export function confirmationMessage(o: MessageOrder & { paymentText?: string }): string {
-  const hi = firstName(o.customerName)
+/** Tamaño del vehículo dentro de las opciones de los servicios (Classic Wash · Mediano). */
+const VEHICLE_RE = /peque|median|grande|suv|camioneta|sed[aá]n|hatch|pick ?up|moto|furg|van\b|7 puestos|5 puestos/i
+
+/**
+ * Asesor → cliente: confirmación de la reserva con las condiciones del servicio
+ * (formato definido por gerencia: datos en viñetas + horario y pertenencias).
+ */
+export function confirmationMessage(o: MessageOrder & { paymentText?: string; notes?: string }): string {
+  const services = o.items.map((l) => `${[l.name, l.choice && `incluye ${l.choice.toLowerCase()}`].filter(Boolean).join(' · ')} ${qty(l)}`).join(', ')
+  const vehicle = [...new Set(o.items.map((l) => l.variant).filter((v): v is string => !!v && VEHICLE_RE.test(v)))].join(', ')
+  const address = [o.address, o.zone && !o.address?.includes(o.zone) ? `(${o.zone})` : '', o.reference ? `— Ref.: ${o.reference}` : '']
+    .filter(Boolean)
+    .join(' ')
   return compose([
-    `Hola${hi ? ` ${hi}` : ''}, tu reserva en Nemo Cleaning está registrada.`,
+    '*Confirmación de reserva*',
     '',
-    `*Reserva ${o.code}*`,
-    ...o.items.map((l) => lineText(l, false)),
+    `•  *Fecha:* ${chatDate(o.date)}`,
+    `•  *Hora:* ${o.time}`,
+    `•  *Cliente:* ${o.customerName || ''}`,
+    `•  *Dirección:* ${address || o.branchName || ''}`,
+    o.mapsUrl && `•  *Ubicación GPS:* ${o.mapsUrl}`,
+    `•  *Servicios:* ${services}`,
+    vehicle && `•  *Vehículo:* ${vehicle}`,
+    `•  *Total:* ${money(o.total)}`,
+    `•  *Método de pago:* ${o.paymentText || 'Por coordinar'}`,
+    `•  *Observaciones:* ${o.notes?.trim() || 'Ninguna'}`,
     '',
-    `*Fecha:* ${chatDate(o.date)}, ${o.time}`,
-    ...placeText(o),
-    `*Total:* ${money(o.total)}`,
-    o.paymentText && `*Pago:* ${o.paymentText}`,
+    'Su servicio ha sido programado exitosamente, por favor tomar en cuenta las siguientes observaciones:',
     '',
-    o.trackingUrl && `Sigue tu reserva aquí: ${o.trackingUrl}`,
-    'Gracias por confiar en Nemo Cleaning.',
+    '•  *Horario:* por factores externos (tráfico, seguridad de garitas, atrasos de turnos previos) podría existir un retraso en el horario pactado, mismo que se procurará notificar con anticipación.',
+    '•  *Pertenencias:* en caso de tener objetos de valor económico en el bien a manipular notificar con anticipación o retirar previamente.',
+    '',
+    o.trackingUrl && `Reserva ${o.code}: ${o.trackingUrl}`,
+    '',
+    'Gracias por preferir Nemo Cleaning Services 🙌🏻',
   ])
 }
 

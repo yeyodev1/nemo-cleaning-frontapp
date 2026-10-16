@@ -35,6 +35,7 @@ const text = computed(() =>
     customerName: props.order.customer?.name,
     trackingUrl: props.order.trackingUrl,
     paymentText: paymentText.value,
+    notes: props.order.notes,
   }),
 )
 const url = computed(() => whatsappUrl(props.order.customer?.phone, text.value))
