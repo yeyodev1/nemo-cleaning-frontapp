@@ -1,6 +1,7 @@
 // Etiquetas del módulo "Operación" con el vocabulario de las hojas del Excel.
 import type { PaymentConfirmation } from '@/types/api'
-import type { GoalStatus, ShiftStatus } from '@/types/operation'
+import type { GoalStatus, ShiftStatus, StaffIncidentType } from '@/types/operation'
+import type { IconName } from '@/components/ui/icons'
 import type { Tone } from './labels'
 
 export const paymentConfirmation: Record<PaymentConfirmation, { label: string; tone: Tone; hint: string }> = {
@@ -9,6 +10,16 @@ export const paymentConfirmation: Record<PaymentConfirmation, { label: string; t
   pending_payment: { label: 'Pendiente de pago', tone: 'warning', hint: 'Aún no paga: queda por cobrar' },
   lost: { label: 'Perdida', tone: 'danger', hint: 'No se va a cobrar' },
   exchange: { label: 'Canje', tone: 'navy', hint: 'Sin cobro: intercambio o cortesía' },
+}
+
+/** Novedades del personal: qué pasó, con su ícono y color. */
+export const staffIncidentLabel: Record<StaffIncidentType, { label: string; icon: IconName; tone: 'warning' | 'danger' | 'info' | 'navy' }> = {
+  late: { label: 'Llegó tarde', icon: 'clock', tone: 'warning' },
+  absence: { label: 'Faltó', icon: 'ban', tone: 'danger' },
+  fight: { label: 'Pelea o conflicto', icon: 'users', tone: 'danger' },
+  customer_issue: { label: 'Problema con cliente', icon: 'user', tone: 'warning' },
+  damage: { label: 'Daño o pérdida', icon: 'alert', tone: 'danger' },
+  other: { label: 'Otro', icon: 'edit', tone: 'navy' },
 }
 
 export const positionLabel: Record<'supervisor' | 'base_assistant' | 'washer', string> = {

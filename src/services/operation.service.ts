@@ -7,6 +7,8 @@ import type {
   CommissionSheet,
   GoalMonth,
   NovedadRow,
+  StaffIncident,
+  StaffIncidentType,
   ProductionInput,
   ProductionList,
   ProductionOptions,
@@ -51,6 +53,16 @@ class OperationService extends APIBase {
   }
   deleteNovedad(bookingId: ID, id: ID) {
     return this.delete(`admin/bookings/${bookingId}/novedades/${id}`)
+  }
+
+  staffIncidents(q: { user?: ID; from?: string; to?: string; type?: StaffIncidentType }) {
+    return this.get<{ from: string; to: string; items: StaffIncident[]; total: number }>('admin/staff-incidents', q)
+  }
+  addStaffIncident(body: { user: ID; type: StaffIncidentType; date: string; text: string }) {
+    return this.post<StaffIncident>('admin/staff-incidents', body)
+  }
+  deleteStaffIncident(id: ID) {
+    return this.delete(`admin/staff-incidents/${id}`)
   }
 
   shifts(month: string, branch?: string) {

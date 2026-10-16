@@ -95,6 +95,19 @@ export interface NovedadRow {
   operator: { _id: ID; name: string; color?: string } | null
 }
 
+export type StaffIncidentType = 'late' | 'absence' | 'fight' | 'customer_issue' | 'damage' | 'other'
+
+/** Novedad del personal (no de un servicio): llegó tarde, pelea, problema con cliente… */
+export interface StaffIncident {
+  _id: ID
+  user: { _id: ID; name: string; color?: string }
+  type: StaffIncidentType
+  date: string
+  text: string
+  by: PersonRef | null
+  createdAt: string
+}
+
 export type ShiftStatus = 'active' | 'off' | 'half'
 
 export interface ShiftMonth {

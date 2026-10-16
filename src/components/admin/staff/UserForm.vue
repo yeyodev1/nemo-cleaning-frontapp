@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import BaseSheet from '@/components/ui/BaseSheet.vue'
+import ColorSwatches from '@/components/ui/ColorSwatches.vue'
+import ToggleSwitch from '@/components/ui/ToggleSwitch.vue'
+import ChoiceChips from '@/components/admin/operation/ChoiceChips.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
 import { positionLabel } from '@/config/operationLabels'
 import { managementService, type UserInput } from '@/services/management.service'
@@ -8,7 +11,7 @@ import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
 import { options, roleLabel } from '@/config/labels'
 import { errorMessage } from '@/utils/format'
-import type { User } from '@/types/api'
+import type { Role, User } from '@/types/api'
 
 const props = defineProps<{ open: boolean; user: User | null; people?: User[] }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
@@ -37,6 +40,23 @@ const blank = (): UserInput => ({
 })
 const form = reactive<UserInput>(blank())
 
+// Mismos campos que se guardan: si difieren de la foto tomada al abrir, hay cambios sin guardar.
+const payload = (): UserInput => ({
+  name: form.name,
+  email: form.email,
+  phone: form.phone,
+  role: form.role,
+  branches: form.branches,
+  active: form.active,
+  color: form.color,
+  position: form.position,
+  monthlySalary: form.monthlySalary,
+  commissions: form.commissions,
+  supervisor: form.supervisor || null,
+})
+const snapshot = ref('')
+const dirty = computed(() => Boolean(password.value) || JSON.stringify(payload()) !== snapshot.value)
+
 watch(
   () => props.open,
   (o) => {
@@ -46,8 +66,28 @@ watch(
     password.value = ''
     showPassword.value = false
     hasPassword.value = Boolean(u?.hasPassword)
+    snapshot.value = JSON.stringify(payload())
   },
 )
+
+const roleHint: Record<Role, string> = { admin: 'Ve todo', manager: 'Ve su sucursal', operator: 'Ve sus servicios' }
+const roleOptions = options(roleLabel).map((o) => ({ ...o, hint: roleHint[o.value] }))
+const positionOptions = [
+  { value: '', label: 'Sin cargo' },
+  ...Object.entries(positionLabel).map(([value, label]) => ({ value, label: String(label) })),
+]
+const branchOptions = computed(() => scope.branches.map((b) => ({ value: b._id, label: b.name })))
+
+// ChoiceChips trabaja con textos: el supervisor general (null) viaja como '__general'.
+const GENERAL = '__general'
+const supervisorOptions = computed(() => [
+  { value: GENERAL, label: 'Supervisor general' },
+  ...supervisors.value.map((p) => ({ value: p._id, label: p.name })),
+])
+const supervisorChoice = computed({
+  get: () => form.supervisor || GENERAL,
+  set: (v: string) => (form.supervisor = v === GENERAL ? null : v),
+})
 
 // Quien cobra el FEE supervisor: preferimos a los de cargo Supervisor, pero cualquiera activo sirve.
 const supervisors = computed(() =>
@@ -76,19 +116,7 @@ async function savePassword(value: string | null) {
 async function save() {
   saving.value = true
   try {
-    const body: UserInput = {
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      role: form.role,
-      branches: form.branches,
-      active: form.active,
-      color: form.color,
-      position: form.position,
-      monthlySalary: form.monthlySalary,
-      commissions: form.commissions,
-      supervisor: form.supervisor || null,
-    }
+    const body: UserInput = payload()
     if (password.value && password.value.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres')
     if (props.user) await managementService.updateUser(props.user._id, body)
     else await managementService.createUser({ ...body, ...(password.value ? { password: password.value } : {}) })
@@ -104,7 +132,7 @@ async function save() {
 </script>
 
 <template>
-  <BaseSheet :open="open" :title="user ? 'Editar persona' : 'Nueva persona'" @close="emit('close')">
+  <BaseSheet :open="open" :title="user ? 'Editar persona' : 'Nueva persona'" :dirty="dirty && !saving" @close="emit('close')">
     <form id="user-form" class="form" @submit.prevent="save">
       <label class="field"><span class="field__label">Nombre</span><input v-model="form.name" type="text" required autocomplete="off" /></label>
       <div class="form-row">
@@ -138,44 +166,42 @@ async function save() {
           <button v-if="user && hasPassword" type="button" class="link" :disabled="savingPassword" @click="savePassword(null)">Quitar contraseña</button>
         </p>
       </section>
-      <div class="form-row">
-        <label class="field">
-          <span class="field__label">Rol</span>
-          <select v-model="form.role">
-            <option v-for="o in options(roleLabel)" :key="o.value" :value="o.value">{{ o.label }}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">Color en la agenda</span>
-          <input v-model="form.color" type="color" class="color" />
-        </label>
+      <div class="field">
+        <span class="field__label">Rol</span>
+        <ChoiceChips :options="roleOptions" :model-value="form.role" label="Rol" @update:model-value="form.role = $event as Role" />
+        <span class="field__hint">{{ roleLabel[form.role] }}: {{ roleHint[form.role].toLowerCase() }}.</span>
       </div>
-      <div class="form-row">
-        <label class="field">
-          <span class="field__label">Cargo</span>
-          <select v-model="form.position">
-            <option value="">Sin cargo</option>
-            <option v-for="(l, k) in positionLabel" :key="k" :value="k">{{ l }}</option>
-          </select>
-        </label>
-        <MoneyField :model-value="form.monthlySalary || 0" label="Sueldo mensual" @update:model-value="form.monthlySalary = $event" hint="Solo se propone en los meses nuevos de Nómina; cada mes se edita allí." />
+      <div class="field">
+        <span class="field__label">Color en la agenda</span>
+        <ColorSwatches :model-value="form.color || ''" @update:model-value="form.color = $event" label="Color en la agenda" />
       </div>
-      <label class="check"><input v-model="form.commissions" type="checkbox" /> Cuenta en la calculadora FEE (solo referencia)</label>
-      <label v-if="form.commissions" class="field">
+      <div class="field">
+        <span class="field__label">Cargo</span>
+        <ChoiceChips
+          :options="positionOptions"
+          :model-value="form.position || ''"
+          label="Cargo"
+          @update:model-value="form.position = $event as UserInput['position']"
+        />
+      </div>
+      <MoneyField :model-value="form.monthlySalary || 0" label="Sueldo mensual" @update:model-value="form.monthlySalary = $event" hint="Solo se propone en los meses nuevos de Nómina; cada mes se edita allí." />
+      <ToggleSwitch :model-value="Boolean(form.commissions)" @update:model-value="form.commissions = $event" label="Cuenta en la calculadora FEE" hint="Solo referencia." />
+      <div v-if="form.commissions" class="field">
         <span class="field__label">Supervisor que cobra su "FEE supervisor"</span>
-        <select v-model="form.supervisor">
-          <option :value="null">El supervisor general</option>
-          <option v-for="p in supervisors" :key="p._id" :value="p._id">{{ p.name }}</option>
-        </select>
-      </label>
-      <fieldset class="field">
-        <legend class="field__label">Sucursales</legend>
-        <label v-for="b in scope.branches" :key="b._id" class="check">
-          <input v-model="form.branches" type="checkbox" :value="b._id" /> {{ b.name }}
-        </label>
+        <ChoiceChips v-model="supervisorChoice" :options="supervisorOptions" label="Supervisor" small />
+      </div>
+      <div class="field">
+        <span class="field__label">Sucursales</span>
+        <ChoiceChips
+          :options="branchOptions"
+          :model-value="form.branches"
+          label="Sucursales"
+          multiple
+          @update:model-value="form.branches = $event as string[]"
+        />
         <span v-if="form.role === 'admin'" class="field__hint">Gerencia ve todas las sucursales.</span>
-      </fieldset>
-      <label class="check"><input v-model="form.active" type="checkbox" /> Activo{{ form.email ? ' (puede ingresar al panel)' : '' }}</label>
+      </div>
+      <ToggleSwitch :model-value="Boolean(form.active)" @update:model-value="form.active = $event" label="Activo" :hint="form.email ? 'Puede ingresar al panel.' : undefined" />
     </form>
     <template #footer>
       <button type="button" class="btn btn--ghost" @click="emit('close')">Cancelar</button>
@@ -189,10 +215,6 @@ async function save() {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-}
-
-fieldset {
-  border: 0;
 }
 
 .pw {
@@ -236,10 +258,5 @@ fieldset {
       min-width: 0;
     }
   }
-}
-
-.color {
-  padding: 4px;
-  cursor: pointer;
 }
 </style>

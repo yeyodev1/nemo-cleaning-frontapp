@@ -53,6 +53,7 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
             <StatusBadge v-if="!u.active" tone="danger" label="Inactivo" />
           </span>
         </button>
+        <RouterLink :to="`/admin/personal/${u._id}`" class="person__profile" :aria-label="`Ver perfil y novedades de ${u.name}`"><AppIcon name="user" :size="16" /> Perfil</RouterLink>
       </li>
     </ul>
     <UserForm :open="formOpen" :user="editing" :people="items" @close="formOpen = false" @saved="onSaved" />
@@ -72,6 +73,29 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
 .list {
   list-style: none;
   @include flex-cards(320px, 0.5rem);
+}
+
+.list > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.person__profile {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 36px;
+  padding: 0 0.6rem;
+  border-radius: $radius-pill;
+  font-size: $text-xs;
+  font-weight: 700;
+  color: $navy;
+
+  &:hover {
+    background: $navy-soft;
+  }
 }
 
 .person {
