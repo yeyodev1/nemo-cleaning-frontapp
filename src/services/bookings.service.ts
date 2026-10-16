@@ -65,8 +65,9 @@ class BookingsService extends APIBase {
     return this.get<Paginated<Booking>>('admin/bookings', { ...q })
   }
 
-  agenda(branch: string | undefined, date: string) {
-    return this.get<Agenda>('admin/agenda', { branch, date })
+  /** Un día (`date`) o un rango para semana/mes (`from`/`to`, máx. 6 semanas). */
+  agenda(branch: string | undefined, date: string, range?: { from: string; to: string }) {
+    return this.get<Agenda>('admin/agenda', range ? { branch, ...range } : { branch, date })
   }
 
   create(body: AdminCreateBookingInput) {

@@ -74,6 +74,11 @@ export function longDate(iso?: string): string {
   }).format(isoToDate(iso))
 }
 
+/** Lunes de la semana de esa fecha (la agenda arranca la semana en lunes). */
+export function weekStart(iso: string): string {
+  return addDays(iso, -((weekdayOf(iso) + 6) % 7))
+}
+
 export function weekdayOf(iso: string): number {
   return isoToDate(iso).getUTCDay()
 }

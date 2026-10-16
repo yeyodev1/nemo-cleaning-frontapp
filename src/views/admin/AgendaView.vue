@@ -2,14 +2,21 @@
 import { ref } from 'vue'
 import DateNav from '@/components/admin/agenda/DateNav.vue'
 import AgendaCard from '@/components/admin/agenda/AgendaCard.vue'
+import AgendaWeek from '@/components/admin/agenda/AgendaWeek.vue'
+import AgendaMonth from '@/components/admin/agenda/AgendaMonth.vue'
 import BookingQuickSheet from '@/components/admin/agenda/BookingQuickSheet.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { useAgenda } from '@/composables/admin/useAgenda'
+import { useAgenda, type AgendaView } from '@/composables/admin/useAgenda'
 import { useAdminScope } from '@/stores/adminScope'
 import type { Booking } from '@/types/api'
 
 const scope = useAdminScope()
-const { date, loading, error, load, bookings, cancelled, byTime, columns, replace } = useAgenda()
+const { date, view, range, loading, error, load, bookings, cancelled, byDate, byTime, columns, replace, openDay } = useAgenda()
+const VIEWS: { value: AgendaView; label: string }[] = [
+  { value: 'day', label: 'Día' },
+  { value: 'week', label: 'Semana' },
+  { value: 'month', label: 'Mes' },
+]
 const selected = ref<Booking | null>(null)
 
 function onUpdated(b: Booking) {
@@ -21,7 +28,21 @@ function onUpdated(b: Booking) {
 <template>
   <div class="agenda">
     <div class="agenda__bar">
-      <DateNav v-model="date" />
+      <DateNav v-model="date" :view="view" />
+      <div class="agenda__views" role="tablist" aria-label="Vista de la agenda">
+        <button
+          v-for="v in VIEWS"
+          :key="v.value"
+          type="button"
+          role="tab"
+          class="agenda__view"
+          :class="{ 'is-on': view === v.value }"
+          :aria-selected="view === v.value"
+          @click="view = v.value"
+        >
+          {{ v.label }}
+        </button>
+      </div>
       <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary btn--sm"><AppIcon name="plus" :size="16" /> Agendar</RouterLink>
     </div>
 
@@ -31,6 +52,11 @@ function onUpdated(b: Booking) {
       <AppIcon name="alert" /> <span>{{ error }}</span>
       <button type="button" class="btn btn--ghost btn--sm" @click="load">Reintentar</button>
     </div>
+
+    <template v-else-if="view !== 'day'">
+      <AgendaWeek v-if="view === 'week'" :from="range.from" :by-date="byDate" :class="{ 'is-loading': loading }" @open="selected = $event" @day="openDay" />
+      <AgendaMonth v-else :from="range.from" :month="date.slice(0, 7)" :by-date="byDate" :class="{ 'is-loading': loading }" @open="selected = $event" @day="openDay" />
+    </template>
 
     <div v-else-if="loading && !bookings.length" class="agenda__list">
       <span v-for="n in 3" :key="n" class="skeleton" style="height: 96px"></span>
@@ -64,7 +90,7 @@ function onUpdated(b: Booking) {
       </div>
     </template>
 
-    <p v-if="cancelled.length" class="agenda__cancelled">{{ cancelled.length }} cancelado{{ cancelled.length === 1 ? '' : 's' }} este día.</p>
+    <p v-if="cancelled.length" class="agenda__cancelled">{{ cancelled.length }} cancelado{{ cancelled.length === 1 ? '' : 's' }} {{ view === 'day' ? 'este día' : view === 'week' ? 'esta semana' : 'en estas fechas' }}.</p>
 
     <BookingQuickSheet :booking="selected" @close="selected = null" @updated="onUpdated" />
   </div>
@@ -86,6 +112,33 @@ function onUpdated(b: Booking) {
     > :first-child {
       flex: 1 1 280px;
     }
+  }
+
+  &__views {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: $radius-pill;
+    background: $navy-soft;
+  }
+
+  &__view {
+    min-height: 36px;
+    padding: 0 1rem;
+    border-radius: $radius-pill;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $navy;
+
+    &.is-on {
+      background: $navy;
+      color: #fff;
+      box-shadow: $shadow-sm;
+    }
+  }
+
+  .is-loading {
+    opacity: 0.6;
+    transition: opacity 0.2s;
   }
 
   &__hint {

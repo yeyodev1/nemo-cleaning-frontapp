@@ -18,7 +18,7 @@ const adminRoutes: RouteRecordRaw[] = [
     meta: { layout: 'admin', requiresAuth: true },
     children: [
       { path: '', name: 'AdminDashboard', component: () => import('@/views/admin/DashboardView.vue'), meta: { title: 'Inicio', purpose: 'Producción, cobros y pendientes de un vistazo.', roles: AM } },
-      { path: 'agenda', name: 'AdminAgenda', component: () => import('@/views/admin/AgendaView.vue'), meta: { title: 'Agenda', purpose: 'Servicios agendados del día por operador. Toca uno para asignarlo o cambiar su estado.', roles: AM } },
+      { path: 'agenda', name: 'AdminAgenda', component: () => import('@/views/admin/AgendaView.vue'), meta: { title: 'Agenda', purpose: 'Servicios agendados por día, semana o mes. Toca uno para asignarlo o cambiar su estado.', roles: AM } },
       { path: 'pedidos', name: 'AdminBookings', component: () => import('@/views/admin/BookingsView.vue'), meta: { title: 'Reservas', purpose: 'Todas las reservas: web, panel e historial del Excel. Busca por cliente o código.', roles: AM } },
       { path: 'pedidos/nuevo', name: 'AdminBookingNew', component: () => import('@/views/admin/BookingNewView.vue'), meta: { title: 'Agendar servicio', purpose: 'Agenda un servicio a futuro. Para uno que ya se hizo usa Registrar servicio.', roles: AM } },
       { path: 'pedidos/:id', name: 'AdminBooking', component: () => import('@/views/admin/BookingDetailView.vue'), meta: { title: 'Reserva', roles: AM } },
