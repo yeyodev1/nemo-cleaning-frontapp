@@ -249,7 +249,16 @@ export interface Booking {
   /** Ubicación que marcó el operador al iniciar el servicio. */
   startCheck?: { lat: number; lng: number; accuracy: number; at: string; by?: PersonRef } | null
   /** Cierre del operador: cómo pagó el cliente y cuánto efectivo recibió (centavos). */
-  closeReport?: { method: 'cash' | 'transfer'; cashReceived: number; at: string; by?: PersonRef } | null
+  closeReport?: {
+    method: 'cash' | 'transfer'
+    cashReceived: number
+    at: string
+    by?: PersonRef
+    receivedAt?: string | null
+    receivedBy?: PersonRef | null
+    receivedAmount?: number
+    proofUrl?: string
+  } | null
 }
 
 /** Servicio como lo ve el operador: sin montos ni pagos. */

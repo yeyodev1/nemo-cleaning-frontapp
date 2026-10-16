@@ -288,6 +288,8 @@ export interface BankAccountRec {
   pendingVerification: number
   bank: number | null
   bankNote: string
+  /** Archivo del estado de cuenta (Cloudinary) para descargar. */
+  bankFileUrl?: string
   difference: number | null
   payments: BankPayment[]
 }

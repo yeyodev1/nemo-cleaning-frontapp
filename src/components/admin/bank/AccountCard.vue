@@ -2,11 +2,28 @@
 import { computed, ref, watch } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
-import { money, shortDate } from '@/utils/format'
+import FileDrop from '@/components/ui/FileDrop.vue'
+import { managementService } from '@/services/management.service'
+import { useToastStore } from '@/stores/toast'
+import { errorMessage, money, shortDate } from '@/utils/format'
 import type { BankAccountRec, BankPayment } from '@/types/finance'
 
 const props = defineProps<{ acc: BankAccountRec; busyId: string }>()
-const emit = defineEmits<{ verify: [p: BankPayment]; bank: [amount: number | null] }>()
+const emit = defineEmits<{ verify: [p: BankPayment]; bank: [amount: number | null, fileUrl?: string] }>()
+const toast = useToastStore()
+// Archivo del estado de cuenta (PDF o foto): lo suben administradores y gerencia.
+const fileUrl = ref(props.acc.bankFileUrl || '')
+const uploading = ref(false)
+async function upload(file: File) {
+  uploading.value = true
+  try {
+    fileUrl.value = (await managementService.uploadFile(file)).url
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    uploading.value = false
+  }
+}
 const open = ref(false)
 const editing = ref(false)
 const bankValue = ref(props.acc.bank ?? 0)
@@ -19,7 +36,7 @@ const tone = computed(() => {
   return props.acc.difference === 0 ? 'ok' : 'bad'
 })
 function saveBank() {
-  emit('bank', bankValue.value)
+  emit('bank', bankValue.value, fileUrl.value)
   editing.value = false
 }
 </script>
@@ -46,12 +63,16 @@ function saveBank() {
         <dd class="money" :class="{ neg: (acc.difference ?? 0) !== 0 }">{{ acc.difference === null ? '—' : money(acc.difference) }}</dd>
       </div>
     </dl>
+    <a v-if="acc.bankFileUrl && !editing" :href="acc.bankFileUrl" target="_blank" rel="noopener" download class="acc__file">
+      <AppIcon name="external" :size="16" /> Descargar estado de cuenta
+    </a>
     <form v-if="editing" class="acc__edit" @submit.prevent="saveBank">
       <MoneyField v-model="bankValue" label="Total recibido según el estado de cuenta" />
+      <FileDrop label="Estado de cuenta (PDF o foto, opcional)" :url="fileUrl" :busy="uploading" @pick="upload" @error="toast.error" />
       <div class="acc__edit-actions">
         <button v-if="acc.bank !== null" type="button" class="btn btn--ghost btn--sm" @click="emit('bank', null); editing = false">Borrar</button>
         <button type="button" class="btn btn--ghost btn--sm" @click="editing = false">Cancelar</button>
-        <button type="submit" class="btn btn--primary btn--sm">Guardar</button>
+        <button type="submit" class="btn btn--primary btn--sm" :disabled="uploading">{{ uploading ? 'Subiendo…' : 'Guardar' }}</button>
       </div>
     </form>
     <button v-if="acc.payments.length" type="button" class="acc__toggle" :aria-expanded="open" @click="open = !open">
@@ -116,6 +137,17 @@ function saveBank() {
     dd {
       font-weight: 800;
     }
+  }
+
+  &__file {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    align-self: flex-start;
+    min-height: 36px;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $navy;
   }
 
   &__bank {

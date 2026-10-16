@@ -59,9 +59,22 @@ async function remove() {
         <li v-if="booking.closeReport">
           <AppIcon :name="booking.closeReport.method === 'cash' ? 'cash' : 'bank'" :size="16" />
           <span>
-            {{ booking.closeReport.method === 'cash' ? `Cobró en efectivo: ${money(booking.closeReport.cashReceived)}` : 'Cliente pagó por transferencia (por confirmar)' }}
+            {{ booking.closeReport.method === 'cash' ? `Cobró en efectivo: ${money(booking.closeReport.cashReceived)}` : 'Cliente pagó por transferencia' }}
             · {{ dateTime(booking.closeReport.at) }}
           </span>
+        </li>
+        <li v-if="booking.closeReport?.receivedAt">
+          <AppIcon name="check-circle" :size="16" />
+          <span>
+            {{ booking.closeReport.method === 'cash' ? `Oficina recibió ${money(booking.closeReport.receivedAmount || 0)}` : 'Transferencia confirmada' }}
+            · {{ booking.closeReport.receivedBy?.name }} · {{ dateTime(booking.closeReport.receivedAt) }}
+          </span>
+          <a v-if="booking.closeReport.proofUrl" :href="booking.closeReport.proofUrl" target="_blank" rel="noopener" class="link">Ver comprobante</a>
+        </li>
+        <li v-else-if="booking.closeReport">
+          <AppIcon name="clock" :size="16" />
+          <span>{{ booking.closeReport.method === 'cash' ? 'Efectivo pendiente de entregar a la oficina' : 'Transferencia pendiente de comprobante' }}</span>
+          <RouterLink to="/admin/cobros" class="link">Ir a Cobros</RouterLink>
         </li>
       </ul>
     </template>

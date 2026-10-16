@@ -8,6 +8,7 @@ import type {
   GoalCommissionSheet,
   GoalMonth,
   NovedadRow,
+  OperatorCollection,
   StaffIncident,
   StaffIncidentType,
   ProductionInput,
@@ -54,6 +55,13 @@ class OperationService extends APIBase {
   }
   deleteNovedad(bookingId: ID, id: ID) {
     return this.delete(`admin/bookings/${bookingId}/novedades/${id}`)
+  }
+
+  collections(status: 'pending' | 'done', branch?: string) {
+    return this.get<{ items: OperatorCollection[]; summary: { cashCount: number; cashTotal: number; transferCount: number } }>('admin/collections', { status, branch })
+  }
+  receiveCollection(id: ID, body: { amount?: number; proofUrl?: string; note?: string }) {
+    return this.post<OperatorCollection>(`admin/collections/${id}/receive`, body)
   }
 
   staffIncidents(q: { user?: ID; from?: string; to?: string; type?: StaffIncidentType }) {

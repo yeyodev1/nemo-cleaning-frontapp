@@ -121,7 +121,7 @@ class LedgerService extends APIBase {
     return this.patch<{ verified: boolean; verifiedBy: string }>(`admin/finance/bank/payments/${id}`, { verified })
   }
 
-  saveStatement(body: { account: string; from: string; to: string; branch: Branch; amount: number | null }) {
+  saveStatement(body: { account: string; from: string; to: string; branch: Branch; amount: number | null; fileUrl?: string }) {
     return this.patch('admin/finance/bank/statement', body)
   }
 

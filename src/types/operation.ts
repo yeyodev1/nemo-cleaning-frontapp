@@ -95,6 +95,28 @@ export interface NovedadRow {
   operator: { _id: ID; name: string; color?: string } | null
 }
 
+/** Cobro reportado por el operador al terminar (efectivo o transferencia). */
+export interface OperatorCollection {
+  _id: ID
+  code: string
+  date: string
+  time: string
+  branch: ID
+  customer: { name: string; phone?: string } | null
+  operators: { _id: ID; name: string; color?: string }[]
+  total: number
+  balance: number
+  paymentAccount: string
+  method: 'cash' | 'transfer'
+  cashReceived: number
+  reportedAt: string
+  reportedBy: string
+  receivedAt: string | null
+  receivedBy: string
+  receivedAmount: number
+  proofUrl: string
+}
+
 export type StaffIncidentType = 'late' | 'absence' | 'fight' | 'customer_issue' | 'damage' | 'inconsistency' | 'complaint' | 'other'
 
 /** Novedad del personal (no de un servicio): llegó tarde, pelea, problema con cliente… */

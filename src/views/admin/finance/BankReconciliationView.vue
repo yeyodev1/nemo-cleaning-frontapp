@@ -37,9 +37,9 @@ async function verify(p: BankPayment) {
   }
 }
 
-async function saveBank(acc: BankAccountRec, amount: number | null) {
+async function saveBank(acc: BankAccountRec, amount: number | null, fileUrl?: string) {
   try {
-    await ledgerService.saveStatement({ account: acc.account, from: range.value.from, to: range.value.to, branch: scope.query, amount })
+    await ledgerService.saveStatement({ account: acc.account, from: range.value.from, to: range.value.to, branch: scope.query, amount, fileUrl })
     toast.success(amount === null ? 'Monto del banco borrado' : `Monto de ${acc.account} guardado`)
     load()
   } catch (e) {
@@ -69,7 +69,7 @@ async function saveBank(acc: BankAccountRec, amount: number | null) {
       <p v-if="!hasPayments" class="note">No hay transferencias ni pagos con tarjeta registrados en este periodo. Igual puedes anotar lo que dice el banco.</p>
       <EmptyState v-if="!data.items.length" title="No hay cuentas para conciliar" text="Agrega las cuentas bancarias en Configuración." icon="bank" />
       <div v-else class="grid">
-        <AccountCard v-for="a in data.items" :key="a.account" :acc="a" :busy-id="busyId" @verify="verify" @bank="saveBank(a, $event)" />
+        <AccountCard v-for="a in data.items" :key="a.account" :acc="a" :busy-id="busyId" @verify="verify" @bank="(amount, file) => saveBank(a, amount, file)" />
       </div>
     </template>
   </section>

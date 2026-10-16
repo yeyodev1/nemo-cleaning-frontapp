@@ -38,6 +38,7 @@ export const adminNav: NavItem[] = [
   { to: '/admin/metas', label: 'Metas mensuales', icon: 'flag', roles: AM, group: 'Operación' },
   { to: '/admin/comisiones', label: 'Comisiones', icon: 'briefcase', roles: AM, group: 'Operación' },
   // Finanzas (reportes del Excel de gerencia)
+  { to: '/admin/cobros', label: 'Cobros de operadores', short: 'Cobros', icon: 'cash', roles: AM, group: 'Finanzas' },
   { to: '/admin/pagos', label: 'Pagos por confirmar', short: 'Pagos', icon: 'wallet', roles: AM, tab: true, group: 'Finanzas' },
   { to: '/admin/finanzas/cuentas-por-cobrar', label: 'Cuentas por cobrar', icon: 'clock', roles: AM, group: 'Finanzas' },
   { to: '/admin/caja', label: 'Registro de caja', icon: 'cash', roles: AM, group: 'Finanzas' },
