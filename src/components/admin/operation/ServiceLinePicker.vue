@@ -10,26 +10,36 @@ import type { EntryLine } from '@/composables/operation/useQuickEntry'
 
 /**
  * Servicios de la fila: atajos de Classic Wash por tamaño (el 80 % de la Base), el resto del
- * catálogo en un selector y "valor libre" para lo que no está en el catálogo o tuvo otro precio.
+ * catálogo como tarjetas con buscador y categorías, y "valor libre" para otro precio.
  */
 const props = defineProps<{ services: Service[]; lines: EntryLine[] }>()
 const emit = defineEmits<{ add: [service: Service, variant?: string]; free: [name: string, amount: number]; remove: [key: number] }>()
 
 const classic = computed(() => props.services.find((s) => s.slug === 'classic-wash'))
-const groups = computed(() => {
-  const map = new Map<string, Service[]>()
-  for (const s of props.services) map.set(s.category, [...(map.get(s.category) || []), s])
-  return [...map.entries()].map(([cat, list]) => ({ label: serviceCategory[cat as Service['category']] || cat, list }))
+const categories = computed(() => {
+  const seen = new Set<string>()
+  for (const s of props.services) seen.add(s.category)
+  return [...seen].map((c) => ({ value: c, label: serviceCategory[c as Service['category']] || c }))
 })
+
+// Catálogo: buscar por nombre y filtrar por categoría; tocar una tarjeta la agrega.
+const browsing = ref(false)
+const query = ref('')
+const category = ref('')
+const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+const visible = computed(() =>
+  props.services.filter(
+    (s) => (!category.value || s.category === category.value) && (!query.value.trim() || norm(s.name).includes(norm(query.value.trim()))),
+  ),
+)
+const fromPrice = (s: Service) => (s.variants?.length ? Math.min(...s.variants.map((v) => v.price)) : s.price)
 
 const selectedId = ref('')
 const selected = computed(() => props.services.find((s) => s._id === selectedId.value))
-function onSelect() {
-  const s = selected.value
-  if (s && !s.variants?.length) {
-    emit('add', s)
-    selectedId.value = ''
-  }
+function choose(s: Service) {
+  if (s.variants?.length) return void (selectedId.value = selectedId.value === s._id ? '' : s._id)
+  emit('add', s)
+  selectedId.value = ''
 }
 function pickVariant(label: string) {
   if (!selected.value) return
@@ -60,15 +70,38 @@ function addFree() {
       </div>
     </div>
 
-    <label class="field">
-      <span class="field__label">Otro servicio del catálogo</span>
-      <select v-model="selectedId" @change="onSelect">
-        <option value="">Elige un servicio…</option>
-        <optgroup v-for="g in groups" :key="g.label" :label="g.label">
-          <option v-for="s in g.list" :key="s._id" :value="s._id">{{ s.name }}</option>
-        </optgroup>
-      </select>
-    </label>
+    <button v-if="!browsing" type="button" class="slp__open" @click="browsing = true">
+      <AppIcon name="search" :size="18" />
+      <span><strong>Otro servicio del catálogo</strong><small>Busca o elige por categoría</small></span>
+      <AppIcon name="chevron-down" :size="18" />
+    </button>
+    <div v-else class="slp__catalog">
+      <div class="slp__search">
+        <AppIcon name="search" :size="18" class="slp__search-icon" />
+        <input v-model="query" type="search" placeholder="Buscar servicio (ej.: tapicería, alfombra)" autocomplete="off" aria-label="Buscar servicio" />
+        <button type="button" class="btn btn--ghost btn--icon" aria-label="Cerrar catálogo" @click="browsing = false; selectedId = ''"><AppIcon name="x" :size="18" /></button>
+      </div>
+      <div class="slp__cats" role="radiogroup" aria-label="Categoría">
+        <button type="button" class="slp__cat" :class="{ 'is-on': !category }" role="radio" :aria-checked="!category" @click="category = ''">Todos</button>
+        <button v-for="c in categories" :key="c.value" type="button" class="slp__cat" :class="{ 'is-on': category === c.value }" role="radio" :aria-checked="category === c.value" @click="category = c.value">{{ c.label }}</button>
+      </div>
+      <div class="slp__cards">
+        <button
+          v-for="s in visible"
+          :key="s._id"
+          type="button"
+          class="slp__card"
+          :class="{ 'is-on': selectedId === s._id }"
+          :aria-expanded="s.variants?.length ? selectedId === s._id : undefined"
+          @click="choose(s)"
+        >
+          <span class="slp__card-name">{{ s.name }}</span>
+          <small>{{ s.variants?.length ? `${s.variants.length} opciones · desde ` : '' }}<strong>{{ money(fromPrice(s)) }}</strong></small>
+          <AppIcon :name="s.variants?.length ? 'chevron-down' : 'plus'" :size="16" class="slp__card-icon" />
+        </button>
+        <p v-if="!visible.length" class="slp__empty">No hay servicios con “{{ query }}”. Usa “Valor libre”.</p>
+      </div>
+    </div>
     <Transition name="fade-up">
       <div v-if="selected?.variants?.length" class="slp__variants">
         <span class="field__label">{{ selected.name }}: elige la opción</span>
@@ -162,6 +195,148 @@ function addFree() {
     &:active {
       transform: scale(0.97);
     }
+  }
+
+  &__open {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: $tap-lg;
+    padding: 0.5rem 0.9rem;
+    border-radius: $radius-md;
+    border: 1.5px dashed $line-strong;
+    background: $surface;
+    color: $navy;
+    text-align: left;
+
+    span {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    small {
+      font-size: $text-xs;
+      color: $ink-muted;
+    }
+
+    &:hover {
+      border-color: $navy;
+    }
+  }
+
+  &__catalog {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.75rem;
+    border-radius: $radius-md;
+    border: 1.5px solid $line;
+    background: $sky;
+  }
+
+  &__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding-left: 2.4rem;
+    }
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 0.8rem;
+    color: $ink-muted;
+    pointer-events: none;
+  }
+
+  &__cats {
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  &__cat {
+    flex-shrink: 0;
+    min-height: 36px;
+    padding: 0 0.85rem;
+    border-radius: $radius-pill;
+    border: 1.5px solid $line;
+    background: $surface;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $ink-soft;
+
+    &.is-on {
+      border-color: $navy;
+      background: $navy;
+      color: #fff;
+    }
+  }
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0.45rem;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  &__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-height: 64px;
+    padding: 0.55rem 2rem 0.55rem 0.75rem;
+    border-radius: $radius-md;
+    border: 1.5px solid $line;
+    background: $surface;
+    text-align: left;
+    transition:
+      border-color $dur-fast ease,
+      transform $dur-fast $ease-out;
+
+    small {
+      font-size: $text-xs;
+      color: $ink-muted;
+    }
+
+    strong {
+      color: $navy;
+    }
+
+    &:hover,
+    &.is-on {
+      border-color: $navy;
+    }
+
+    &.is-on {
+      background: $navy-soft;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &__card-name {
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $ink;
+  }
+
+  &__card-icon {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    color: $navy;
   }
 
   &__free-btn {

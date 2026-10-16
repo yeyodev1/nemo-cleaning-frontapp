@@ -4,12 +4,14 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import MoneyField from '@/components/admin/finance/MoneyField.vue'
 import PageIntro from '@/components/admin/sheet/PageIntro.vue'
 import ChoiceChips from '@/components/admin/operation/ChoiceChips.vue'
+import DatePicker from '@/components/ui/DatePicker.vue'
+import TimePicker from '@/components/ui/TimePicker.vue'
 import CustomerPicker from '@/components/admin/operation/CustomerPicker.vue'
 import ServiceLinePicker from '@/components/admin/operation/ServiceLinePicker.vue'
 import SessionList from '@/components/admin/operation/SessionList.vue'
 import { useQuickEntry } from '@/composables/operation/useQuickEntry'
 import { paymentConfirmation } from '@/config/operationLabels'
-import { addDays, money, shortDate, todayISO } from '@/utils/format'
+import { addDays, longDate, money, todayISO } from '@/utils/format'
 
 const q = useQuickEntry()
 const { form } = q
@@ -42,13 +44,22 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
     </PageIntro>
 
     <section class="card qe__sec">
-      <h2><span class="qe__n">1</span> Día y equipo</h2>
-      <div class="qe__row">
-        <ChoiceChips v-model="form.date" :options="dayChoices" label="Día" />
-        <label class="field qe__date"><span class="sr-only">Otra fecha</span><input v-model="form.date" type="date" /></label>
-        <label v-if="q.isFuture.value" class="field qe__date"><span class="sr-only">Hora</span><input v-model="form.time" type="time" step="900" /></label>
+      <h2><span class="qe__n">1</span> Fecha, hora y equipo</h2>
+      <ChoiceChips v-model="form.date" :options="dayChoices" label="Día" />
+      <div class="qe__when">
+        <div class="field">
+          <span class="field__label">Fecha</span>
+          <DatePicker v-model="form.date" label="Fecha del servicio" />
+        </div>
+        <div class="field">
+          <span class="field__label">Hora</span>
+          <TimePicker v-model="form.time" label="Hora del servicio" />
+        </div>
       </div>
-      <p class="qe__hint">{{ shortDate(form.date) }}</p>
+      <p class="qe__summary" :class="{ 'is-future': q.isFuture.value }">
+        <AppIcon :name="q.isFuture.value ? 'calendar' : 'check-circle'" :size="18" />
+        <span><b>{{ longDate(form.date) }} · {{ form.time }}</b> {{ q.isFuture.value ? '— se agenda' : '— servicio hecho' }}</span>
+      </p>
       <p v-if="q.isFuture.value" class="qe__linked"><AppIcon name="calendar" :size="14" /> Fecha futura: el servicio se guarda en la agenda como confirmado, no como hecho. El cobro solo se registra si ya está pagado.</p>
       <div v-if="branchChoices.length > 1" class="field">
         <span class="field__label">Sucursal</span>
@@ -153,16 +164,37 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
     font-size: $text-xs;
   }
 
-  &__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
+  &__when {
+    display: grid;
+    gap: 0.75rem;
+
+    @include from('md') {
+      grid-template-columns: 2fr 1fr;
+    }
   }
 
-  &__date {
-    flex: 1 1 160px;
-    max-width: 220px;
+  &__summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: $radius-md;
+    background: $success-bg;
+    color: $success;
+    font-size: $text-sm;
+
+    b {
+      color: $ink;
+
+      &::first-letter {
+        text-transform: uppercase;
+      }
+    }
+
+    &.is-future {
+      background: $navy-soft;
+      color: $navy;
+    }
   }
 
   &__hint {

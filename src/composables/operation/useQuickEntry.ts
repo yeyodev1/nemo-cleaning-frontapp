@@ -133,6 +133,7 @@ export function useQuickEntry() {
   /** Completa un servicio de la agenda: trae cliente, servicios y urbanización. */
   function useScheduled(b: Booking) {
     form.bookingId = b._id
+    if (b.time) form.time = b.time
     pickCustomer(b.customer as unknown as Customer)
     form.zone = b.zone || ''
     form.otherZone = !!b.zone && !zones.value.includes(b.zone)
@@ -180,7 +181,7 @@ export function useQuickEntry() {
         bookingId: form.bookingId || undefined,
         branch: form.branch,
         date: form.date,
-        time: isFuture.value ? form.time : undefined,
+        time: form.time,
         operators: form.operators,
         customer: form.customerId ? { _id: form.customerId } : { name: form.customerName.trim(), phone: form.customerPhone.trim() || undefined },
         zone: form.zone,
