@@ -116,8 +116,12 @@ class OperatorService extends APIBase {
     return this.get<OperatorDay>('operator/bookings', { date })
   }
   /** Iniciar exige `location` (GPS del celular al llegar). */
-  setStatus(id: string, status: 'on_the_way' | 'in_progress' | 'completed', extra?: { note?: string; location?: { lat: number; lng: number; accuracy: number }; payment?: { method: 'cash' | 'transfer'; cashReceived: number } }) {
+  setStatus(id: string, status: 'on_the_way' | 'in_progress' | 'completed', extra?: { note?: string; location?: { lat: number; lng: number; accuracy: number }; payment?: { method: 'cash' | 'transfer'; cashReceived: number; handedTo?: string } }) {
     return this.patch<OperatorJob>(`operator/bookings/${id}/status`, { status, ...extra })
+  }
+  /** A quién puede entregarle el efectivo (gerencia y administradores de la sucursal). */
+  recipients(id: string) {
+    return this.get<{ _id: string; name: string; role: 'admin' | 'manager' }[]>(`operator/bookings/${id}/recipients`)
   }
   addNovedad(id: string, body: { text: string; photos: string[] }) {
     return this.post<OperatorJob>(`operator/bookings/${id}/novedades`, body)

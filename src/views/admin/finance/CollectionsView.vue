@@ -9,6 +9,7 @@ import ReceiveCollectionSheet from '@/components/admin/payments/ReceiveCollectio
 import { operationService } from '@/services/operation.service'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
+import { useUserStore } from '@/stores/user'
 import { dateTime, errorMessage, money, shortDate } from '@/utils/format'
 import type { OperatorCollection } from '@/types/operation'
 
@@ -18,7 +19,10 @@ import type { OperatorCollection } from '@/types/operation'
  */
 const scope = useAdminScope()
 const toast = useToastStore()
+const me = useUserStore()
 const tab = ref<'pending' | 'done'>('pending')
+// "Para mí": el efectivo que los operadores dicen que me entregan a mí.
+const onlyMine = ref(!me.isAdmin)
 const items = ref<OperatorCollection[]>([])
 const summary = ref({ cashCount: 0, cashTotal: 0, transferCount: 0 })
 const loading = ref(false)
@@ -27,7 +31,7 @@ const selected = ref<OperatorCollection | null>(null)
 async function load() {
   loading.value = true
   try {
-    const r = await operationService.collections(tab.value, scope.query)
+    const r = await operationService.collections(tab.value, scope.query, onlyMine.value)
     items.value = r.items
     summary.value = r.summary
   } catch (e) {
@@ -36,7 +40,8 @@ async function load() {
     loading.value = false
   }
 }
-watch([tab, toRef(scope, 'branch')], load, { immediate: true })
+watch([tab, onlyMine, toRef(scope, 'branch')], load, { immediate: true })
+const canReceive = (it: OperatorCollection) => it.method !== 'cash' || !it.handedTo || me.isAdmin || it.handedTo.id === me.user?._id
 
 /** Por operador: lo que tiene pendiente de entregar o de confirmar. */
 const groups = computed(() => {
@@ -70,6 +75,11 @@ function onDone() {
       ]"
     />
 
+    <div class="col__mine" role="radiogroup" aria-label="Qué cobros ver">
+      <button type="button" class="col__chip" :class="{ 'is-on': onlyMine }" role="radio" :aria-checked="onlyMine" @click="onlyMine = true"><AppIcon name="user" :size="15" /> Me los entregan a mí</button>
+      <button type="button" class="col__chip" :class="{ 'is-on': !onlyMine }" role="radio" :aria-checked="!onlyMine" @click="onlyMine = false">Todos los de la sucursal</button>
+    </div>
+
     <KpiRow>
       <KpiCard :label="tab === 'pending' ? 'Efectivo por recibir' : 'Efectivo recibido'" :value="money(summary.cashTotal)" icon="cash" :tone="tab === 'pending' && summary.cashTotal ? 'warning' : 'success'" :hint="`${summary.cashCount} servicio(s)`" />
       <KpiCard :label="tab === 'pending' ? 'Transferencias por confirmar' : 'Transferencias confirmadas'" :value="String(summary.transferCount)" icon="bank" :tone="tab === 'pending' && summary.transferCount ? 'warning' : 'success'" />
@@ -101,6 +111,7 @@ function onDone() {
             <div class="col__info">
               <RouterLink :to="`/admin/pedidos/${it._id}`" class="col__svc">{{ it.customer?.name || 'Cliente' }} · {{ it.code }}</RouterLink>
               <small>{{ shortDate(it.date) }} {{ it.time }} · total {{ money(it.total) }}</small>
+              <small v-if="it.method === 'cash' && it.handedTo" class="col__to"><AppIcon name="user" :size="12" /> Lo entrega a {{ it.handedTo.id === me.user?._id ? 'ti' : it.handedTo.name }}</small>
               <small v-if="tab === 'done'" class="col__ok">
                 <AppIcon name="check-circle" :size="13" /> {{ it.method === 'cash' ? `Recibió ${money(it.receivedAmount)}` : 'Confirmada' }} · {{ it.receivedBy }} · {{ dateTime(it.receivedAt || '') }}
                 <a v-if="it.proofUrl" :href="it.proofUrl" target="_blank" rel="noopener" class="link">Ver comprobante</a>
@@ -110,7 +121,8 @@ function onDone() {
               <strong v-if="it.method === 'cash'">{{ money(tab === 'done' ? it.receivedAmount : it.cashReceived) }}</strong>
               <span v-else class="col__tag">Transferencia</span>
             </div>
-            <button v-if="tab === 'pending'" type="button" class="btn btn--primary btn--sm" @click="selected = it">
+            <span v-if="tab === 'pending' && !canReceive(it)" class="col__tag">Lo recibe {{ it.handedTo?.name }}</span>
+            <button v-else-if="tab === 'pending'" type="button" class="btn btn--primary btn--sm" @click="selected = it">
               {{ it.method === 'cash' ? 'Recibir' : 'Subir comprobante' }}
             </button>
           </li>
@@ -128,6 +140,40 @@ function onDone() {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+
+  &__mine {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 40px;
+    padding: 0 0.9rem;
+    border-radius: $radius-pill;
+    border: 1.5px solid $line;
+    background: $surface;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $ink-soft;
+
+    &.is-on {
+      border-color: $navy;
+      background: $navy;
+      color: #fff;
+    }
+  }
+
+  &__to {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: $navy !important;
+    font-weight: 700;
+  }
 
   &__skel,
   &__groups {

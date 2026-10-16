@@ -57,8 +57,8 @@ class OperationService extends APIBase {
     return this.delete(`admin/bookings/${bookingId}/novedades/${id}`)
   }
 
-  collections(status: 'pending' | 'done', branch?: string) {
-    return this.get<{ items: OperatorCollection[]; summary: { cashCount: number; cashTotal: number; transferCount: number } }>('admin/collections', { status, branch })
+  collections(status: 'pending' | 'done', branch?: string, mine?: boolean) {
+    return this.get<{ items: OperatorCollection[]; summary: { cashCount: number; cashTotal: number; transferCount: number } }>('admin/collections', { status, branch, mine: mine ? '1' : undefined })
   }
   receiveCollection(id: ID, body: { amount?: number; proofUrl?: string; note?: string }) {
     return this.post<OperatorCollection>(`admin/collections/${id}/receive`, body)

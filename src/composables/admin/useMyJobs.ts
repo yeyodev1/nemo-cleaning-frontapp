@@ -54,7 +54,7 @@ export function useMyJobs() {
     day.value.bookings = day.value.bookings.map((j) => (j._id === job._id ? job : j))
   }
 
-  async function setStatus(job: OperatorJob, status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number }) {
+  async function setStatus(job: OperatorJob, status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number; handedTo?: string }) {
     busyId.value = job._id
     try {
       let location: { lat: number; lng: number; accuracy: number } | undefined

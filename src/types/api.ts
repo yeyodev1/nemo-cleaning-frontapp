@@ -254,6 +254,7 @@ export interface Booking {
     cashReceived: number
     at: string
     by?: PersonRef
+    handedTo?: PersonRef | null
     receivedAt?: string | null
     receivedBy?: PersonRef | null
     receivedAmount?: number
@@ -279,7 +280,7 @@ export interface OperatorJob {
   items: { name: string; variant: string; choice: string; unit?: string; quantity: number }[]
   operators: OperatorRef[]
   startCheck: { at: string; accuracy: number } | null
-  closeReport: { method: 'cash' | 'transfer'; cashReceived: number; at: string } | null
+  closeReport: { method: 'cash' | 'transfer'; cashReceived: number; at: string; handedTo?: string; received?: boolean } | null
   novedades: { _id: ID; text: string; photos: string[]; by: string; at: string }[]
 }
 

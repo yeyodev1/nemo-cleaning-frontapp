@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import NovedadComposer from './NovedadComposer.vue'
+import { operatorService } from '@/services/management.service'
 import { bookingStatus } from '@/config/labels'
 import { dateTime, mapsUrl, money, toCents, whatsappUrl } from '@/utils/format'
 import { directionsUrl } from '@/utils/location'
@@ -13,7 +14,7 @@ import type { JobStatus } from '@/composables/admin/useMyJobs'
 /** Un servicio del día para el operador: a dónde ir, qué hacer y sus pasos. Sin montos. */
 const props = defineProps<{ job: OperatorJob; busy: boolean; locating: boolean; isNew?: boolean }>()
 const emit = defineEmits<{
-  status: [status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number }]
+  status: [status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number; handedTo?: string }]
   updated: [job: OperatorJob]
 }>()
 const reporting = ref(false)
@@ -23,6 +24,20 @@ const finishing = ref(false)
 const payMethod = ref<'cash' | 'transfer' | ''>('')
 const cashText = ref('')
 const finishError = ref('')
+// A quién le entrega el efectivo: gerencia o el administrador de la sucursal.
+const handedTo = ref('')
+const recipients = ref<{ _id: string; name: string; role: 'admin' | 'manager' }[]>([])
+async function openFinish() {
+  finishing.value = true
+  if (!recipients.value.length) {
+    try {
+      recipients.value = await operatorService.recipients(props.job._id)
+      if (recipients.value.length === 1) handedTo.value = recipients.value[0]!._id
+    } catch {
+      recipients.value = []
+    }
+  }
+}
 
 function finish() {
   finishError.value = ''
@@ -32,8 +47,9 @@ function finish() {
     const n = Number(cashText.value.replace(',', '.'))
     if (!cashText.value.trim() || !Number.isFinite(n) || n < 0) return void (finishError.value = 'Escribe cuánto efectivo recibiste')
     cashReceived = toCents(n)
+    if (!handedTo.value) return void (finishError.value = 'Elige a quién le entregas el efectivo')
   }
-  emit('status', 'completed', { method: payMethod.value, cashReceived })
+  emit('status', 'completed', { method: payMethod.value, cashReceived, handedTo: payMethod.value === 'cash' ? handedTo.value : undefined })
 }
 
 // Con GPS del cliente va directo al punto (indicaciones de manejo), no a la dirección escrita.
@@ -98,7 +114,7 @@ function onSaved(job: OperatorJob) {
         <button type="button" class="btn btn--primary btn--lg" :disabled="busy || !canStart" @click="emit('status', 'in_progress')">
           <AppIcon name="play" /> {{ locating ? 'Marcando ubicación…' : 'Iniciar' }}
         </button>
-        <button type="button" class="btn btn--accent btn--lg" :disabled="busy || !canFinish" @click="finishing = true"><AppIcon name="check" /> Terminar</button>
+        <button type="button" class="btn btn--accent btn--lg" :disabled="busy || !canFinish" @click="openFinish"><AppIcon name="check" /> Terminar</button>
       </div>
 
       <div v-if="finishing && canFinish" class="job__finish">
@@ -116,6 +132,24 @@ function onSaved(job: OperatorJob) {
           <span class="field__label">¿Cuánto efectivo recibiste? (USD)</span>
           <input v-model="cashText" type="text" inputmode="decimal" placeholder="0.00" autofocus />
         </label>
+        <div v-if="payMethod === 'cash'" class="field">
+          <span class="field__label">¿A quién le entregas el efectivo?</span>
+          <div class="job__paychoice job__paychoice--wrap" role="radiogroup" aria-label="Quién recibe el efectivo">
+            <button
+              v-for="r in recipients"
+              :key="r._id"
+              type="button"
+              class="job__pay"
+              :class="{ 'is-on': handedTo === r._id }"
+              role="radio"
+              :aria-checked="handedTo === r._id"
+              @click="handedTo = r._id"
+            >
+              <AppIcon name="user" :size="18" /> {{ r.name }} <small>{{ r.role === 'admin' ? 'Gerencia' : 'Administrador' }}</small>
+            </button>
+          </div>
+          <span v-if="!recipients.length" class="field__hint">No hay administradores en tu sucursal: avisa a la oficina.</span>
+        </div>
         <p v-if="payMethod === 'transfer'" class="job__tip">La oficina confirma la transferencia. No necesitas foto.</p>
         <p v-if="finishError" class="job__err" role="alert"><AppIcon name="alert" :size="16" /> {{ finishError }}</p>
         <div class="job__finish-actions">
@@ -126,7 +160,8 @@ function onSaved(job: OperatorJob) {
     </template>
     <p v-if="job.closeReport" class="job__closed">
       <AppIcon name="check-circle" :size="18" />
-      {{ job.closeReport.method === 'cash' ? `Cobraste en efectivo: ${money(job.closeReport.cashReceived)}` : 'El cliente pagó por transferencia' }}
+      {{ job.closeReport.method === 'cash' ? `Cobraste en efectivo: ${money(job.closeReport.cashReceived)}${job.closeReport.handedTo ? ` · lo entregas a ${job.closeReport.handedTo}` : ''}` : 'El cliente pagó por transferencia' }}
+      <small v-if="job.closeReport.method === 'cash'" class="job__recv" :class="{ 'is-ok': job.closeReport.received }">{{ job.closeReport.received ? 'Recibido por la oficina ✓' : 'Pendiente de entregar' }}</small>
     </p>
 
     <!-- 4. Novedades con fotos -->
@@ -373,6 +408,36 @@ function onSaved(job: OperatorJob) {
     }
   }
 
+  &__paychoice--wrap {
+    flex-wrap: wrap;
+
+    .job__pay {
+      flex: 1 1 160px;
+      flex-direction: column;
+      gap: 0.1rem;
+      padding: 0.4rem;
+
+      small {
+        font-size: $text-xs;
+        font-weight: 500;
+        color: $ink-muted;
+      }
+    }
+  }
+
+  &__recv {
+    padding: 0.1rem 0.5rem;
+    border-radius: $radius-pill;
+    background: $warning-bg;
+    color: $warning;
+    font-size: $text-xs;
+
+    &.is-ok {
+      background: $success-bg;
+      color: $success;
+    }
+  }
+
   &__err {
     display: flex;
     align-items: center;
@@ -390,6 +455,7 @@ function onSaved(job: OperatorJob) {
 
   &__closed {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.4rem;
     font-size: $text-sm;

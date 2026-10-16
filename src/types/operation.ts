@@ -111,6 +111,8 @@ export interface OperatorCollection {
   cashReceived: number
   reportedAt: string
   reportedBy: string
+  /** A quién dijo el operador que entrega el efectivo. */
+  handedTo: { id: string; name: string } | null
   receivedAt: string | null
   receivedBy: string
   receivedAmount: number
