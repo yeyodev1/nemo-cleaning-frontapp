@@ -19,7 +19,7 @@ function submit() {
 
 <template>
   <section class="card st">
-    <h3>Estado del pedido</h3>
+    <h3>Estado del servicio</h3>
     <div class="st__chips" role="radiogroup" aria-label="Estado">
       <label v-for="s in statuses" :key="s.value" class="st__chip" :class="[{ 'is-on': next === s.value }, `st__chip--${bookingStatus[s.value].tone}`]">
         <input v-model="next" type="radio" name="status" :value="s.value" class="sr-only" />

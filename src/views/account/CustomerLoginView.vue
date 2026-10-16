@@ -22,7 +22,7 @@ function done() {
 }
 
 const perks: { icon: IconName; text: string }[] = [
-  { icon: 'list', text: 'Mira tus pedidos, su estado y lo que falta por pagar.' },
+  { icon: 'list', text: 'Mira tus servicios, su estado y lo que falta por pagar.' },
   { icon: 'sparkles', text: 'Reserva más rápido: tus datos se llenan solos.' },
   { icon: 'lock', text: 'Sin contraseñas: te enviamos un código cada vez.' },
 ]

@@ -14,7 +14,7 @@ const href = computed(
 <template>
   <a :href="href" target="_blank" rel="noopener" class="cwa" :class="{ 'cwa--compact': compact }">
     <AppIcon name="whatsapp" :size="compact ? 13 : 15" />
-    <span>¿Prefieres pedir por WhatsApp?</span>
+    <span>¿Prefieres agendar por WhatsApp?</span>
   </a>
 </template>
 

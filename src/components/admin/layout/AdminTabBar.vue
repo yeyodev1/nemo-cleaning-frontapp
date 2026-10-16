@@ -21,7 +21,7 @@ const { tabs, isActive, restBadge } = useAdminNav()
       </span>
       <span>{{ t.short || t.label }}</span>
     </RouterLink>
-    <button type="button" class="tabs__item" :aria-label="restBadge ? `Más: ${restBadge} pedidos por WhatsApp sin confirmar` : 'Más'" @click="emit('more')">
+    <button type="button" class="tabs__item" :aria-label="restBadge ? `Más: ${restBadge} reservas por WhatsApp sin confirmar` : 'Más'" @click="emit('more')">
       <span class="tabs__more">
         <AppIcon name="menu" :size="22" />
         <span v-if="restBadge" :key="restBadge" class="tabs__badge bump">{{ restBadge }}</span>

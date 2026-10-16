@@ -18,7 +18,7 @@ export function useBookingDetail(id: string) {
     try {
       booking.value = await bookingsService.detail(id)
     } catch (e) {
-      error.value = errorMessage(e, 'No se pudo cargar el pedido')
+      error.value = errorMessage(e, 'No se pudo cargar la reserva')
     } finally {
       loading.value = false
     }
@@ -43,7 +43,7 @@ export function useBookingDetail(id: string) {
     }
   }
 
-  const update = (patch: BookingPatch, ok = 'Pedido actualizado') =>
+  const update = (patch: BookingPatch, ok = 'Reserva actualizada') =>
     run(async () => merge(await bookingsService.update(id, patch)), ok)
 
   const setStatus = (status: BookingStatus, note?: string) =>

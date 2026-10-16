@@ -22,7 +22,7 @@ const pending = computed(() => o.value?.status === 'pending')
 </script>
 
 <template>
-  <BaseSheet :open="!!order" :title="order ? `Pedido ${order.code}` : 'Pedido'" @close="emit('close')">
+  <BaseSheet :open="!!order" :title="order ? `Reserva ${order.code}` : 'Reserva'" @close="emit('close')">
     <div v-if="o" class="wos">
       <header class="wos__head">
         <div>
@@ -72,13 +72,13 @@ const pending = computed(() => o.value?.status === 'pending')
         <ChoiceChips v-model="s.form.operators" :options="s.operatorChoices.value" multiple label="Operadores" small />
       </section>
 
-      <RouterLink :to="`/admin/pedidos/${o._id}`" class="wos__more">Ver pedido completo <AppIcon name="chevron-right" :size="16" /></RouterLink>
+      <RouterLink :to="`/admin/pedidos/${o._id}`" class="wos__more">Ver reserva completa <AppIcon name="chevron-right" :size="16" /></RouterLink>
     </div>
 
     <template #footer>
       <button type="button" class="btn btn--ghost" :disabled="s.saving.value" @click="s.save(false)">Guardar</button>
       <button v-if="pending" type="button" class="btn btn--primary" :disabled="s.saving.value" @click="s.save(true)">
-        <AppIcon name="check" /> {{ s.saving.value ? 'Guardando…' : 'Confirmar pedido' }}
+        <AppIcon name="check" /> {{ s.saving.value ? 'Guardando…' : 'Confirmar reserva' }}
       </button>
     </template>
   </BaseSheet>

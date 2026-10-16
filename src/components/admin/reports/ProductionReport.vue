@@ -37,7 +37,7 @@ const totals = computed(() => ({
       <article class="box">
         <div class="box__head">
           <h3>Producción por día</h3>
-          <span class="muted">{{ totals.bookings }} pedidos · <strong class="money">{{ money(totals.amount) }}</strong></span>
+          <span class="muted">{{ totals.bookings }} servicios · <strong class="money">{{ money(totals.amount) }}</strong></span>
         </div>
         <DayChart v-if="days.length" :days="days" />
         <p v-else class="muted">Sin datos en el rango.</p>
@@ -54,7 +54,7 @@ const totals = computed(() => ({
         <article class="box">
           <h3>Por operador</h3>
           <div class="bars">
-            <HBar v-for="o in operators" :key="o.operator || o.name" tone="aqua" :label="o.name" :sub="`${o.bookings} pedidos`" :value="o.amount" :max="maxO" :display="money(o.amount)" />
+            <HBar v-for="o in operators" :key="o.operator || o.name" tone="aqua" :label="o.name" :sub="`${o.bookings} servicios`" :value="o.amount" :max="maxO" :display="money(o.amount)" />
             <p v-if="!operators.length" class="muted">Sin datos.</p>
           </div>
         </article>

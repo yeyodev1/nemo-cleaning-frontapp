@@ -38,7 +38,7 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
     <PageIntro text="Carga un servicio ya hecho, como una fila de la Base. Al guardar, el día y el operador se quedan puestos para registrar el siguiente sin volver a elegirlos.">
       <RouterLink to="/admin/produccion" class="btn btn--ghost"><AppIcon name="list" /> Ver la Base del día</RouterLink>
       <!-- Un pedido a futuro que llegó por el chat no es un servicio hecho: va al pedido rápido. -->
-      <RouterLink to="/admin/whatsapp/nuevo" class="btn btn--whatsapp"><AppIcon name="whatsapp" /> Pedido por WhatsApp</RouterLink>
+      <RouterLink to="/admin/whatsapp/nuevo" class="btn btn--whatsapp"><AppIcon name="whatsapp" /> Reserva por WhatsApp</RouterLink>
     </PageIntro>
 
     <section class="card qe__sec">
@@ -64,7 +64,7 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
     <Transition name="fade-up">
       <section v-if="q.scheduled.value.length" class="card qe__sec qe__sched">
         <h2><AppIcon name="calendar" :size="18" /> Agendados sin cerrar</h2>
-        <p class="qe__hint">Toca uno para completarlo con sus datos (no se duplica el pedido).</p>
+        <p class="qe__hint">Toca uno para completarlo con sus datos (no se duplica la reserva).</p>
         <button v-for="b in q.scheduled.value" :key="b._id" type="button" class="qe__sched-item" :class="{ 'is-on': form.bookingId === b._id }" @click="q.useScheduled(b)">
           <span><strong>{{ b.time }} · {{ b.customer?.name }}</strong><small>{{ b.items.map((i) => i.name).join(', ') }}</small></span>
           <strong class="money">{{ money(b.total) }}</strong>
@@ -74,7 +74,7 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
 
     <section class="card qe__sec">
       <h2><span class="qe__n">2</span> Cliente y urbanización</h2>
-      <p v-if="form.bookingId" class="qe__linked"><AppIcon name="check" :size="14" /> Completando un pedido agendado. <button type="button" class="link" @click="q.resetClient()">Quitar</button></p>
+      <p v-if="form.bookingId" class="qe__linked"><AppIcon name="check" :size="14" /> Completando un servicio agendado. <button type="button" class="link" @click="q.resetClient()">Quitar</button></p>
       <CustomerPicker v-model:phone="form.customerPhone" :name="form.customerName" :customer-id="form.customerId" @pick="q.pickCustomer" />
       <div class="field">
         <span class="field__label">Urbanización / zona</span>

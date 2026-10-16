@@ -20,10 +20,10 @@ const tabs = computed(() => [
 const tabModel = computed({ get: () => tab.value, set: (v: string) => (tab.value = v as WaTab) })
 const empty = computed(() =>
   tab.value === 'pending'
-    ? { title: 'Todo al día', text: 'No hay pedidos por WhatsApp esperando confirmación. Los nuevos aparecen aquí solos.' }
+    ? { title: 'Todo al día', text: 'No hay reservas por WhatsApp esperando confirmación. Los nuevos aparecen aquí solos.' }
     : tab.value === 'unpaid'
-      ? { title: 'Nada por cobrar', text: 'Los pedidos por WhatsApp confirmados sin pago aparecen aquí.' }
-      : { title: 'Sin pedidos por WhatsApp', text: 'Aún no hay pedidos por WhatsApp en los últimos 30 días.' },
+      ? { title: 'Nada por cobrar', text: 'Las reservas por WhatsApp confirmadas sin pago aparecen aquí.' }
+      : { title: 'Sin reservas por WhatsApp', text: 'Aún no hay reservas por WhatsApp en los últimos 30 días.' },
 )
 </script>
 
@@ -31,12 +31,12 @@ const empty = computed(() =>
   <div class="wai">
     <PageIntro>
       <RouterLink to="/admin/whatsapp/nuevo" class="btn btn--whatsapp btn--lg wai__new">
-        <AppIcon name="plus" /> Pedido rápido por WhatsApp
+        <AppIcon name="plus" /> Agenda rápida por WhatsApp
       </RouterLink>
     </PageIntro>
 
     <form class="wai__search" role="search" @submit.prevent="inbox.search()">
-      <label class="sr-only" for="wa-code">Código del pedido</label>
+      <label class="sr-only" for="wa-code">Código de reserva</label>
       <span class="wai__input">
         <AppIcon name="search" :size="18" />
         <input id="wa-code" v-model="code" type="search" inputmode="text" autocomplete="off" placeholder="Pega el código: NEMO-000123 o 123" />
@@ -50,7 +50,7 @@ const empty = computed(() =>
       <div v-for="n in 3" :key="n" class="skeleton wai__sk"></div>
     </div>
     <EmptyState v-else-if="!items.length" :title="empty.title" :text="empty.text" icon="whatsapp">
-      <RouterLink to="/admin/whatsapp/nuevo" class="btn btn--ghost"><AppIcon name="plus" /> Cargar un pedido que llegó por WhatsApp</RouterLink>
+      <RouterLink to="/admin/whatsapp/nuevo" class="btn btn--ghost"><AppIcon name="plus" /> Cargar una reserva que llegó por WhatsApp</RouterLink>
     </EmptyState>
     <TransitionGroup v-else name="fade-up" tag="div" class="wai__list">
       <WaOrderCard v-for="o in items" :key="o._id" :order="o" :now="now" :highlight="highlight === o._id" @open="selected = $event" />

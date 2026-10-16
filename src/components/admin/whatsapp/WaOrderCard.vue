@@ -28,7 +28,7 @@ const chat = computed(() =>
     <button type="button" class="wac__main" :aria-label="`Atender ${o.code}`" @click="emit('open', o)">
       <span class="wac__top">
         <strong class="wac__code">{{ o.code }}</strong>
-        <span class="wac__origin">{{ o.fromWeb ? 'Web' : 'Pedido rápido' }}</span>
+        <span class="wac__origin">{{ o.fromWeb ? 'Web' : 'Agenda rápida' }}</span>
         <span class="wac__ago">{{ timeAgo(o.createdAt, now) }}</span>
       </span>
       <span class="wac__who">

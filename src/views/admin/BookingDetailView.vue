@@ -26,7 +26,7 @@ async function onPay(body: ManualPaymentInput) {
 
 <template>
   <div class="detail">
-    <RouterLink to="/admin/pedidos" class="detail__back"><AppIcon name="arrow-left" :size="16" /> Pedidos</RouterLink>
+    <RouterLink to="/admin/pedidos" class="detail__back"><AppIcon name="arrow-left" :size="16" /> Reservas</RouterLink>
 
     <div v-if="loading && !booking" class="detail__col">
       <span class="skeleton" style="height: 220px"></span>
@@ -52,7 +52,7 @@ async function onPay(body: ManualPaymentInput) {
             :booking="booking"
             :saving="saving"
             :locked="locked"
-            @reschedule="(date, time) => update({ date, time }, 'Pedido reprogramado')"
+            @reschedule="(date, time) => update({ date, time }, 'Reserva reprogramada')"
             @operators="(ids) => update({ operators: ids }, 'Operadores asignados')"
           />
           <DetailOperation :booking="booking" @changed="load" />

@@ -38,15 +38,15 @@ const title = computed(
 )
 const body = computed(() => {
   if (phase.value === 'confirming') return 'No cierres esta página, toma solo unos segundos.'
-  if (phase.value === 'approved') return 'Tu pedido quedó confirmado. Te llevamos a tu seguimiento…'
+  if (phase.value === 'approved') return 'Tu reserva quedó confirmada. Te llevamos a tu seguimiento…'
   if (phase.value === 'rejected')
-    return 'No se realizó ningún cobro. Puedes intentarlo de nuevo desde tu pedido.'
+    return 'No se realizó ningún cobro. Puedes intentarlo de nuevo desde tu reserva.'
   if (phase.value === 'missing')
-    return 'Abre esta página desde el enlace de Payphone o revisa tu pedido.'
+    return 'Abre esta página desde el enlace de Payphone o revisa tu reserva.'
   return message.value || 'Si se debitó el valor, escríbenos y lo resolvemos.'
 })
 const wa = computed(() =>
-  whatsappUrl(site.whatsapp, `Hola, tengo un problema con el pago del pedido ${code.value || ''}`),
+  whatsappUrl(site.whatsapp, `Hola, tengo un problema con el pago de la reserva ${code.value || ''}`),
 )
 </script>
 
@@ -69,7 +69,7 @@ const wa = computed(() =>
 
       <div v-if="phase !== 'confirming'" class="pres__actions">
         <RouterLink v-if="trackTo" :to="trackTo" class="btn btn--primary btn--lg btn--block">
-          {{ phase === 'approved' ? 'Ver mi pedido' : 'Reintentar desde mi pedido' }}
+          {{ phase === 'approved' ? 'Ver mi reserva' : 'Reintentar desde mi reserva' }}
         </RouterLink>
         <RouterLink v-else to="/reservar" class="btn btn--primary btn--lg btn--block"
           >Volver a reservar</RouterLink

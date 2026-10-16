@@ -79,7 +79,7 @@ export function useWaOrderSheet(order: Ref<WaOrder | null>, onSaved: (o: WaOrder
     try {
       const fresh = await whatsappService.handle(order.value._id, body)
       const msg = body.payment
-        ? `${fresh.code}: pago registrado${fresh.status === 'confirmed' ? ' y pedido confirmado' : ''}`
+        ? `${fresh.code}: pago registrado${fresh.status === 'confirmed' ? ' y reserva confirmada' : ''}`
         : confirm
           ? `${fresh.code} confirmado`
           : `${fresh.code} actualizado`

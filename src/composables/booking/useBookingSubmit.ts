@@ -85,7 +85,7 @@ export function useBookingSubmit() {
       return res
     } catch (e) {
       tab?.close()
-      error.value = errorMessage(e, 'No pudimos crear tu pedido. Inténtalo de nuevo.')
+      error.value = errorMessage(e, 'No pudimos agendar tu servicio. Inténtalo de nuevo.')
       return null
     } finally {
       sending.value = false

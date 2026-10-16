@@ -7,7 +7,7 @@ import type { BookingStatus } from '@/types/api'
 const props = defineProps<{ status: BookingStatus }>()
 
 const FLOW: { id: BookingStatus; label: string; text: string; icon: IconName }[] = [
-  { id: 'pending', label: 'Recibido', text: 'Tenemos tu pedido.', icon: 'inbox' },
+  { id: 'pending', label: 'Recibido', text: 'Recibimos tu reserva.', icon: 'inbox' },
   {
     id: 'confirmed',
     label: 'Confirmado',
@@ -27,18 +27,18 @@ const current = computed(() => FLOW.findIndex((f) => f.id === props.status))
   <div v-if="stopped" class="stopped" role="status">
     <AppIcon name="ban" :size="22" />
     <div>
-      <strong>{{ status === 'cancelled' ? 'Pedido cancelado' : 'Servicio no realizado' }}</strong>
+      <strong>{{ status === 'cancelled' ? 'Servicio cancelado' : 'Servicio no realizado' }}</strong>
       <p>
         {{
           status === 'cancelled'
-            ? 'Este pedido fue cancelado.'
+            ? 'Este servicio fue cancelado.'
             : 'No pudimos realizar el servicio en la fecha acordada.'
         }}
         Escríbenos si necesitas reagendar.
       </p>
     </div>
   </div>
-  <ol v-else class="timeline" aria-label="Estado del pedido">
+  <ol v-else class="timeline" aria-label="Estado de tu servicio">
     <li
       v-for="(f, i) in FLOW"
       :key="f.id"

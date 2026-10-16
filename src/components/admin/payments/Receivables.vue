@@ -29,7 +29,7 @@ async function load() {
 
 onMounted(load)
 watch(() => scope.branch, load)
-const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de Nemo Cleaning por el saldo pendiente de tu pedido ${b.code}: ${money(b.balance)}.`
+const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de Nemo Cleaning por el saldo pendiente de tu servicio ${b.code}: ${money(b.balance)}.`
 </script>
 
 <template>
@@ -37,7 +37,7 @@ const waText = (b: Booking) => `Hola ${b.customer?.name || ''}, te escribimos de
     <div class="sum">
       <span>Total por cobrar</span>
       <strong class="money">{{ money(total) }}</strong>
-      <small>{{ items.length }} pedido(s)</small>
+      <small>{{ items.length }} servicio(s)</small>
     </div>
     <div v-if="loading && !items.length" class="rows">
       <span v-for="i in 4" :key="i" class="skeleton" style="height: 88px"></span>

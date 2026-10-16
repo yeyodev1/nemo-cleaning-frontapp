@@ -17,7 +17,7 @@ const summary = (b: CustomerBooking) =>
 <template>
   <section class="mine">
     <header class="mine__head">
-      <h2>Mis pedidos</h2>
+      <h2>Mis servicios</h2>
       <span v-if="total" class="muted">{{ total }}</span>
     </header>
 
@@ -31,7 +31,7 @@ const summary = (b: CustomerBooking) =>
 
     <div v-else-if="!items.length" class="card mine__empty">
       <AppIcon name="inbox" :size="28" />
-      <p>Aún no tienes pedidos con este correo.</p>
+      <p>Aún no tienes servicios agendados con este correo.</p>
       <RouterLink to="/reservar" class="btn btn--primary">Reservar una limpieza</RouterLink>
     </div>
 
@@ -59,7 +59,7 @@ const summary = (b: CustomerBooking) =>
     </ul>
 
     <button v-if="page < pages" type="button" class="btn btn--ghost btn--block" :disabled="loading" @click="load(true)">
-      {{ loading ? 'Cargando…' : 'Ver más pedidos' }}
+      {{ loading ? 'Cargando…' : 'Ver más servicios' }}
     </button>
   </section>
 </template>

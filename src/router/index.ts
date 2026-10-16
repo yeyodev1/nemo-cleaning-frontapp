@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
     path: '/pedido/:code',
     name: 'Tracking',
     component: () => import('@/views/TrackingView.vue'),
-    meta: { title: 'Seguimiento de tu pedido', focus: true },
+    meta: { title: 'Seguimiento de tu reserva', focus: true },
   },
   {
     // URL de respuesta configurada en Payphone: https://nemocleaning.ec/pay-response

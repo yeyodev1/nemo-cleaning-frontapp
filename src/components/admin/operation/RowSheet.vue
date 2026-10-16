@@ -54,7 +54,7 @@ const dirty = () => props.row && (confirmation.value !== props.row.paymentConfir
         <h3>Anotar novedad</h3>
         <NovedadForm :booking-id="row._id" :operators="row.operators" @saved="emit('changed')" />
       </section>
-      <RouterLink :to="`/admin/pedidos/${row._id}`" class="btn btn--ghost"><AppIcon name="external" :size="16" /> Abrir el pedido completo</RouterLink>
+      <RouterLink :to="`/admin/pedidos/${row._id}`" class="btn btn--ghost"><AppIcon name="external" :size="16" /> Abrir la reserva completa</RouterLink>
     </div>
   </BaseSheet>
 </template>

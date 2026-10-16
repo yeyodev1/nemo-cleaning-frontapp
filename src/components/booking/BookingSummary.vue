@@ -21,8 +21,8 @@ const branch = computed(() => catalog.branchById(draft.branch))
 </script>
 
 <template>
-  <aside class="summary" aria-label="Resumen del pedido">
-    <h2 class="summary__title">Tu pedido</h2>
+  <aside class="summary" aria-label="Resumen de tu reserva">
+    <h2 class="summary__title">Tu reserva</h2>
     <p v-if="branch" class="summary__meta"><AppIcon name="pin" :size="16" /> {{ branch.name }}</p>
     <p v-if="draft.date" class="summary__meta">
       <AppIcon name="calendar" :size="16" /> {{ shortDate(draft.date)

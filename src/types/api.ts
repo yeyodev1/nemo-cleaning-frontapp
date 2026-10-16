@@ -116,6 +116,9 @@ export interface Customer {
   phone: string
   documentId?: string
   address?: string
+  /** Última referencia y ubicación usadas: se precargan en el próximo servicio. */
+  reference?: string
+  location?: BookingLocation | null
   notes?: string
   branch?: ID
   totalOrders: number
@@ -477,6 +480,8 @@ export interface PayphoneInit {
 }
 
 export interface BookingCustomerInput {
+  /** Panel: cliente ya registrado elegido en el buscador. */
+  _id?: ID
   name: string
   email: string
   phone: string

@@ -6,7 +6,7 @@ defineProps<{ compact?: boolean }>()
 </script>
 
 <template>
-  <span class="wa-tag" :class="{ 'wa-tag--compact': compact }" title="Pedido por WhatsApp">
+  <span class="wa-tag" :class="{ 'wa-tag--compact': compact }" title="Reserva por WhatsApp">
     <AppIcon name="whatsapp" :size="compact ? 12 : 13" />
     <span :class="{ 'sr-only': compact }">WhatsApp</span>
   </span>

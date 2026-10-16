@@ -32,7 +32,7 @@ const showPay = computed(
 const wa = computed(() =>
   whatsappUrl(
     branch.value?.whatsapp || site.whatsapp,
-    `Hola, tengo una consulta sobre mi pedido ${code}`,
+    `Hola, tengo una consulta sobre mi reserva ${code}`,
   ),
 )
 
@@ -54,7 +54,7 @@ onMounted(t.load)
 
     <div v-else-if="error || !booking" class="track__error" role="alert">
       <span class="track__error-icon"><AppIcon name="search" :size="28" /></span>
-      <h1>No pudimos abrir tu pedido</h1>
+      <h1>No pudimos abrir tu reserva</h1>
       <p>{{ error }}</p>
       <a :href="wa" target="_blank" rel="noopener" class="btn btn--whatsapp btn--lg"
         ><AppIcon name="whatsapp" /> Escríbenos</a
@@ -64,7 +64,7 @@ onMounted(t.load)
 
     <template v-else>
       <header class="track__head">
-        <p class="track__eyebrow">Pedido {{ booking.code }}</p>
+        <p class="track__eyebrow">Reserva {{ booking.code }}</p>
         <h1 class="track__title">Hola, {{ booking.customer?.name?.split(' ')[0] || 'cliente' }}</h1>
         <StatusBadge
           dot
@@ -112,14 +112,14 @@ onMounted(t.load)
               class="btn btn--danger btn--block"
               @click="confirmOpen = true"
             >
-              Cancelar pedido
+              Cancelar reserva
             </button>
           </div>
         </div>
       </div>
     </template>
 
-    <BaseSheet :open="confirmOpen" title="¿Cancelar este pedido?" @close="confirmOpen = false">
+    <BaseSheet :open="confirmOpen" title="¿Cancelar esta reserva?" @close="confirmOpen = false">
       <p>
         Liberaremos tu horario del {{ booking ? longDate(booking.date) : '' }}. Solo se puede
         cancelar con más de 12 horas de anticipación.

@@ -103,7 +103,7 @@ const zoneSelect = computed({
             required
           />
           <span v-if="customer.isAuthenticated" class="field__hint">
-            Ingresaste con este correo: el pedido quedará en Mi cuenta.
+            Ingresaste con este correo: la reserva quedará en Mi cuenta.
           </span>
         </label>
       </div>

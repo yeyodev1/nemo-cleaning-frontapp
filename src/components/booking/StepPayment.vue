@@ -45,7 +45,7 @@ const methods = computed(() => {
     id: 'whatsapp',
     icon: 'whatsapp',
     title: 'Coordinar y pagar por WhatsApp',
-    text: 'Registramos tu pedido y te abrimos WhatsApp con el resumen. Un asesor te ayuda con el pago.',
+    text: 'Registramos tu reserva y te abrimos WhatsApp con el resumen. Un asesor te ayuda con el pago.',
   })
   return list
 })
@@ -117,7 +117,7 @@ async function onFile(file: File) {
       <AppIcon name="info" :size="16" /> Ten el monto listo; el equipo no siempre lleva cambio.
     </p>
     <p v-if="draft.paymentMethod === 'whatsapp'" class="pay__note">
-      <AppIcon name="whatsapp" :size="16" /> Al confirmar se abre WhatsApp con tu pedido listo para enviar.
+      <AppIcon name="whatsapp" :size="16" /> Al confirmar se abre WhatsApp con tu reserva lista para enviar.
     </p>
   </div>
 </template>

@@ -72,7 +72,7 @@ async function convert() {
       time: conv.time,
       address: conv.address || undefined,
     })
-    toast.success(`Pedido ${b.code} creado`)
+    toast.success(`Servicio ${b.code} agendado`)
     router.push(`/admin/pedidos/${b._id}`)
   } catch (e) {
     toast.error(errorMessage(e))
@@ -132,12 +132,12 @@ async function convert() {
       </label>
 
       <RouterLink v-if="quote.booking" :to="`/admin/pedidos/${quote.booking}`" class="btn btn--soft btn--block">
-        <AppIcon name="list" /> Ver pedido creado
+        <AppIcon name="list" /> Ver servicio agendado
       </RouterLink>
       <template v-else>
-        <p v-if="quote.estimate === null" class="muted qs__hint">Define el valor acordado para convertirla en pedido.</p>
+        <p v-if="quote.estimate === null" class="muted qs__hint">Define el valor acordado para convertirla en servicio agendado.</p>
         <button v-if="!converting" type="button" class="btn btn--primary btn--block" :disabled="quote.estimate === null" @click="converting = true">
-          <AppIcon name="calendar" /> Convertir en pedido
+          <AppIcon name="calendar" /> Agendar servicio
         </button>
         <form v-else class="qs__conv" @submit.prevent="convert">
           <div class="form-row">
@@ -147,7 +147,7 @@ async function convert() {
           <label class="field"><span class="field__label">Dirección (opcional)</span><input v-model="conv.address" type="text" /></label>
           <div class="qs__links">
             <button type="button" class="btn btn--ghost" @click="converting = false">Cancelar</button>
-            <button type="submit" class="btn btn--primary" :disabled="busy">Crear pedido</button>
+            <button type="submit" class="btn btn--primary" :disabled="busy">Agendar servicio</button>
           </div>
         </form>
       </template>

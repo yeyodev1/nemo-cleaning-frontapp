@@ -39,7 +39,7 @@ const next = computed(() => {
   <section class="done">
     <template v-if="paying">
       <header class="done__head">
-        <p class="done__eyebrow">Pedido {{ b.code }} creado</p>
+        <p class="done__eyebrow">Reserva {{ b.code }} creada</p>
         <h1 class="done__title">Completa tu pago con tarjeta</h1>
       </header>
       <PayphoneBox
@@ -52,7 +52,7 @@ const next = computed(() => {
 
     <template v-else>
       <AnimatedCheck />
-      <h1 class="done__title">{{ viaWhatsapp ? '¡Pedido creado! Termínalo en WhatsApp' : '¡Reserva recibida!' }}</h1>
+      <h1 class="done__title">{{ viaWhatsapp ? '¡Reserva creada! Termínala en WhatsApp' : '¡Reserva recibida!' }}</h1>
       <p class="done__code">{{ b.code }}</p>
       <dl class="done__facts">
         <div>
@@ -72,17 +72,17 @@ const next = computed(() => {
       <p class="done__next"><AppIcon name="info" :size="18" /> {{ next }}</p>
       <div class="done__actions">
         <RouterLink :to="trackTo" class="btn btn--block" :class="viaWhatsapp ? 'btn--ghost' : 'btn--primary btn--lg'"
-          >Ir a mi pedido <AppIcon name="arrow-right"
+          >Ir a mi reserva <AppIcon name="arrow-right"
         /></RouterLink>
         <button type="button" class="btn btn--ghost btn--block" @click="emit('again')">
           Hacer otra reserva
         </button>
       </div>
       <p v-if="customer.isAuthenticated" class="done__link">
-        También lo tienes en <RouterLink to="/mi-cuenta">Mi cuenta</RouterLink>, con el resto de tus pedidos.
+        También lo tienes en <RouterLink to="/mi-cuenta">Mi cuenta</RouterLink>, con el resto de tus servicios.
       </p>
       <p v-else class="done__link">
-        Guarda este enlace para ver tu pedido: <a :href="trackUrl">{{ trackUrl }}</a>
+        Guarda este enlace para ver tu reserva: <a :href="trackUrl">{{ trackUrl }}</a>
       </p>
     </template>
   </section>

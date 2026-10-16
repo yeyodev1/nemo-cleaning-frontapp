@@ -25,7 +25,7 @@ const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : 
   <div class="dash" :class="{ 'is-stale': loading && !!data }" :aria-busy="loading">
     <div class="dash__actions">
       <RouterLink to="/admin/produccion/registrar" class="btn btn--primary"><AppIcon name="plus" /> Registrar servicio</RouterLink>
-      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--ghost"><AppIcon name="calendar" /> Agendar pedido</RouterLink>
+      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--ghost"><AppIcon name="calendar" /> Agendar servicio</RouterLink>
     </div>
 
     <div v-if="error" class="card dash__error" role="alert">
@@ -71,7 +71,7 @@ const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : 
           <RouterLink to="/admin/agenda" class="btn btn--soft btn--sm">Ver agenda</RouterLink>
         </div>
         <div class="dash__today card">
-          <span><strong>{{ data.today.bookings }}</strong> pedidos</span>
+          <span><strong>{{ data.today.bookings }}</strong> servicios</span>
           <span><strong>{{ data.today.completed }}</strong> terminados</span>
           <span><strong>{{ data.today.pending }}</strong> sin confirmar</span>
           <span><strong class="money">{{ money(data.today.income) }}</strong> cobrado</span>
@@ -119,7 +119,7 @@ const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : 
         <div v-if="data.upcoming.length" class="dash__list">
           <BookingRow v-for="b in data.upcoming" :key="b._id" :booking="b" />
         </div>
-        <p v-else class="card empty">No hay servicios agendados. Los pedidos de la web y los que agendes aparecen aquí.</p>
+        <p v-else class="card empty">No hay servicios agendados. Las reservas de la web y los servicios que agendes aparecen aquí.</p>
       </section>
     </template>
   </div>

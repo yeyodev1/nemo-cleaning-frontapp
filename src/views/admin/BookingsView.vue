@@ -22,8 +22,8 @@ onMounted(() => load(1))
 <template>
   <div class="bookings">
     <div class="bookings__head">
-      <p class="muted">{{ num(total) }} pedido{{ total === 1 ? '' : 's' }}</p>
-      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary"><AppIcon name="plus" /> Nuevo pedido</RouterLink>
+      <p class="muted">{{ num(total) }} reserva{{ total === 1 ? '' : 's' }}</p>
+      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary"><AppIcon name="plus" /> Agendar servicio</RouterLink>
     </div>
 
     <BookingFilters v-model="filters" />
@@ -33,7 +33,7 @@ onMounted(() => load(1))
     </div>
     <div v-else-if="!items.length" class="card empty">
       <AppIcon name="inbox" :size="28" style="margin: 0 auto 0.5rem" />
-      No hay pedidos con estos filtros.
+      No hay reservas con estos filtros.
     </div>
     <div v-else class="bookings__list" :class="{ 'is-loading': loading }">
       <BookingRow v-for="b in items" :key="b._id" :booking="b" />

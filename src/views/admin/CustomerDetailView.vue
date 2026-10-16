@@ -60,12 +60,12 @@ function onSaved(c: Customer) {
       </header>
 
       <div class="kpis">
-        <KpiCard label="Pedidos" :value="data.totalOrders" icon="list" />
+        <KpiCard label="Servicios" :value="data.totalOrders" icon="list" />
         <KpiCard label="Total pagado" :value="money(data.totalSpent)" icon="wallet" tone="aqua" />
       </div>
 
-      <h3 class="title">Historial de pedidos</h3>
-      <p v-if="!data.bookings?.length" class="empty">Sin pedidos todavía.</p>
+      <h3 class="title">Historial de servicios</h3>
+      <p v-if="!data.bookings?.length" class="empty">Sin servicios todavía.</p>
       <ul v-else class="rows">
         <li v-for="b in data.bookings" :key="b._id">
           <RouterLink :to="`/admin/pedidos/${b._id}`" class="bk">

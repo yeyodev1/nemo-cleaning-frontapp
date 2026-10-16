@@ -30,7 +30,7 @@ onMounted(() => load(1))
           </span>
           <span class="cc__end">
             <strong class="money">{{ money(c.totalSpent) }}</strong>
-            <small>pagado · {{ c.totalOrders }} {{ c.totalOrders === 1 ? 'pedido' : 'pedidos' }}</small>
+            <small>pagado · {{ c.totalOrders }} {{ c.totalOrders === 1 ? 'servicio' : 'servicios' }}</small>
           </span>
         </RouterLink>
       </li>

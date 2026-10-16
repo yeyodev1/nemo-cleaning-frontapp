@@ -45,7 +45,7 @@ const wa = (name: string) =>
             </div>
           </dl>
           <a :href="wa(p.name)" target="_blank" rel="noopener" class="btn btn--accent btn--lg btn--block">
-            <AppIcon name="whatsapp" :size="18" /> Pedir por WhatsApp
+            <AppIcon name="whatsapp" :size="18" /> Agendar por WhatsApp
           </a>
         </article>
       </div>

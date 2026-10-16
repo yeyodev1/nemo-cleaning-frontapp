@@ -48,8 +48,8 @@ export function useTracking(code: string, token: string) {
       const status = (e as { status?: number }).status
       error.value =
         status === 404 || status === 401 || status === 403
-          ? 'No encontramos este pedido o el enlace ya no es válido.'
-          : errorMessage(e, 'No pudimos cargar tu pedido.')
+          ? 'No encontramos esta reserva o el enlace ya no es válido.'
+          : errorMessage(e, 'No pudimos cargar tu reserva.')
     } finally {
       loading.value = false
     }
@@ -73,7 +73,7 @@ export function useTracking(code: string, token: string) {
       booking.value = await publicService.cancelBooking(code, token)
       return ''
     } catch (e) {
-      return errorMessage(e, 'No pudimos cancelar el pedido.')
+      return errorMessage(e, 'No pudimos cancelar la reserva.')
     } finally {
       busy.value = false
     }

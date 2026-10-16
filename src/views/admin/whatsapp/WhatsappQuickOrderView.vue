@@ -50,9 +50,9 @@ const statusModel = computed({
         <p v-if="q.looking.value" class="wqo__state">Buscando cliente…</p>
         <Transition name="fade-up">
           <p v-if="!q.looking.value && q.match.value?.customer" class="wqo__state wqo__state--ok">
-            <AppIcon name="check" :size="14" /> Ya es cliente · {{ q.match.value.customer.totalOrders }} pedido(s)<template v-if="q.match.value.last">. Último {{ q.match.value.last.code }}: datos cargados</template>
+            <AppIcon name="check" :size="14" /> Ya es cliente · {{ q.match.value.customer.totalOrders }} servicio(s)<template v-if="q.match.value.last">. Último {{ q.match.value.last.code }}: datos cargados</template>
           </p>
-          <p v-else-if="!q.looking.value && q.match.value" class="wqo__state"><AppIcon name="plus" :size="14" /> Cliente nuevo: se guarda con el pedido</p>
+          <p v-else-if="!q.looking.value && q.match.value" class="wqo__state"><AppIcon name="plus" :size="14" /> Cliente nuevo: se guarda con la reserva</p>
         </Transition>
         <label class="field">
           <span class="field__label">Nombre *</span>
@@ -96,7 +96,7 @@ const statusModel = computed({
         <h2><span class="wqo__n">4</span> Pago y estado</h2>
         <WaPaymentFields v-model:state="q.pay.value" :balance="q.total.value" />
         <div class="field">
-          <span class="field__label">Estado del pedido</span>
+          <span class="field__label">Estado de la reserva</span>
           <ChoiceChips v-model="statusModel" :options="statusChoices" label="Estado" small />
         </div>
         <label class="field"><span class="field__label">Notas</span><input v-model="form.notes" type="text" placeholder="Ej.: llamar al llegar" /></label>
@@ -108,7 +108,7 @@ const statusModel = computed({
           <strong :key="q.total.value" class="money bump">{{ money(q.total.value) }}</strong>
         </div>
         <button type="submit" class="btn btn--lg wqo__save" :disabled="q.busy.value">
-          <AppIcon name="check" /> {{ q.busy.value ? 'Guardando…' : 'Guardar pedido' }}
+          <AppIcon name="check" /> {{ q.busy.value ? 'Guardando…' : 'Guardar reserva' }}
         </button>
       </div>
     </form>

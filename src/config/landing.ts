@@ -118,7 +118,7 @@ export const steps: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'home',
     title: 'Vamos a tu domicilio',
-    text: 'El servicio es a domicilio. Sigue el estado de tu pedido con tu enlace de seguimiento.',
+    text: 'El servicio es a domicilio. Sigue el estado de tu servicio con tu enlace de seguimiento.',
   },
   {
     icon: 'wallet',
@@ -141,7 +141,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: '¿Cómo reservo?',
-    a: 'En “Reservar” eliges los servicios (con el tamaño u opción que corresponda), la sucursal, el día y la hora, dejas tus datos y eliges cómo pagar. Recibes un enlace para seguir tu pedido.',
+    a: 'En “Reservar” eliges los servicios (con el tamaño u opción que corresponda), la sucursal, el día y la hora, dejas tus datos y eliges cómo pagar. Recibes un enlace para seguir tu reserva.',
   },
   {
     q: '¿Qué formas de pago aceptan?',
@@ -168,7 +168,7 @@ export const faqs: { q: string; a: string }[] = [
     a: 'En “Cotizar oficina” indicas los m² y el plan (Básico $2,50/m² o Profundo $3,00/m²), y puedes sumar sillas, ventanales y sanitarios. El plan mensual tiene tarifa especial: te contactamos para cotizarlo.',
   },
   {
-    q: '¿Puedo cancelar mi pedido?',
+    q: '¿Puedo cancelar mi reserva?',
     a: 'Sí, desde tu enlace de seguimiento mientras falten más de 12 horas para el servicio y no esté pagado con tarjeta. Para cualquier cambio escríbenos por WhatsApp.',
   },
 ]

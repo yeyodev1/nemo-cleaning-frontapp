@@ -4,6 +4,8 @@ import FileDrop from '@/components/ui/FileDrop.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import SlotPicker from '@/components/admin/bookings/SlotPicker.vue'
 import OperatorChips from '@/components/admin/bookings/OperatorChips.vue'
+import CustomerSearch from '@/components/admin/bookings/CustomerSearch.vue'
+import LocationPicker from '@/components/booking/LocationPicker.vue'
 import { useBookingForm } from '@/composables/admin/useBookingForm'
 import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
@@ -12,7 +14,7 @@ import { money } from '@/utils/format'
 
 const scope = useAdminScope()
 const toast = useToastStore()
-const { form, cart, services, subtotal, discountCents, total, busy, uploading, uploadProof, submit } = useBookingForm()
+const { form, cart, services, picked, pickCustomer, subtotal, discountCents, total, busy, uploading, uploadProof, submit } = useBookingForm()
 const statuses = options(bookingStatus).filter((s) => ['pending', 'confirmed'].includes(s.value))
 const methods = options(paymentMethod)
 </script>
@@ -39,6 +41,7 @@ const methods = options(paymentMethod)
 
     <section class="card new__sec">
       <h2>3. Cliente</h2>
+      <CustomerSearch :picked="picked" @pick="pickCustomer" />
       <div class="form-row">
         <label class="field"><span class="field__label">Nombre *</span><input v-model="form.customer.name" autocomplete="off" required /></label>
         <label class="field"><span class="field__label">Teléfono *</span><input v-model="form.customer.phone" type="tel" inputmode="tel" required /></label>
@@ -49,11 +52,7 @@ const methods = options(paymentMethod)
       </div>
       <label class="field"><span class="field__label">Dirección del servicio *</span><input v-model="form.address" required /></label>
       <label class="field"><span class="field__label">Referencia</span><input v-model="form.reference" placeholder="Junto a…, casa color…" /></label>
-      <label class="field">
-        <span class="field__label">Ubicación GPS (enlace de Google Maps)</span>
-        <input v-model="form.mapsLink" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/…" />
-        <span class="field__hint">Pega la ubicación que mandó el cliente por WhatsApp: el lavador la abre con un toque.</span>
-      </label>
+      <LocationPicker :key="picked?._id || 'nuevo'" v-model="form.location" />
       <label class="field"><span class="field__label">Notas</span><textarea v-model="form.notes" rows="2"></textarea></label>
       <label class="check"><input v-model="form.invoice.required" type="checkbox" /> Requiere factura</label>
       <template v-if="form.invoice.required">
@@ -107,7 +106,7 @@ const methods = options(paymentMethod)
         <small>Subtotal {{ money(subtotal) }}<template v-if="discountCents"> · Desc. −{{ money(discountCents) }}</template></small>
         <strong class="money">{{ money(total) }}</strong>
       </div>
-      <button type="submit" class="btn btn--primary btn--lg" :disabled="busy">{{ busy ? 'Creando…' : 'Crear pedido' }}</button>
+      <button type="submit" class="btn btn--primary btn--lg" :disabled="busy">{{ busy ? 'Agendando…' : 'Agendar servicio' }}</button>
     </div>
   </form>
 </template>

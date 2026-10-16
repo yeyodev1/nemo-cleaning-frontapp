@@ -23,7 +23,7 @@ export function useMyBookings() {
       page.value = res.page
       pages.value = res.pages
     } catch (e) {
-      error.value = errorMessage(e, 'No pudimos cargar tus pedidos')
+      error.value = errorMessage(e, 'No pudimos cargar tus servicios')
     } finally {
       loading.value = false
     }

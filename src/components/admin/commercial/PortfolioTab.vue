@@ -49,7 +49,7 @@ const msg = (name: string) => `Hola ${name}, te escribimos de Nemo Cleaning. Hac
 
 <template>
   <div>
-    <p class="hint">Clientes cuyo último servicio fue hace más de 60 días. Registra cada intento de contacto y el resultado; si vuelven a pedir, salen solos de la lista.</p>
+    <p class="hint">Clientes cuyo último servicio fue hace más de 60 días. Registra cada intento de contacto y el resultado; si vuelven a agendar, salen solos de la lista.</p>
     <div v-if="loading && !data" class="skeleton" style="height: 220px"></div>
     <template v-else-if="data">
       <KpiRow>

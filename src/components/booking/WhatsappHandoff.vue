@@ -24,8 +24,8 @@ async function copy() {
   <div class="wah">
     <p class="wah__lead" :class="{ 'wah__lead--warn': !opened }" role="status">
       <AppIcon :name="opened ? 'whatsapp' : 'alert'" :size="18" />
-      <span v-if="opened">Te abrimos WhatsApp con tu pedido. <strong>Envía el mensaje</strong> y un asesor te ayuda con el pago.</span>
-      <span v-else>Tu navegador no dejó abrir WhatsApp. Toca el botón para enviar tu pedido.</span>
+      <span v-if="opened">Te abrimos WhatsApp con tu reserva. <strong>Envía el mensaje</strong> y un asesor te ayuda con el pago.</span>
+      <span v-else>Tu navegador no dejó abrir WhatsApp. Toca el botón para enviar tu reserva.</span>
     </p>
     <a
       :href="wa.url"

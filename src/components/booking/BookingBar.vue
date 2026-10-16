@@ -20,7 +20,7 @@ const { total, count, calculating } = useQuote()
         <span v-if="calculating" class="bar__calc">calculando…</span>
         <CartWhatsappLink v-else compact />
       </div>
-      <p v-else key="empty" class="bar__empty">Arma tu pedido</p>
+      <p v-else key="empty" class="bar__empty">Elige tus servicios</p>
     </Transition>
     <button
       type="button"

@@ -48,7 +48,7 @@ async function copy() {
 <template>
   <section class="wqd card">
     <AnimatedCheck />
-    <h2 class="wqd__title">Pedido guardado</h2>
+    <h2 class="wqd__title">Reserva guardada</h2>
     <p class="wqd__code">{{ order.code }}</p>
     <p class="wqd__facts">
       {{ order.customer?.name }} · <span class="cap">{{ shortDate(order.date) }}</span> {{ order.time }} ·
@@ -60,9 +60,9 @@ async function copy() {
     <button type="button" class="btn btn--ghost btn--sm" @click="copy"><AppIcon name="copy" :size="16" /> Copiar el mensaje</button>
     <pre class="wqd__preview">{{ text }}</pre>
     <div class="wqd__actions">
-      <button type="button" class="btn btn--primary btn--block" @click="emit('again')"><AppIcon name="plus" /> Nuevo pedido</button>
-      <RouterLink to="/admin/whatsapp" class="btn btn--ghost btn--block">Ir a Pedidos por WhatsApp</RouterLink>
-      <RouterLink :to="`/admin/pedidos/${order._id}`" class="wqd__link">Ver el pedido completo</RouterLink>
+      <button type="button" class="btn btn--primary btn--block" @click="emit('again')"><AppIcon name="plus" /> Agendar otro servicio</button>
+      <RouterLink to="/admin/whatsapp" class="btn btn--ghost btn--block">Ir a Reservas por WhatsApp</RouterLink>
+      <RouterLink :to="`/admin/pedidos/${order._id}`" class="wqd__link">Ver la reserva completa</RouterLink>
     </div>
   </section>
 </template>

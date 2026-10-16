@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import MapPinPicker from './MapPinPicker.vue'
 import { useGeoLocation } from '@/composables/booking/useGeoLocation'
-import { MAPS_URL_RE, hasCoords, mapEmbedUrl, gpsUrl } from '@/utils/location'
+import { MAPS_URL_RE, hasCoords, gpsUrl } from '@/utils/location'
 import type { BookingLocation } from '@/types/api'
 
 /**
- * Ubicación GPS del servicio. Dos caminos: el GPS del celular (si está en el lugar) o pegar el
- * enlace de Google Maps (si reserva desde otro sitio). `recommended` la destaca en Vía a la Costa.
+ * Ubicación GPS del servicio. Tres caminos: el GPS del celular (si está en el lugar), poner el
+ * punto en el mapa, o pegar el enlace de Google Maps. `recommended` la destaca en Vía a la Costa.
  */
 const props = defineProps<{ modelValue: BookingLocation | null; recommended?: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: BookingLocation | null] }>()
@@ -17,6 +18,12 @@ const pasting = ref(!!props.modelValue?.url && !hasCoords(props.modelValue))
 const link = ref(props.modelValue?.url ?? '')
 const linkError = computed(() => (link.value.trim() && !MAPS_URL_RE.test(link.value.trim()) ? 'Pega un enlace de Google Maps (empieza con https://maps.app.goo.gl/…).' : ''))
 const coords = computed(() => (hasCoords(props.modelValue) ? props.modelValue : null))
+const pinning = ref(false)
+
+/** Punto puesto en el mapa: coordenadas exactas (se conserva el enlace si había uno). */
+function setPin(p: { lat: number; lng: number }) {
+  emit('update:modelValue', { lat: p.lat, lng: p.lng, accuracy: 0, url: props.modelValue?.url ?? '' })
+}
 
 function saveLink() {
   const url = link.value.trim()
@@ -26,6 +33,7 @@ function saveLink() {
 
 function clear() {
   link.value = ''
+  pinning.value = false
   emit('update:modelValue', null)
 }
 </script>
@@ -44,7 +52,7 @@ function clear() {
 
     <!-- Ya hay ubicación -->
     <div v-if="modelValue" class="loc__done">
-      <iframe v-if="coords" class="loc__map" :src="mapEmbedUrl(coords)" title="Vista previa de tu ubicación" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <MapPinPicker v-if="coords || pinning" :model-value="coords ? { lat: coords.lat, lng: coords.lng } : null" @update:model-value="setPin" />
       <p class="loc__ok">
         <AppIcon name="check-circle" :size="18" />
         <span>
@@ -54,6 +62,7 @@ function clear() {
       </p>
       <div class="loc__actions">
         <a :href="gpsUrl(modelValue)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="external" :size="16" /> Ver en Maps</a>
+        <button v-if="!coords && !pinning" type="button" class="btn btn--ghost btn--sm" @click="pinning = true"><AppIcon name="pin" :size="16" /> Poner el punto en el mapa</button>
         <button v-if="coords" type="button" class="btn btn--ghost btn--sm" :disabled="geo.state.value === 'locating'" @click="geo.locate">
           <AppIcon name="refresh" :size="16" /> Volver a tomar
         </button>
@@ -69,6 +78,11 @@ function clear() {
       </button>
       <p class="loc__hint">Úsalo solo si estás ahora en el lugar donde haremos la limpieza.</p>
       <p v-if="geo.error.value" class="loc__err" role="alert"><AppIcon name="alert" :size="15" /> {{ geo.error.value }}</p>
+
+      <button v-if="!pinning" type="button" class="btn btn--ghost loc__gps" @click="pinning = true">
+        <AppIcon name="pin" :size="18" /> Poner el punto en el mapa
+      </button>
+      <MapPinPicker v-else :model-value="null" @update:model-value="setPin" />
 
       <button v-if="!pasting" type="button" class="loc__link" @click="pasting = true">¿No estás en el lugar? Pega el enlace de Google Maps</button>
       <div v-else class="loc__paste">

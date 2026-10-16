@@ -25,7 +25,7 @@ const { form, loading, saving, save } = useSettingsForm()
 
       <article class="card sec">
         <h2><AppIcon name="mail" :size="20" /> Correos de aviso</h2>
-        <p class="sec__hint">Reciben una copia de cada pedido nuevo, reprogramación o cancelación.</p>
+        <p class="sec__hint">Reciben una copia de cada reserva nueva, reprogramación o cancelación.</p>
         <EmailChips v-model="form.notifyEmails" />
       </article>
 

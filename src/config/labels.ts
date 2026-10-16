@@ -136,8 +136,8 @@ export function options<K extends string>(map: Record<K, string | Label>): { val
 
 /** Acciones del historial del pedido (`history[].action`). Los cambios de estado usan la clave del estado. */
 export const historyAction: Record<string, string> = {
-  created: 'Pedido creado',
-  updated: 'Pedido editado',
+  created: 'Reserva creada',
+  updated: 'Reserva editada',
   rescheduled: 'Reprogramado',
   transfer_proof: 'Comprobante subido',
   payment: 'Pago registrado',

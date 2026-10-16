@@ -28,10 +28,10 @@ export const adminNav: NavItem[] = [
   { to: '/admin', label: 'Inicio', icon: 'grid', roles: AM, tab: true },
   // Operación (la Base, Calendario, Metas, FEE y Novedades del Excel)
   { to: '/admin/produccion/registrar', label: 'Registrar servicio', short: 'Registrar', icon: 'plus', roles: AM, tab: true, group: 'Operación' },
-  { to: '/admin/whatsapp', label: 'Pedidos por WhatsApp', short: 'WhatsApp', icon: 'whatsapp', roles: AM, group: 'Operación', badge: 'whatsapp' },
+  { to: '/admin/whatsapp', label: 'Reservas por WhatsApp', short: 'WhatsApp', icon: 'whatsapp', roles: AM, group: 'Operación', badge: 'whatsapp' },
   { to: '/admin/produccion', label: 'Producción (Base)', short: 'Base', icon: 'layers', roles: AM, tab: true, group: 'Operación' },
   { to: '/admin/agenda', label: 'Agenda', icon: 'calendar', roles: AM, group: 'Operación' },
-  { to: '/admin/pedidos', label: 'Pedidos', icon: 'list', roles: AM, group: 'Operación' },
+  { to: '/admin/pedidos', label: 'Reservas', icon: 'list', roles: AM, group: 'Operación' },
   { to: '/admin/novedades', label: 'Novedades', icon: 'alert', roles: AM, group: 'Operación' },
   { to: '/admin/turnos', label: 'Turnos', icon: 'clock', roles: AM, group: 'Operación' },
   { to: '/admin/metas', label: 'Metas mensuales', icon: 'flag', roles: AM, group: 'Operación' },

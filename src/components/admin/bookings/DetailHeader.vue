@@ -40,7 +40,7 @@ const branch = () => (typeof props.booking.branch === 'string' ? scope.branchNam
       </div>
       <div class="dh__links">
         <a v-if="booking.customer?.phone" :href="`tel:${booking.customer.phone}`" class="btn btn--ghost btn--sm"><AppIcon name="phone" /> Llamar</a>
-        <a v-if="booking.customer?.phone" :href="whatsappUrl(booking.customer.phone, `Hola ${booking.customer.name}, te escribimos de Nemo Cleaning por tu pedido ${booking.code}.`)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="whatsapp" /> WhatsApp</a>
+        <a v-if="booking.customer?.phone" :href="whatsappUrl(booking.customer.phone, `Hola ${booking.customer.name}, te escribimos de Nemo Cleaning por tu reserva ${booking.code}.`)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="whatsapp" /> WhatsApp</a>
         <a v-if="gpsUrl(booking.location)" :href="gpsUrl(booking.location)" target="_blank" rel="noopener" class="btn btn--primary btn--sm"><AppIcon name="navigation" /> Ubicación GPS</a>
         <a v-else :href="mapsUrl(booking.address)" target="_blank" rel="noopener" class="btn btn--ghost btn--sm"><AppIcon name="pin" /> Mapa</a>
         <RouterLink v-if="booking.customer?._id" :to="`/admin/clientes/${booking.customer._id}`" class="btn btn--ghost btn--sm"><AppIcon name="user" /> Ficha</RouterLink>

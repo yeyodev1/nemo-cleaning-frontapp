@@ -7,7 +7,7 @@ import { useAdminScope } from '@/stores/adminScope'
 import { useToastStore } from '@/stores/toast'
 import { cartItems, localSubtotal, type Cart } from '@/composables/booking/cart'
 import { errorMessage, toCents, todayISO } from '@/utils/format'
-import type { BookingStatus, PaymentMethod, QuoteResult, Service } from '@/types/api'
+import type { BookingLocation, BookingStatus, Customer, PaymentMethod, QuoteResult, Service } from '@/types/api'
 
 /** Estado y envío del formulario "Nuevo pedido" del panel. */
 export function useBookingForm() {
@@ -28,8 +28,8 @@ export function useBookingForm() {
     customer: { name: '', email: '', phone: '', documentId: '' },
     address: '',
     reference: '',
-    // Enlace de Google Maps que el cliente mandó por WhatsApp (opcional).
-    mapsLink: '',
+    // Punto en el mapa, GPS o enlace de Google Maps que mandó el cliente (opcional).
+    location: null as BookingLocation | null,
     notes: '',
     paymentMethod: 'cash' as PaymentMethod,
     transferProofUrl: '',
@@ -71,6 +71,21 @@ export function useBookingForm() {
     { deep: true },
   )
 
+  /** Cliente ya registrado elegido en el buscador: no se vuelve a escribir nada. */
+  const picked = ref<Customer | null>(null)
+  function pickCustomer(c: Customer | null) {
+    picked.value = c
+    if (!c) {
+      Object.assign(form.customer, { name: '', email: '', phone: '', documentId: '' })
+      Object.assign(form, { address: '', reference: '', location: null })
+      return
+    }
+    Object.assign(form.customer, { name: c.name || '', email: c.email || '', phone: c.phone || '', documentId: c.documentId || '' })
+    form.address = c.address || ''
+    form.reference = c.reference || ''
+    form.location = c.location && (c.location.lat != null || c.location.url) ? { ...c.location } : null
+  }
+
   const subtotal = computed(() => quote.value?.subtotal ?? localSubtotal(cart.value, services.value))
   const discountCents = computed(() => Math.max(0, toCents(form.discount || 0)))
   const total = computed(() => Math.max(0, subtotal.value - discountCents.value))
@@ -105,10 +120,10 @@ export function useBookingForm() {
         items: cartItems(cart.value),
         date: form.date,
         time: form.time,
-        customer: { ...form.customer },
+        customer: picked.value ? { _id: picked.value._id, ...form.customer } : { ...form.customer },
         address: form.address,
         reference: form.reference,
-        location: form.mapsLink.trim() ? { lat: null, lng: null, accuracy: 0, url: form.mapsLink.trim() } : undefined,
+        location: form.location || undefined,
         notes: form.notes,
         paymentMethod: form.paymentMethod,
         transferProofUrl: form.transferProofUrl || undefined,
@@ -117,7 +132,7 @@ export function useBookingForm() {
         discount: discountCents.value || undefined,
         status: form.status,
       })
-      toast.success(`Pedido ${booking.code} creado`)
+      toast.success(`Servicio ${booking.code} agendado`)
       router.replace(`/admin/pedidos/${booking._id}`)
     } catch (e) {
       toast.error(errorMessage(e))
@@ -126,5 +141,5 @@ export function useBookingForm() {
     }
   }
 
-  return { form, cart, services, quote, subtotal, discountCents, total, busy, uploading, uploadProof, submit }
+  return { form, cart, services, quote, picked, pickCustomer, subtotal, discountCents, total, busy, uploading, uploadProof, submit }
 }

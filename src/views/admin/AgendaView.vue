@@ -22,7 +22,7 @@ function onUpdated(b: Booking) {
   <div class="agenda">
     <div class="agenda__bar">
       <DateNav v-model="date" />
-      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary btn--sm"><AppIcon name="plus" :size="16" /> Pedido</RouterLink>
+      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary btn--sm"><AppIcon name="plus" :size="16" /> Agendar</RouterLink>
     </div>
 
     <p v-if="!scope.branch && scope.canSeeAll" class="agenda__hint"><AppIcon name="info" :size="16" /> Viendo todas las sucursales. Elige una arriba para ver solo su agenda.</p>

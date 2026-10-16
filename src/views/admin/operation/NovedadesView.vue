@@ -50,7 +50,7 @@ async function remove() {
 
 <template>
   <section>
-    <PageIntro text="Quejas e incidencias de los servicios de la semana: qué pasó, con qué cliente y con qué operador. Se anotan desde la Base o desde el pedido." />
+    <PageIntro text="Quejas e incidencias de los servicios de la semana: qué pasó, con qué cliente y con qué operador. Se anotan desde la Base o desde la reserva." />
 
     <div class="week">
       <button type="button" class="btn btn--ghost btn--icon" aria-label="Semana anterior" @click="from = addDays(from, -7)"><AppIcon name="chevron-left" /></button>

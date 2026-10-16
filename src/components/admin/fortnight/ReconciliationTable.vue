@@ -28,7 +28,7 @@ const squared = computed(() => r.value.difference.total === 0 && r.value.differe
       <QRow label="Efectivo desembolsado" :value="r.cashDisbursed" hint="Gastos de caja menor pagados en efectivo" />
       <QRow label="Valores por confirmar" :value="r.toConfirm" hint="Transferencias con comprobante sin revisar" />
       <QRow label="Valores por cobrar" :value="r.toCollect" />
-      <QRow v-if="has('barter')" label="Canje, cortesía y plan mensual" :value="r.barter" hint="No se cobran pedido a pedido" />
+      <QRow v-if="has('barter')" label="Canje, cortesía y plan mensual" :value="r.barter" hint="No se cobran servicio a servicio" />
       <QRow v-if="has('lost')" label="Perdidas" :value="r.lost" hint="No se cobrarán" />
       <QRow v-if="has('tips')" label="Propinas cobradas con el pago" :value="r.tips" negative hint="Entraron a cuenta pero no son producción" />
       <QRow label="Diferencia de conciliación" :value="r.difference" kind="total" signed />
@@ -37,7 +37,7 @@ const squared = computed(() => r.value.difference.total === 0 && r.value.differe
   <p class="note" :class="squared ? 'note--ok' : 'note--bad'">
     <template v-if="squared">Cuadra: todo lo producido está cobrado, por cobrar o justificado.</template>
     <template v-else>
-      No cuadra: hay pagos registrados por más del valor del servicio. Revisa los pedidos del mes con saldo a favor.
+      No cuadra: hay pagos registrados por más del valor del servicio. Revisa los servicios del mes con saldo a favor.
     </template>
     <small>Diferencia = recibido en cuentas + efectivo disponible + desembolsado + por confirmar/cobrar + canje + perdidas − producción − propinas cobradas con el pago.</small>
   </p>

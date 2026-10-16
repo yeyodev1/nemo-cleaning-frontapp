@@ -17,8 +17,8 @@ const alerts = computed(() => {
       // Primero: un pedido por WhatsApp sin confirmar es un cliente esperando respuesta.
       show: wa > 0,
       value: String(wa),
-      label: 'Pedidos por WhatsApp',
-      hint: `${wa} ${wa === 1 ? 'pedido por WhatsApp sin confirmar' : 'pedidos por WhatsApp sin confirmar'}`,
+      label: 'Reservas por WhatsApp',
+      hint: `${wa} ${wa === 1 ? 'reserva por WhatsApp sin confirmar' : 'reservas por WhatsApp sin confirmar'}`,
       to: '/admin/whatsapp',
       icon: 'whatsapp',
       tone: 'wa',

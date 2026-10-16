@@ -59,9 +59,9 @@ function placeText(o: MessageOrder): string[] {
 /** Cliente → Nemo: pedido creado en la web que termina en WhatsApp. */
 export function webOrderMessage(o: MessageOrder): string {
   return compose([
-    'Hola, Nemo Cleaning. Acabo de hacer un pedido en la web y quiero coordinar el pago por aquí.',
+    'Hola, Nemo Cleaning. Acabo de agendar un servicio en la web y quiero coordinar el pago por aquí.',
     '',
-    `*Pedido ${o.code}*`,
+    `*Reserva ${o.code}*`,
     ...o.items.map((l) => lineText(l)),
     '',
     `*Fecha:* ${chatDate(o.date)}, ${o.time}`,
@@ -77,7 +77,7 @@ export function webOrderMessage(o: MessageOrder): string {
 export function cartMessage(c: { items: MessageLine[]; total: number; branchName?: string; date?: string; time?: string }): string {
   const when = c.date ? `${chatDate(c.date)}${c.time ? `, ${c.time}` : ''}` : ''
   return compose([
-    'Hola, Nemo Cleaning. Quiero hacer este pedido:',
+    'Hola, Nemo Cleaning. Quiero agendar estos servicios:',
     '',
     ...c.items.map((l) => lineText(l)),
     `*Subtotal:* ${money(c.total)}`,
@@ -110,10 +110,10 @@ export function paymentLinkMessage(o: { code: string; balance: number; customerN
   return [
     `Hola${hi ? ` ${hi}` : ''}, te escribimos de Nemo Cleaning.`,
     '',
-    `Tu pedido *${o.code}* por *${money(o.balance)}* está listo para pagar con tarjeta (Visa o Mastercard), de forma segura con Payphone:`,
+    `Tu reserva *${o.code}* por *${money(o.balance)}* está listo para pagar con tarjeta (Visa o Mastercard), de forma segura con Payphone:`,
     o.trackingUrl,
     '',
-    'Abre el enlace y toca "Pagar con tarjeta". Apenas se apruebe, tu pedido queda confirmado.',
+    'Abre el enlace y toca "Pagar con tarjeta". Apenas se apruebe, tu reserva queda confirmada.',
   ].join('\n')
 }
 
@@ -121,9 +121,9 @@ export function paymentLinkMessage(o: { code: string; balance: number; customerN
 export function confirmationMessage(o: MessageOrder & { paymentText?: string }): string {
   const hi = firstName(o.customerName)
   return compose([
-    `Hola${hi ? ` ${hi}` : ''}, tu pedido en Nemo Cleaning está registrado.`,
+    `Hola${hi ? ` ${hi}` : ''}, tu reserva en Nemo Cleaning está registrada.`,
     '',
-    `*Pedido ${o.code}*`,
+    `*Reserva ${o.code}*`,
     ...o.items.map((l) => lineText(l, false)),
     '',
     `*Fecha:* ${chatDate(o.date)}, ${o.time}`,
@@ -131,7 +131,7 @@ export function confirmationMessage(o: MessageOrder & { paymentText?: string }):
     `*Total:* ${money(o.total)}`,
     o.paymentText && `*Pago:* ${o.paymentText}`,
     '',
-    o.trackingUrl && `Sigue tu pedido aquí: ${o.trackingUrl}`,
+    o.trackingUrl && `Sigue tu reserva aquí: ${o.trackingUrl}`,
     'Gracias por confiar en Nemo Cleaning.',
   ])
 }
@@ -139,7 +139,7 @@ export function confirmationMessage(o: MessageOrder & { paymentText?: string }):
 /** Asesor → cliente: saludo para retomar la conversación. */
 export function greetingMessage(o: { code: string; customerName?: string }): string {
   const hi = firstName(o.customerName)
-  return `Hola${hi ? ` ${hi}` : ''}, te escribimos de Nemo Cleaning por tu pedido ${o.code}.`
+  return `Hola${hi ? ` ${hi}` : ''}, te escribimos de Nemo Cleaning por tu reserva ${o.code}.`
 }
 
 /** Enlace al WhatsApp oficial de Nemo (o al de la sucursal si lo trae el API). */
