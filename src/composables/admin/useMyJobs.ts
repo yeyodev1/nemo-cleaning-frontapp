@@ -2,25 +2,46 @@ import { ref, watch } from 'vue'
 import { operatorService } from '@/services/management.service'
 import { useToastStore } from '@/stores/toast'
 import { errorMessage, todayISO } from '@/utils/format'
-import type { Booking } from '@/types/api'
+import type { OperatorDay, OperatorJob } from '@/types/api'
 
 export type JobStatus = 'on_the_way' | 'in_progress' | 'completed'
 
-/** Servicios del operador para un día, con cambio de estado optimista. */
+/** GPS del celular una sola vez (al iniciar el servicio), con mensajes claros si falla. */
+export function currentPosition(): Promise<{ lat: number; lng: number; accuracy: number }> {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) return reject(new Error('Tu celular no permite compartir la ubicación desde el navegador.'))
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: Math.round(p.coords.accuracy || 0) }),
+      (e) =>
+        reject(
+          new Error(
+            e.code === e.PERMISSION_DENIED
+              ? 'Activa el permiso de ubicación: toca el candado junto a la dirección de la página → Ubicación → Permitir.'
+              : e.code === e.TIMEOUT
+                ? 'El GPS tardó demasiado. Sal a un lugar abierto e inténtalo otra vez.'
+                : 'No pudimos obtener tu ubicación. Revisa que el GPS esté encendido e inténtalo otra vez.',
+          ),
+        ),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
+    )
+  })
+}
+
+/** Turno y servicios del operador para un día. Iniciar marca la ubicación (solo esa vez). */
 export function useMyJobs() {
   const toast = useToastStore()
   const date = ref(todayISO())
-  const jobs = ref<Booking[]>([])
+  const day = ref<OperatorDay | null>(null)
   const loading = ref(false)
   const error = ref('')
   const busyId = ref('')
+  const locatingId = ref('')
 
   async function load() {
     loading.value = true
     error.value = ''
     try {
-      const list = await operatorService.bookings(date.value)
-      jobs.value = [...list].sort((a, b) => a.time.localeCompare(b.time))
+      day.value = await operatorService.day(date.value)
     } catch (e) {
       error.value = errorMessage(e, 'No se pudieron cargar tus servicios')
     } finally {
@@ -28,16 +49,26 @@ export function useMyJobs() {
     }
   }
 
-  async function setStatus(job: Booking, status: JobStatus, note?: string) {
-    const prev = job.status
+  function replace(job: OperatorJob) {
+    if (!day.value) return
+    day.value.bookings = day.value.bookings.map((j) => (j._id === job._id ? job : j))
+  }
+
+  async function setStatus(job: OperatorJob, status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number }) {
     busyId.value = job._id
-    job.status = status
     try {
-      const updated = await operatorService.setStatus(job._id, status, note)
-      Object.assign(job, updated)
-      toast.success(status === 'completed' ? '¡Servicio terminado!' : status === 'in_progress' ? 'Servicio iniciado' : 'Avisamos que vas en camino')
+      let location: { lat: number; lng: number; accuracy: number } | undefined
+      if (status === 'in_progress' && !job.startCheck) {
+        locatingId.value = job._id
+        try {
+          location = await currentPosition()
+        } finally {
+          locatingId.value = ''
+        }
+      }
+      replace(await operatorService.setStatus(job._id, status, { location, payment }))
+      toast.success(status === 'completed' ? '¡Servicio terminado!' : status === 'in_progress' ? 'Servicio iniciado · ubicación marcada' : 'Listo: vas en camino')
     } catch (e) {
-      job.status = prev
       toast.error(errorMessage(e))
     } finally {
       busyId.value = ''
@@ -45,5 +76,5 @@ export function useMyJobs() {
   }
 
   watch(date, load, { immediate: true })
-  return { date, jobs, loading, error, busyId, load, setStatus }
+  return { date, day, loading, error, busyId, locatingId, load, setStatus, replace }
 }

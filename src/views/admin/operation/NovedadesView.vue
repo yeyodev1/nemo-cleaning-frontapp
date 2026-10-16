@@ -73,7 +73,10 @@ async function remove() {
           <strong>{{ n.customer || 'Cliente' }}</strong>
           <span v-if="n.operator" class="nov__op"><span class="nov__dot" :style="{ background: n.operator.color || '#12263F' }"></span>{{ n.operator.name }}</span>
         </div>
-        <p class="nov__text">{{ n.text }}</p>
+        <p v-if="n.text" class="nov__text">{{ n.text }}</p>
+        <div v-if="n.photos?.length" class="nov__pics">
+          <a v-for="p in n.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
+        </div>
         <div class="nov__foot">
           <RouterLink :to="`/admin/pedidos/${n.bookingId}`">{{ n.code }} · servicio del {{ shortDate(n.date) }}</RouterLink>
           <span>{{ n.by?.name }} · {{ dateTime(n.at) }}</span>
@@ -143,6 +146,19 @@ async function remove() {
     width: 10px;
     height: 10px;
     border-radius: 50%;
+  }
+
+  &__pics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+
+    img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
   }
 
   &__text {

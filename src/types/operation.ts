@@ -88,6 +88,7 @@ export interface NovedadRow {
   date: string
   branch: ID
   text: string
+  photos?: string[]
   at: string
   by?: PersonRef
   customer?: string

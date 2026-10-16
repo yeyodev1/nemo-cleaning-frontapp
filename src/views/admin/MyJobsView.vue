@@ -7,9 +7,19 @@ import { useMyJobs } from '@/composables/admin/useMyJobs'
 import { useUserStore } from '@/stores/user'
 
 const user = useUserStore()
-const { date, jobs, loading, error, busyId, load, setStatus } = useMyJobs()
+const { date, day, loading, error, busyId, locatingId, load, setStatus, replace } = useMyJobs()
+const jobs = computed(() => day.value?.bookings || [])
 const pending = computed(() => jobs.value.filter((j) => !['completed', 'cancelled', 'no_show'].includes(j.status)).length)
 const firstName = computed(() => user.user?.name.split(' ')[0] || '')
+
+/** Turno del día (calendario de la oficina): Activo, Libre o Medio día. */
+const shift = computed(() => {
+  const s = day.value?.shift
+  if (!s) return null
+  if (s.status === 'off') return { tone: 'off', label: 'Día libre', hint: 'Hoy no tienes turno.' }
+  if (s.status === 'half') return { tone: 'half', label: 'Medio día', hint: `Turno hasta las ${s.halfDayUntil}.` }
+  return { tone: 'on', label: 'Turno activo', hint: 'Día completo.' }
+})
 </script>
 
 <template>
@@ -20,6 +30,10 @@ const firstName = computed(() => user.user?.name.split(' ')[0] || '')
     </div>
 
     <DateNav v-model="date" />
+
+    <p v-if="shift" class="jobs__shift" :class="`is-${shift.tone}`">
+      <AppIcon name="calendar" :size="18" /> <b>{{ shift.label }}</b> <span>{{ shift.hint }}</span>
+    </p>
 
     <div v-if="error" class="card jobs__error" role="alert">
       <AppIcon name="alert" /> <span>{{ error }}</span>
@@ -33,7 +47,15 @@ const firstName = computed(() => user.user?.name.split(' ')[0] || '')
       No tienes servicios asignados para este día.
     </div>
     <div v-else class="jobs__list">
-      <JobCard v-for="j in jobs" :key="j._id" :job="j" :busy="busyId === j._id" @status="(s, n) => setStatus(j, s, n)" />
+      <JobCard
+        v-for="j in jobs"
+        :key="j._id"
+        :job="j"
+        :busy="busyId === j._id"
+        :locating="locatingId === j._id"
+        @status="(s, p) => setStatus(j, s, p)"
+        @updated="replace"
+      />
     </div>
 
     <button type="button" class="btn btn--ghost jobs__refresh" :disabled="loading" @click="load"><AppIcon name="refresh" /> Actualizar</button>
@@ -50,6 +72,35 @@ const firstName = computed(() => user.user?.name.split(' ')[0] || '')
 
   &__hello h2 {
     font-size: $text-xl;
+  }
+
+  &__shift {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: $radius-md;
+    font-size: $text-sm;
+
+    span {
+      color: $ink-soft;
+    }
+
+    &.is-on {
+      background: $success-bg;
+      color: $success;
+    }
+
+    &.is-half {
+      background: $warning-bg;
+      color: $warning;
+    }
+
+    &.is-off {
+      background: $line;
+      color: $ink-soft;
+    }
   }
 
   &__error {

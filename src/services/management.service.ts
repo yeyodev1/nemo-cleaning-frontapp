@@ -6,6 +6,8 @@ import type {
   CustomerDetail,
   OfficeQuote,
   OfficeQuoteStatus,
+  OperatorDay,
+  OperatorJob,
   Paginated,
   Role,
   Service,
@@ -105,11 +107,19 @@ class ManagementService extends APIBase {
 export const managementService = new ManagementService()
 
 class OperatorService extends APIBase {
-  bookings(date?: string) {
-    return this.get<Booking[]>('operator/bookings', { date })
+  /** Turno del día y servicios asignados (sin montos). */
+  day(date?: string) {
+    return this.get<OperatorDay>('operator/bookings', { date })
   }
-  setStatus(id: string, status: 'on_the_way' | 'in_progress' | 'completed', note?: string) {
-    return this.patch<Booking>(`operator/bookings/${id}/status`, { status, note })
+  /** Iniciar exige `location` (GPS del celular al llegar). */
+  setStatus(id: string, status: 'on_the_way' | 'in_progress' | 'completed', extra?: { note?: string; location?: { lat: number; lng: number; accuracy: number }; payment?: { method: 'cash' | 'transfer'; cashReceived: number } }) {
+    return this.patch<OperatorJob>(`operator/bookings/${id}/status`, { status, ...extra })
+  }
+  addNovedad(id: string, body: { text: string; photos: string[] }) {
+    return this.post<OperatorJob>(`operator/bookings/${id}/novedades`, body)
+  }
+  uploadPhoto(file: File) {
+    return this.upload<{ url: string }>('admin/uploads', file)
   }
 }
 

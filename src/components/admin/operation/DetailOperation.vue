@@ -48,10 +48,31 @@ async function remove() {
       <div><dt>Propina</dt><dd class="money">{{ booking.tip ? money(booking.tip) : '—' }}</dd></div>
     </dl>
 
+    <template v-if="booking.startCheck || booking.closeReport">
+      <h3>Reporte del operador</h3>
+      <ul class="dop__report">
+        <li v-if="booking.startCheck">
+          <AppIcon name="locate" :size="16" />
+          <span>Inició {{ dateTime(booking.startCheck.at) }}<template v-if="booking.startCheck.by?.name"> · {{ booking.startCheck.by.name }}</template></span>
+          <a :href="`https://www.google.com/maps?q=${booking.startCheck.lat},${booking.startCheck.lng}`" target="_blank" rel="noopener" class="link">Ver ubicación</a>
+        </li>
+        <li v-if="booking.closeReport">
+          <AppIcon :name="booking.closeReport.method === 'cash' ? 'cash' : 'bank'" :size="16" />
+          <span>
+            {{ booking.closeReport.method === 'cash' ? `Cobró en efectivo: ${money(booking.closeReport.cashReceived)}` : 'Cliente pagó por transferencia (por confirmar)' }}
+            · {{ dateTime(booking.closeReport.at) }}
+          </span>
+        </li>
+      </ul>
+    </template>
+
     <h3>Novedades</h3>
     <ul v-if="booking.novedades?.length" class="dop__list">
       <li v-for="n in booking.novedades" :key="n._id">
-        <p>{{ n.text }}</p>
+        <p v-if="n.text">{{ n.text }}</p>
+        <div v-if="n.photos?.length" class="dop__pics">
+          <a v-for="p in n.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
+        </div>
         <small>{{ opName(n.operator) ? `${opName(n.operator)} · ` : '' }}{{ n.by?.name }} · {{ dateTime(n.at) }}</small>
         <button type="button" class="btn btn--ghost btn--icon" aria-label="Eliminar novedad" @click="removing = n"><AppIcon name="trash" :size="16" /></button>
       </li>
@@ -96,6 +117,34 @@ async function remove() {
     dd {
       font-size: $text-sm;
       font-weight: 600;
+    }
+  }
+
+  &__report {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    li {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      font-size: $text-sm;
+    }
+  }
+
+  &__pics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+
+    img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 6px;
     }
   }
 

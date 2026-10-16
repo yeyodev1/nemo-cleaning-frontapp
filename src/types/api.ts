@@ -244,6 +244,38 @@ export interface Booking {
   paymentAccount?: string
   paymentConfirmation?: PaymentConfirmation
   novedades?: Novedad[]
+  /** Ubicación que marcó el operador al iniciar el servicio. */
+  startCheck?: { lat: number; lng: number; accuracy: number; at: string; by?: PersonRef } | null
+  /** Cierre del operador: cómo pagó el cliente y cuánto efectivo recibió (centavos). */
+  closeReport?: { method: 'cash' | 'transfer'; cashReceived: number; at: string; by?: PersonRef } | null
+}
+
+/** Servicio como lo ve el operador: sin montos ni pagos. */
+export interface OperatorJob {
+  _id: ID
+  code: string
+  date: string
+  time: string
+  durationMinutes: number
+  status: BookingStatus
+  customer: { name: string; phone: string } | null
+  branch: { name: string; address: string; phone: string } | null
+  address: string
+  reference: string
+  zone: string
+  location: BookingLocation | null
+  notes: string
+  items: { name: string; variant: string; choice: string; unit?: string; quantity: number }[]
+  operators: OperatorRef[]
+  startCheck: { at: string; accuracy: number } | null
+  closeReport: { method: 'cash' | 'transfer'; cashReceived: number; at: string } | null
+  novedades: { _id: ID; text: string; photos: string[]; by: string; at: string }[]
+}
+
+export interface OperatorDay {
+  date: string
+  shift: { status: 'active' | 'off' | 'half'; halfDayUntil: string }
+  bookings: OperatorJob[]
 }
 
 export type PaymentConfirmation = 'pending_confirmation' | 'confirmed' | 'pending_payment' | 'lost' | 'exchange'
@@ -251,6 +283,7 @@ export type PaymentConfirmation = 'pending_confirmation' | 'confirmed' | 'pendin
 export interface Novedad {
   _id: ID
   text: string
+  photos?: string[]
   operator: ID | null
   by?: PersonRef
   at: string

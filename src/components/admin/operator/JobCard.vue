@@ -3,48 +3,73 @@ import { itemLabel } from '@/utils/pricing'
 import { computed, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
-import { bookingStatus, paymentMethod } from '@/config/labels'
-import { mapsUrl, money, whatsappUrl } from '@/utils/format'
+import NovedadComposer from './NovedadComposer.vue'
+import { bookingStatus } from '@/config/labels'
+import { dateTime, mapsUrl, money, toCents, whatsappUrl } from '@/utils/format'
 import { directionsUrl } from '@/utils/location'
-import type { Booking } from '@/types/api'
+import type { OperatorJob } from '@/types/api'
 import type { JobStatus } from '@/composables/admin/useMyJobs'
 
-const props = defineProps<{ job: Booking; busy: boolean }>()
-const emit = defineEmits<{ status: [status: JobStatus, note?: string] }>()
-const note = ref('')
-const showNote = ref(false)
+/** Un servicio del día para el operador: a dónde ir, qué hacer y sus pasos. Sin montos. */
+const props = defineProps<{ job: OperatorJob; busy: boolean; locating: boolean }>()
+const emit = defineEmits<{
+  status: [status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number }]
+  updated: [job: OperatorJob]
+}>()
+const reporting = ref(false)
 
-// Con GPS del cliente el lavador va directo al punto (indicaciones de manejo), no a la dirección escrita.
+// Cierre: cómo pagó el cliente y, si fue en efectivo, cuánto recibió.
+const finishing = ref(false)
+const payMethod = ref<'cash' | 'transfer' | ''>('')
+const cashText = ref('')
+const finishError = ref('')
+
+function finish() {
+  finishError.value = ''
+  if (!payMethod.value) return void (finishError.value = 'Elige cómo pagó el cliente')
+  let cashReceived = 0
+  if (payMethod.value === 'cash') {
+    const n = Number(cashText.value.replace(',', '.'))
+    if (!cashText.value.trim() || !Number.isFinite(n) || n < 0) return void (finishError.value = 'Escribe cuánto efectivo recibiste')
+    cashReceived = toCents(n)
+  }
+  emit('status', 'completed', { method: payMethod.value, cashReceived })
+}
+
+// Con GPS del cliente va directo al punto (indicaciones de manejo), no a la dirección escrita.
 const navUrl = computed(() => directionsUrl(props.job.location) || mapsUrl(props.job.address))
+const hasPoint = computed(() => props.job.location?.lat != null || !!props.job.location?.url)
 const done = computed(() => ['completed', 'cancelled', 'no_show'].includes(props.job.status))
 const canGo = computed(() => ['pending', 'confirmed'].includes(props.job.status))
 const canStart = computed(() => ['pending', 'confirmed', 'on_the_way'].includes(props.job.status))
 const canFinish = computed(() => props.job.status === 'in_progress')
+const startedAt = computed(() => (props.job.startCheck ? dateTime(props.job.startCheck.at).split(', ').pop() : ''))
 
-function send(status: JobStatus) {
-  emit('status', status, note.value.trim() || undefined)
-  note.value = ''
-  showNote.value = false
+function onSaved(job: OperatorJob) {
+  emit('updated', job)
+  reporting.value = false
 }
 </script>
 
 <template>
   <article class="job" :class="{ 'job--done': done }">
     <header class="job__head">
-      <span class="job__time">{{ job.time }}</span>
+      <span class="job__time"><AppIcon name="clock" :size="22" /> {{ job.time }}</span>
       <StatusBadge dot :tone="bookingStatus[job.status].tone" :label="bookingStatus[job.status].label" />
     </header>
 
     <div class="job__who">
       <strong>{{ job.customer?.name }}</strong>
-      <span class="muted">{{ job.code }}</span>
+      <span class="muted">{{ job.zone ? `${job.zone} · ` : '' }}{{ job.code }}</span>
     </div>
 
-    <a :href="navUrl" target="_blank" rel="noopener" class="job__addr" :class="{ 'job__addr--gps': job.location }">
-      <AppIcon :name="job.location ? 'navigation' : 'pin'" :size="20" />
+    <!-- 1. A dónde ir -->
+    <a :href="navUrl" target="_blank" rel="noopener" class="job__addr" :class="{ 'job__addr--gps': hasPoint }">
+      <AppIcon :name="hasPoint ? 'navigation' : 'pin'" :size="22" />
       <span>
-        {{ job.address }}<small v-if="job.reference">{{ job.reference }}</small>
-        <small v-if="job.location" class="job__gps">Ubicación GPS del cliente · Cómo llegar</small>
+        <b>{{ hasPoint ? 'Abrir mapa: cómo llegar al punto' : 'Abrir mapa' }}</b>
+        {{ job.address }}
+        <small v-if="job.reference">Referencia: {{ job.reference }}</small>
       </span>
       <AppIcon name="external" :size="16" />
     </a>
@@ -54,24 +79,72 @@ function send(status: JobStatus) {
       <a :href="whatsappUrl(job.customer.phone, `Hola ${job.customer.name}, soy de Nemo Cleaning por tu servicio de hoy a las ${job.time}.`)" target="_blank" rel="noopener" class="btn btn--whatsapp"><AppIcon name="whatsapp" /> WhatsApp</a>
     </div>
 
-    <ul class="job__items">
-      <li v-for="(i, n) in job.items" :key="n">{{ itemLabel(i) }}</li>
-    </ul>
-    <p v-if="job.notes" class="job__notes"><AppIcon name="info" :size="16" /> {{ job.notes }}</p>
-    <p v-if="job.balance > 0" class="job__due">Cobrar {{ money(job.balance) }} · {{ paymentMethod[job.paymentMethod] }}</p>
+    <!-- 2. Qué hacer -->
+    <section class="job__todo">
+      <h3>Servicio</h3>
+      <ul class="job__items">
+        <li v-for="(i, n) in job.items" :key="n"><AppIcon name="check" :size="16" /> {{ itemLabel(i) }}</li>
+      </ul>
+      <p v-if="job.notes" class="job__notes"><AppIcon name="info" :size="18" /> <span><b>Instrucciones:</b> {{ job.notes }}</span></p>
+      <p v-if="job.operators.length > 1" class="job__team">Con: {{ job.operators.map((o) => o.name).join(', ') }}</p>
+    </section>
 
+    <!-- 3. Pasos -->
+    <p v-if="job.startCheck" class="job__started"><AppIcon name="check-circle" :size="18" /> Iniciado a las {{ startedAt }} · ubicación marcada</p>
     <template v-if="!done">
-      <button v-if="!showNote" type="button" class="job__notelink" @click="showNote = true">Agregar nota</button>
-      <label v-else class="field">
-        <span class="field__label">Nota</span>
-        <input v-model="note" placeholder="Ej.: cliente pidió llegar 10 min tarde" />
-      </label>
+      <p v-if="canStart && !job.startCheck" class="job__tip"><AppIcon name="locate" :size="16" /> Al tocar <b>Iniciar</b> se marca tu ubicación (solo esa vez). Ten el GPS encendido.</p>
       <div class="job__actions">
-        <button type="button" class="btn btn--soft btn--lg" :disabled="busy || !canGo" @click="send('on_the_way')"><AppIcon name="route" /> En camino</button>
-        <button type="button" class="btn btn--primary btn--lg" :disabled="busy || !canStart" @click="send('in_progress')"><AppIcon name="play" /> Iniciar</button>
-        <button type="button" class="btn btn--accent btn--lg" :disabled="busy || !canFinish" @click="send('completed')"><AppIcon name="check" /> Terminar</button>
+        <button type="button" class="btn btn--soft btn--lg" :disabled="busy || !canGo" @click="emit('status', 'on_the_way')"><AppIcon name="route" /> En camino</button>
+        <button type="button" class="btn btn--primary btn--lg" :disabled="busy || !canStart" @click="emit('status', 'in_progress')">
+          <AppIcon name="play" /> {{ locating ? 'Marcando ubicación…' : 'Iniciar' }}
+        </button>
+        <button type="button" class="btn btn--accent btn--lg" :disabled="busy || !canFinish" @click="finishing = true"><AppIcon name="check" /> Terminar</button>
+      </div>
+
+      <div v-if="finishing && canFinish" class="job__finish">
+        <h3>Terminar servicio</h3>
+        <span class="field__label">¿Cómo pagó el cliente?</span>
+        <div class="job__paychoice" role="radiogroup" aria-label="Forma de pago">
+          <label class="job__pay" :class="{ 'is-on': payMethod === 'cash' }">
+            <input v-model="payMethod" type="radio" value="cash" class="sr-only" /> <AppIcon name="cash" /> Efectivo
+          </label>
+          <label class="job__pay" :class="{ 'is-on': payMethod === 'transfer' }">
+            <input v-model="payMethod" type="radio" value="transfer" class="sr-only" /> <AppIcon name="bank" /> Transferencia
+          </label>
+        </div>
+        <label v-if="payMethod === 'cash'" class="field">
+          <span class="field__label">¿Cuánto efectivo recibiste? (USD)</span>
+          <input v-model="cashText" type="text" inputmode="decimal" placeholder="0.00" autofocus />
+        </label>
+        <p v-if="payMethod === 'transfer'" class="job__tip">La oficina confirma la transferencia. No necesitas foto.</p>
+        <p v-if="finishError" class="job__err" role="alert"><AppIcon name="alert" :size="16" /> {{ finishError }}</p>
+        <div class="job__finish-actions">
+          <button type="button" class="btn btn--ghost" @click="finishing = false">Cancelar</button>
+          <button type="button" class="btn btn--accent" :disabled="busy" @click="finish"><AppIcon name="check" /> {{ busy ? 'Guardando…' : 'Terminar servicio' }}</button>
+        </div>
       </div>
     </template>
+    <p v-if="job.closeReport" class="job__closed">
+      <AppIcon name="check-circle" :size="18" />
+      {{ job.closeReport.method === 'cash' ? `Cobraste en efectivo: ${money(job.closeReport.cashReceived)}` : 'El cliente pagó por transferencia' }}
+    </p>
+
+    <!-- 4. Novedades con fotos -->
+    <section class="job__nov">
+      <ul v-if="job.novedades.length" class="job__novlist">
+        <li v-for="n in job.novedades" :key="n._id">
+          <p v-if="n.text">{{ n.text }}</p>
+          <div v-if="n.photos.length" class="job__pics">
+            <a v-for="p in n.photos" :key="p" :href="p" target="_blank" rel="noopener"><img :src="p" alt="Foto de la novedad" loading="lazy" /></a>
+          </div>
+          <small>{{ n.by }} · {{ dateTime(n.at) }}</small>
+        </li>
+      </ul>
+      <NovedadComposer v-if="reporting" :job="job" @saved="onSaved" @close="reporting = false" />
+      <button v-else-if="!['cancelled', 'no_show'].includes(job.status)" type="button" class="btn btn--ghost job__report" @click="reporting = true">
+        <AppIcon name="camera" /> Reportar novedad con fotos
+      </button>
+    </section>
   </article>
 </template>
 
@@ -84,7 +157,7 @@ function send(status: JobStatus) {
   box-shadow: $shadow-sm;
 
   &--done {
-    opacity: 0.7;
+    opacity: 0.8;
   }
 
   &__head {
@@ -94,6 +167,9 @@ function send(status: JobStatus) {
   }
 
   &__time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     font-size: $display-sm;
     font-weight: 800;
     color: $navy;
@@ -120,27 +196,34 @@ function send(status: JobStatus) {
     align-items: center;
     gap: 0.6rem;
     min-height: $tap-lg;
-    padding: 0.7rem 0.85rem;
+    padding: 0.8rem 0.9rem;
     border-radius: $radius-md;
     background: $navy-soft;
     color: $navy;
-    font-weight: 700;
     font-size: $text-sm;
 
     span {
       flex: 1;
       display: flex;
       flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    b {
+      font-size: $text-base;
     }
 
     small {
-      font-weight: 500;
       color: $ink-soft;
     }
 
-    .job__gps {
-      font-weight: 700;
-      color: $success;
+    &--gps {
+      background: $navy;
+      color: #fff;
+
+      small {
+        color: rgb(255 255 255 / 0.8);
+      }
     }
   }
 
@@ -153,37 +236,70 @@ function send(status: JobStatus) {
     }
   }
 
-  &__items {
-    list-style: none;
-    font-size: $text-sm;
+  &__todo {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.5rem;
+
+    h3 {
+      font-size: $text-xs;
+      text-transform: uppercase;
+      color: $ink-muted;
+    }
+  }
+
+  &__items {
+    list-style: none;
+    font-size: $text-base;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+
+      svg {
+        color: $success;
+      }
+    }
   }
 
   &__notes {
     display: flex;
-    gap: 0.45rem;
-    padding: 0.6rem 0.8rem;
+    gap: 0.5rem;
+    padding: 0.7rem 0.85rem;
     border-radius: $radius-sm;
     background: $warning-bg;
     font-size: $text-sm;
+
+    svg {
+      flex-shrink: 0;
+    }
   }
 
-  &__due {
-    font-weight: 800;
-    color: $warning;
+  &__team {
     font-size: $text-sm;
+    color: $ink-soft;
   }
 
-  &__notelink {
-    align-self: flex-start;
-    min-height: 36px;
+  &__started {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     font-size: $text-sm;
     font-weight: 700;
-    color: $navy;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    color: $success;
+  }
+
+  &__tip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: $text-xs;
+    color: $ink-soft;
   }
 
   &__actions {
@@ -198,6 +314,123 @@ function send(status: JobStatus) {
         flex: 1;
       }
     }
+  }
+
+  &__finish {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.9rem;
+    border-radius: $radius-md;
+    border: 2px solid $navy;
+
+    h3 {
+      font-size: $text-base;
+      color: $navy;
+    }
+  }
+
+  &__paychoice {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__pay {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: $tap-lg;
+    border-radius: $radius-md;
+    border: 1.5px solid $line;
+    font-weight: 700;
+    cursor: pointer;
+
+    &.is-on {
+      border-color: $navy;
+      background: $navy-soft;
+      color: $navy;
+    }
+
+    &:focus-within {
+      outline: 2.5px solid $orange-deep;
+      outline-offset: 2px;
+    }
+  }
+
+  &__err {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: $text-sm;
+    font-weight: 600;
+    color: $danger;
+  }
+
+  &__finish-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  &__closed {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $navy;
+  }
+
+  &__nov {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid $line;
+  }
+
+  &__novlist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: $radius-sm;
+      background: $orange-soft;
+      font-size: $text-sm;
+    }
+
+    small {
+      font-size: $text-xs;
+      color: $ink-muted;
+    }
+  }
+
+  &__pics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 0.4rem;
+
+    img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+  }
+
+  &__report {
+    min-height: $tap-lg;
+    border: 2px dashed $orange-ink;
+    color: $orange-ink;
+    font-weight: 700;
   }
 }
 </style>
