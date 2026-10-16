@@ -80,8 +80,8 @@ async function onFile(file: File) {
       </div>
 
       <div class="kind" role="radiogroup" aria-label="Tipo de gasto">
-        <label class="kind__opt" :class="{ 'is-on': form.kind === 'variable' }"><input v-model="form.kind" type="radio" value="variable" /> <strong>Variable</strong><small>Cambia cada mes</small></label>
-        <label class="kind__opt" :class="{ 'is-on': form.kind === 'fixed' }"><input v-model="form.kind" type="radio" value="fixed" /> <strong>Fijo</strong><small>Alquiler, cuotas fijas</small></label>
+        <label class="kind__opt" :class="{ 'is-on': form.kind === 'variable' }"><input v-model="form.kind" type="radio" value="variable" class="sr-only" /> <strong>Variable</strong><small>Cambia cada mes</small></label>
+        <label class="kind__opt" :class="{ 'is-on': form.kind === 'fixed' }"><input v-model="form.kind" type="radio" value="fixed" class="sr-only" /> <strong>Fijo</strong><small>Alquiler, cuotas fijas</small></label>
       </div>
       <ToggleSwitch v-if="form.kind === 'fixed' && !form.deferred" v-model="form.recurring" label="Se repite cada mes" hint="Aparece en «Repetir gastos fijos»." />
 
