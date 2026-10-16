@@ -13,7 +13,7 @@ const router = useRouter()
 const user = useUserStore()
 
 // Por defecto con contraseña; el código al correo queda como alternativa.
-const mode = ref<'password' | 'code'>('password')
+const mode = ref<'password' | 'code' | 'reset'>('password')
 const email = ref('')
 const password = ref('')
 const busy = ref(false)
@@ -31,6 +31,49 @@ async function submitPassword() {
     done()
   } catch (e) {
     error.value = (e as { message?: string }).message || 'No se pudo ingresar'
+  } finally {
+    busy.value = false
+  }
+}
+
+// ¿Olvidaste tu contraseña?: código al correo + contraseña nueva, y entra de una vez.
+const resetStep = ref<'email' | 'code'>('email')
+const resetCode = ref('')
+const newPassword = ref('')
+const newPassword2 = ref('')
+const showNew = ref(false)
+
+function startReset() {
+  mode.value = 'reset'
+  resetStep.value = 'email'
+  error.value = ''
+}
+
+async function sendResetCode() {
+  error.value = ''
+  if (!email.value.trim()) return void (error.value = 'Escribe tu correo')
+  busy.value = true
+  try {
+    await authService.requestCode(email.value.trim())
+    resetStep.value = 'code'
+  } catch (e) {
+    error.value = (e as { message?: string }).message || 'No se pudo enviar el código'
+  } finally {
+    busy.value = false
+  }
+}
+
+async function submitReset() {
+  error.value = ''
+  if (resetCode.value.trim().length !== 6) return void (error.value = 'Escribe el código de 6 dígitos que llegó a tu correo')
+  if (newPassword.value.length < 6) return void (error.value = 'La contraseña debe tener al menos 6 caracteres')
+  if (newPassword.value !== newPassword2.value) return void (error.value = 'Las contraseñas no coinciden')
+  busy.value = true
+  try {
+    await user.resetPassword(email.value.trim(), resetCode.value.trim(), newPassword.value)
+    done()
+  } catch (e) {
+    error.value = (e as { message?: string }).message || 'No se pudo cambiar la contraseña'
   } finally {
     busy.value = false
   }
@@ -72,8 +115,44 @@ function done() {
               {{ busy ? 'Ingresando…' : 'Ingresar' }} <AppIcon v-if="!busy" name="arrow-right" />
             </button>
           </form>
-          <button type="button" class="login__switch" @click="mode = 'code'">
-            <AppIcon name="mail" :size="16" /> Ingresar con un código al correo
+          <div class="login__links">
+            <button type="button" class="login__switch" @click="startReset">¿Olvidaste tu contraseña?</button>
+            <button type="button" class="login__switch" @click="mode = 'code'">
+              <AppIcon name="mail" :size="16" /> Ingresar con un código al correo
+            </button>
+          </div>
+        </template>
+        <template v-else-if="mode === 'reset'">
+          <p class="login__sub">Te enviamos un código a tu correo para crear una contraseña nueva.</p>
+          <form v-if="resetStep === 'email'" class="login__step" novalidate @submit.prevent="sendResetCode">
+            <label class="field">
+              <span class="field__label">Correo</span>
+              <input v-model="email" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com" required />
+            </label>
+            <p v-if="error" class="login__error" role="alert"><AppIcon name="alert" :size="18" /> {{ error }}</p>
+            <button type="submit" class="btn btn--primary btn--lg btn--block" :disabled="busy">{{ busy ? 'Enviando…' : 'Enviarme el código' }}</button>
+          </form>
+          <form v-else class="login__step" novalidate @submit.prevent="submitReset">
+            <p class="login__sent"><AppIcon name="mail" :size="18" /> Revisa <strong>{{ email }}</strong> (también spam). El código vence en 10 minutos.</p>
+            <label class="field">
+              <span class="field__label">Código de 6 dígitos</span>
+              <input v-model="resetCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" />
+            </label>
+            <label class="field">
+              <span class="field__label">Contraseña nueva</span>
+              <input v-model="newPassword" :type="showNew ? 'text' : 'password'" autocomplete="new-password" placeholder="Mínimo 6 caracteres" />
+            </label>
+            <label class="field">
+              <span class="field__label">Repite la contraseña</span>
+              <input v-model="newPassword2" :type="showNew ? 'text' : 'password'" autocomplete="new-password" />
+            </label>
+            <label class="check"><input v-model="showNew" type="checkbox" /> Ver contraseña</label>
+            <p v-if="error" class="login__error" role="alert"><AppIcon name="alert" :size="18" /> {{ error }}</p>
+            <button type="submit" class="btn btn--primary btn--lg btn--block" :disabled="busy">{{ busy ? 'Guardando…' : 'Guardar e ingresar' }}</button>
+            <button type="button" class="login__switch" :disabled="busy" @click="sendResetCode">Reenviar código</button>
+          </form>
+          <button type="button" class="login__switch" @click="mode = 'password'; error = ''">
+            <AppIcon name="arrow-left" :size="16" /> Volver a ingresar con contraseña
           </button>
         </template>
         <template v-else>
@@ -175,6 +254,26 @@ function done() {
     color: $danger;
     font-weight: 600;
     font-size: $text-sm;
+  }
+
+  &__links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__sent {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    padding: 0.7rem 0.9rem;
+    border-radius: $radius-sm;
+    background: $orange-soft;
+    font-size: $text-sm;
+
+    strong {
+      word-break: break-all;
+    }
   }
 
   &__switch {

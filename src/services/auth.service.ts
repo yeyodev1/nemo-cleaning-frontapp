@@ -11,6 +11,11 @@ class AuthService extends APIBase {
     return this.post<{ token: string; user: User }>('auth/login', { email, password })
   }
 
+  /** ¿Olvidaste tu contraseña?: código del correo + contraseña nueva; entra de una vez. */
+  resetPassword(email: string, code: string, password: string) {
+    return this.post<{ token: string; user: User }>('auth/reset-password', { email, code, password })
+  }
+
   verify(email: string, code: string) {
     return this.post<{ token: string; user: User }>('auth/verify', { email, code })
   }

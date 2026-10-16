@@ -11,7 +11,7 @@ import type { OperatorJob } from '@/types/api'
 import type { JobStatus } from '@/composables/admin/useMyJobs'
 
 /** Un servicio del día para el operador: a dónde ir, qué hacer y sus pasos. Sin montos. */
-const props = defineProps<{ job: OperatorJob; busy: boolean; locating: boolean }>()
+const props = defineProps<{ job: OperatorJob; busy: boolean; locating: boolean; isNew?: boolean }>()
 const emit = defineEmits<{
   status: [status: JobStatus, payment?: { method: 'cash' | 'transfer'; cashReceived: number }]
   updated: [job: OperatorJob]
@@ -52,9 +52,9 @@ function onSaved(job: OperatorJob) {
 </script>
 
 <template>
-  <article class="job" :class="{ 'job--done': done }">
+  <article class="job" :class="{ 'job--done': done, 'job--new': isNew }">
     <header class="job__head">
-      <span class="job__time"><AppIcon name="clock" :size="22" /> {{ job.time }}</span>
+      <span class="job__time"><AppIcon name="clock" :size="22" /> {{ job.time }} <span v-if="isNew" class="job__new">Nuevo</span></span>
       <StatusBadge dot :tone="bookingStatus[job.status].tone" :label="bookingStatus[job.status].label" />
     </header>
 
@@ -155,9 +155,23 @@ function onSaved(job: OperatorJob) {
   flex-direction: column;
   gap: 0.85rem;
   box-shadow: $shadow-sm;
+  scroll-margin-top: 90px;
 
   &--done {
     opacity: 0.8;
+  }
+
+  &--new {
+    box-shadow: 0 0 0 2px $orange;
+  }
+
+  &__new {
+    padding: 0.15rem 0.55rem;
+    border-radius: $radius-pill;
+    background: $orange;
+    color: $navy-ink;
+    font-size: $text-xs;
+    font-weight: 800;
   }
 
   &__head {

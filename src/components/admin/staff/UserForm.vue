@@ -16,6 +16,12 @@ const scope = useAdminScope()
 const toast = useToastStore()
 const saving = ref(false)
 
+// Contraseña: al crear es opcional; al editar se cambia aparte, en cualquier momento.
+const password = ref('')
+const showPassword = ref(false)
+const savingPassword = ref(false)
+const hasPassword = ref(false)
+
 const blank = (): UserInput => ({
   name: '',
   email: '',
@@ -37,6 +43,9 @@ watch(
     if (!o) return
     const u = props.user
     Object.assign(form, u ? { ...blank(), ...u, branches: [...(u.branches || [])] } : blank())
+    password.value = ''
+    showPassword.value = false
+    hasPassword.value = Boolean(u?.hasPassword)
   },
 )
 
@@ -46,6 +55,23 @@ const supervisors = computed(() =>
     .filter((p) => p.active && p._id !== props.user?._id)
     .sort((a, b) => Number(b.position === 'supervisor') - Number(a.position === 'supervisor') || a.name.localeCompare(b.name)),
 )
+
+async function savePassword(value: string | null) {
+  if (!props.user) return
+  if (value !== null && value.length < 6) return toast.error('La contraseña debe tener al menos 6 caracteres')
+  savingPassword.value = true
+  try {
+    const u = await managementService.setUserPassword(props.user._id, value)
+    hasPassword.value = Boolean(u.hasPassword)
+    password.value = ''
+    toast.success(value === null ? 'Contraseña quitada: entra con código al correo' : `Contraseña guardada para ${props.user.name}`)
+    emit('saved')
+  } catch (e) {
+    toast.error(errorMessage(e))
+  } finally {
+    savingPassword.value = false
+  }
+}
 
 async function save() {
   saving.value = true
@@ -63,8 +89,9 @@ async function save() {
       commissions: form.commissions,
       supervisor: form.supervisor || null,
     }
+    if (password.value && password.value.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres')
     if (props.user) await managementService.updateUser(props.user._id, body)
-    else await managementService.createUser(body)
+    else await managementService.createUser({ ...body, ...(password.value ? { password: password.value } : {}) })
     toast.success('Usuario guardado')
     scope.load(true)
     emit('saved')
@@ -84,10 +111,33 @@ async function save() {
         <label class="field">
           <span class="field__label">Correo {{ form.role === 'operator' ? '(opcional)' : '' }}</span>
           <input v-model="form.email" type="email" :required="form.role !== 'operator'" autocomplete="off" />
-          <span class="field__hint">{{ form.email ? 'Entra al panel con un código que llega a este correo.' : 'Sin correo = sin acceso al panel (igual cuenta en producción, turnos y nómina).' }}</span>
+          <span class="field__hint">{{ form.email ? 'Entra al panel con este correo: con contraseña o con un código que llega aquí.' : 'Sin correo = sin acceso al panel (igual cuenta en producción, turnos y nómina).' }}</span>
         </label>
         <label class="field"><span class="field__label">Teléfono</span><input v-model="form.phone" type="tel" /></label>
       </div>
+      <section v-if="form.email" class="pw">
+        <div class="pw__head">
+          <strong>Contraseña de acceso</strong>
+          <span v-if="user" class="pw__state" :class="{ 'is-on': hasPassword }">{{ hasPassword ? 'Tiene contraseña' : 'Sin contraseña (entra con código)' }}</span>
+        </div>
+        <div class="pw__row">
+          <input
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            autocomplete="new-password"
+            :placeholder="user ? (hasPassword ? 'Nueva contraseña' : 'Ponle una contraseña') : 'Contraseña (opcional)'"
+            aria-label="Contraseña"
+          />
+          <button type="button" class="btn btn--ghost btn--sm" @click="showPassword = !showPassword">{{ showPassword ? 'Ocultar' : 'Ver' }}</button>
+          <button v-if="user" type="button" class="btn btn--primary btn--sm" :disabled="savingPassword || !password" @click="savePassword(password)">
+            {{ savingPassword ? 'Guardando…' : hasPassword ? 'Cambiar' : 'Guardar' }}
+          </button>
+        </div>
+        <p class="field__hint">
+          Mínimo 6 caracteres. Pásasela a la persona; si la olvida, puede recuperarla con un código al correo o entrar con código.
+          <button v-if="user && hasPassword" type="button" class="link" :disabled="savingPassword" @click="savePassword(null)">Quitar contraseña</button>
+        </p>
+      </section>
       <div class="form-row">
         <label class="field">
           <span class="field__label">Rol</span>
@@ -143,6 +193,49 @@ async function save() {
 
 fieldset {
   border: 0;
+}
+
+.pw {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border-radius: $radius-md;
+  background: $navy-soft;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    color: $navy;
+  }
+
+  &__state {
+    padding: 0.15rem 0.6rem;
+    border-radius: $radius-pill;
+    background: $warning-bg;
+    color: $warning;
+    font-size: $text-xs;
+    font-weight: 700;
+
+    &.is-on {
+      background: $success-bg;
+      color: $success;
+    }
+  }
+
+  &__row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+
+    input {
+      flex: 1;
+      min-width: 0;
+    }
+  }
 }
 
 .color {

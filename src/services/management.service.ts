@@ -55,7 +55,11 @@ class ManagementService extends APIBase {
   async users(role?: Role) {
     return asArray(await this.get<User[] | Paginated<User>>('admin/users', { role, limit: 100 }))
   }
-  createUser(body: UserInput) {
+  /** Pone o cambia la contraseña (null = quitarla y entrar solo con código). */
+  setUserPassword(id: string, password: string | null) {
+    return this.put<User>(`admin/users/${id}/password`, { password })
+  }
+  createUser(body: UserInput & { password?: string }) {
     return this.post<User>('admin/users', body)
   }
   updateUser(id: string, body: Partial<UserInput>) {

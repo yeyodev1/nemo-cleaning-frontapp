@@ -4,11 +4,17 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import DateNav from '@/components/admin/agenda/DateNav.vue'
 import JobCard from '@/components/admin/operator/JobCard.vue'
 import { useMyJobs } from '@/composables/admin/useMyJobs'
+import { useJobAlerts } from '@/composables/admin/useJobAlerts'
 import { useUserStore } from '@/stores/user'
 
 const user = useUserStore()
 const { date, day, loading, error, busyId, locatingId, load, setStatus, replace } = useMyJobs()
 const jobs = computed(() => day.value?.bookings || [])
+const { alerts, newIds } = useJobAlerts(day, date, load)
+
+function goTo(id?: string) {
+  if (id) document.getElementById(`job-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 const pending = computed(() => jobs.value.filter((j) => !['completed', 'cancelled', 'no_show'].includes(j.status)).length)
 const firstName = computed(() => user.user?.name.split(' ')[0] || '')
 
@@ -35,6 +41,14 @@ const shift = computed(() => {
       <AppIcon name="calendar" :size="18" /> <b>{{ shift.label }}</b> <span>{{ shift.hint }}</span>
     </p>
 
+    <ul v-if="alerts.length" class="jobs__alerts" aria-live="polite">
+      <li v-for="a in alerts" :key="a.id">
+        <button type="button" class="jobs__alert" :class="`is-${a.tone}`" @click="goTo(a.jobId)">
+          <AppIcon :name="a.icon" :size="18" /> <span>{{ a.text }}</span>
+        </button>
+      </li>
+    </ul>
+
     <div v-if="error" class="card jobs__error" role="alert">
       <AppIcon name="alert" /> <span>{{ error }}</span>
       <button type="button" class="btn btn--ghost btn--sm" @click="load">Reintentar</button>
@@ -49,8 +63,10 @@ const shift = computed(() => {
     <div v-else class="jobs__list">
       <JobCard
         v-for="j in jobs"
+        :id="`job-${j._id}`"
         :key="j._id"
         :job="j"
+        :is-new="newIds.includes(j._id)"
         :busy="busyId === j._id"
         :locating="locatingId === j._id"
         @status="(s, p) => setStatus(j, s, p)"
@@ -100,6 +116,50 @@ const shift = computed(() => {
     &.is-off {
       background: $line;
       color: $ink-soft;
+    }
+  }
+
+  &__alerts {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border-radius: $radius-md;
+    font-size: $text-sm;
+    font-weight: 600;
+    text-align: left;
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    &.is-info {
+      background: $navy-soft;
+      color: $navy;
+    }
+
+    &.is-warning {
+      background: $warning-bg;
+      color: $warning;
+    }
+
+    &.is-danger {
+      background: $danger-bg;
+      color: $danger;
+    }
+
+    &.is-success {
+      background: $success-bg;
+      color: $success;
     }
   }
 

@@ -53,6 +53,8 @@ export interface User {
   commissions?: boolean
   supervisor?: ID | null
   hasPanelAccess?: boolean
+  /** Tiene contraseña para entrar (si no, entra con código al correo). */
+  hasPassword?: boolean
 }
 
 /** "autos" = línea NEMO CAR; el resto = NEMO HOME & OFFICE. */

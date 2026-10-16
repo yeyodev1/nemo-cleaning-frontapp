@@ -30,6 +30,11 @@ export const useUserStore = defineStore('user', {
       return this.saveSession(await authService.login(email, password))
     },
 
+    /** Recuperar contraseña: la cambia y deja la sesión abierta. */
+    async resetPassword(email: string, code: string, password: string) {
+      return this.saveSession(await authService.resetPassword(email, code, password))
+    },
+
     /** Segundo paso del acceso por código: guarda el token y la cuenta. */
     async verifyCode(email: string, code: string) {
       return this.saveSession(await authService.verify(email, code))

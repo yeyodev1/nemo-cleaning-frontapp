@@ -45,7 +45,7 @@ const branchNames = (ids: string[]) => ids.map((id) => scope.branchName(id)).fil
           <span class="person__main">
             <strong>{{ u.name }}</strong>
             <span class="muted">
-              <template v-if="u.position">{{ positionLabel[u.position] }} · </template>{{ u.email || 'Sin acceso al panel' }}<template v-if="u.branches?.length"> · {{ branchNames(u.branches) }}</template>
+              <template v-if="u.position">{{ positionLabel[u.position] }} · </template>{{ u.email ? `${u.email}${u.hasPassword ? ' · con contraseña' : ' · entra con código'}` : 'Sin acceso al panel' }}<template v-if="u.branches?.length"> · {{ branchNames(u.branches) }}</template>
             </span>
           </span>
           <span class="person__end">
