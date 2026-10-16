@@ -47,6 +47,7 @@ export function useQuickEntry() {
 
   const form = reactive({
     date: saved.date && saved.date <= todayISO() ? saved.date : todayISO(),
+    time: '09:00',
     branch: saved.branch || scope.branch || '',
     operators: (saved.operators || []) as string[],
     bookingId: '',
@@ -77,6 +78,8 @@ export function useQuickEntry() {
   const operators = computed(() => (options.value?.operators || []).filter((o) => !form.branch || o.branches.includes(form.branch)))
   const subtotal = computed(() => form.lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0))
   const total = computed(() => Math.max(0, subtotal.value - form.discount))
+  /** Fecha futura: el servicio no está hecho, se agenda. */
+  const isFuture = computed(() => form.date > todayISO())
 
   watch(() => form.account, (a) => (form.confirmation = defaultConfirmation(a)))
   watch(
@@ -89,7 +92,7 @@ export function useQuickEntry() {
     () => [form.date, form.branch, form.operators.join(',')],
     async () => {
       scheduled.value = []
-      if (!form.operators.length) return
+      if (!form.operators.length || form.date > todayISO()) return
       try {
         const res = await bookingsService.list({
           date: form.date,
@@ -150,9 +153,9 @@ export function useQuickEntry() {
 
   function validate(): string {
     if (!form.branch) return 'Elige la sucursal'
-    if (!form.operators.length) return 'Elige el operador que hizo el servicio'
+    if (!form.operators.length) return isFuture.value ? 'Elige el operador que hará el servicio' : 'Elige el operador que hizo el servicio'
     if (!form.customerName.trim()) return 'Escribe el nombre del cliente'
-    if (!form.lines.length) return 'Agrega el servicio que se hizo'
+    if (!form.lines.length) return 'Agrega el servicio'
     if (form.discount > subtotal.value) return 'El descuento no puede ser mayor que el total'
     return ''
   }
@@ -177,6 +180,7 @@ export function useQuickEntry() {
         bookingId: form.bookingId || undefined,
         branch: form.branch,
         date: form.date,
+        time: isFuture.value ? form.time : undefined,
         operators: form.operators,
         customer: form.customerId ? { _id: form.customerId } : { name: form.customerName.trim(), phone: form.customerPhone.trim() || undefined },
         zone: form.zone,
@@ -189,7 +193,7 @@ export function useQuickEntry() {
       })
       session.value.unshift(booking)
       scheduled.value = scheduled.value.filter((b) => b._id !== booking._id)
-      toast.success(`${booking.code} guardado. Listo para el siguiente`)
+      toast.success(isFuture.value ? `${booking.code} agendado. Ya está en la agenda` : `${booking.code} guardado. Listo para el siguiente`)
       resetClient()
       return true
     } catch (e) {
@@ -200,5 +204,5 @@ export function useQuickEntry() {
     }
   }
 
-  return { form, options, services, zones, operators, subtotal, total, busy, session, scheduled, addService, addFree, removeLine, pickCustomer, useScheduled, submit, resetClient }
+  return { form, options, services, zones, operators, subtotal, total, isFuture, busy, session, scheduled, addService, addFree, removeLine, pickCustomer, useScheduled, submit, resetClient }
 }

@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import TheHeader from '@/layout/TheHeader.vue'
 import TheFooter from '@/layout/TheFooter.vue'
 import ToastList from '@/components/ui/ToastList.vue'
+import UpdateModal from '@/components/app/UpdateModal.vue'
 
 const route = useRoute()
 // "admin" y "bare" traen su propio marco; "focus" (wizards) oculta el footer.
@@ -24,6 +25,7 @@ const isFocus = computed(() => Boolean(route.meta.focus))
     </main>
     <TheFooter v-if="layout === 'public' && !isFocus" />
     <ToastList />
+    <UpdateModal />
   </div>
 </template>
 

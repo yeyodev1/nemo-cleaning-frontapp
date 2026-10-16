@@ -17,6 +17,7 @@ const today = todayISO()
 const dayChoices = [
   { value: today, label: 'Hoy' },
   { value: addDays(today, -1), label: 'Ayer' },
+  { value: addDays(today, 1), label: 'Mañana' },
 ]
 const branchChoices = computed(() => (q.options.value?.branches || []).map((b) => ({ value: b._id, label: b.name })))
 const operatorChoices = computed(() => q.operators.value.map((o) => ({ value: o._id, label: o.name, color: o.color })))
@@ -44,15 +45,17 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
       <h2><span class="qe__n">1</span> Día y equipo</h2>
       <div class="qe__row">
         <ChoiceChips v-model="form.date" :options="dayChoices" label="Día" />
-        <label class="field qe__date"><span class="sr-only">Otra fecha</span><input v-model="form.date" type="date" :max="today" /></label>
+        <label class="field qe__date"><span class="sr-only">Otra fecha</span><input v-model="form.date" type="date" /></label>
+        <label v-if="q.isFuture.value" class="field qe__date"><span class="sr-only">Hora</span><input v-model="form.time" type="time" step="900" /></label>
       </div>
       <p class="qe__hint">{{ shortDate(form.date) }}</p>
+      <p v-if="q.isFuture.value" class="qe__linked"><AppIcon name="calendar" :size="14" /> Fecha futura: el servicio se guarda en la agenda como confirmado, no como hecho. El cobro solo se registra si ya está pagado.</p>
       <div v-if="branchChoices.length > 1" class="field">
         <span class="field__label">Sucursal</span>
         <ChoiceChips v-model="form.branch" :options="branchChoices" label="Sucursal" />
       </div>
       <div class="field">
-        <span class="field__label">Operador(es) que hicieron el servicio</span>
+        <span class="field__label">{{ q.isFuture.value ? 'Operador(es) que harán el servicio' : 'Operador(es) que hicieron el servicio' }}</span>
         <ChoiceChips v-if="operatorChoices.length" v-model="form.operators" :options="operatorChoices" multiple label="Operadores" />
         <p v-else class="qe__hint">No hay operadores activos en esta sucursal. Agrégalos en Personal.</p>
       </div>
@@ -109,7 +112,7 @@ const confirmationChoices = Object.entries(paymentConfirmation).map(([value, c])
         <strong class="money">{{ money(q.total.value) }}</strong>
       </div>
       <button type="submit" class="btn btn--lg qe__save" :disabled="q.busy.value">
-        <AppIcon name="check" /> {{ q.busy.value ? 'Guardando…' : 'Guardar y seguir' }}
+        <AppIcon name="check" /> {{ q.busy.value ? 'Guardando…' : q.isFuture.value ? 'Agendar y seguir' : 'Guardar y seguir' }}
       </button>
     </div>
 
