@@ -34,7 +34,10 @@ const types = computed(() =>
     ([k]) => !props.general || !['absence', 'fight'].includes(k),
   ),
 )
-const steps = computed(() => (props.person || props.general ? 0 : 1))
+const steps = computed(() => (props.person ? 0 : 1))
+// Un atraso siempre es de alguien: en una general la persona pasa a ser obligatoria.
+const needsPerson = computed(() => !props.general || type.value === 'late')
+const missingPerson = ref(false)
 const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const visiblePeople = computed(() =>
   (props.people || []).filter((p) => p.active && (!query.value.trim() || norm(p.name).includes(norm(query.value.trim())))),
@@ -52,13 +55,17 @@ const placeholder = computed(() =>
 )
 
 async function save() {
-  if (!props.general && !userId.value) return toast.error('Elige a la persona')
   if (!type.value) return toast.error('Elige qué pasó')
-  if ((props.general || type.value === 'other') && !text.value.trim()) return toast.error('Describe qué pasó')
+  if (!props.person && needsPerson.value && !userId.value) {
+    missingPerson.value = true
+    return toast.error(type.value === 'late' ? 'Elige al operador que llegó tarde' : 'Elige a la persona')
+  }
+  // General sin persona: el detalle es lo único que explica qué pasó.
+  if (((props.general && !userId.value) || type.value === 'other') && !text.value.trim()) return toast.error('Describe qué pasó')
   saving.value = true
   try {
     const item = await operationService.addStaffIncident({
-      ...(props.general ? { branch: branch.value || undefined } : { user: userId.value }),
+      ...(userId.value ? { user: userId.value } : { branch: branch.value || undefined }),
       type: type.value,
       date: date.value,
       text: text.value.trim(),
@@ -96,8 +103,11 @@ async function save() {
       </div>
     </div>
 
-    <div v-if="!person && !general" class="field">
-      <span class="field__label">1. ¿Quién?</span>
+    <div v-if="!person" class="field" :class="{ 'sif__need': missingPerson && !userId }">
+      <span class="field__label">
+        1. ¿Quién?
+        <template v-if="general">{{ type === 'late' ? '(obligatorio en un atraso)' : '(opcional)' }}</template>
+      </span>
       <div class="sif__search">
         <AppIcon name="search" :size="18" class="sif__search-icon" />
         <input v-model="query" type="search" placeholder="Buscar persona" autocomplete="off" aria-label="Buscar persona" />
@@ -111,7 +121,7 @@ async function save() {
           :class="{ 'is-on': userId === p._id }"
           role="radio"
           :aria-checked="userId === p._id"
-          @click="userId = p._id"
+          @click="userId = userId === p._id && general ? '' : p._id; missingPerson = false"
         >
           <span class="sif__avatar" :style="{ background: p.color || '#1E2D3A' }">{{ p.name.charAt(0) }}</span>
           {{ p.name }}
@@ -145,7 +155,7 @@ async function save() {
     </div>
 
     <label class="field">
-      <span class="field__label">{{ 3 + steps }}. Detalle {{ general || type === 'other' ? '' : '(opcional)' }}</span>
+      <span class="field__label">{{ 3 + steps }}. Detalle {{ (general && !userId) || type === 'other' ? '' : '(opcional)' }}</span>
       <textarea v-model="text" rows="3" :placeholder="placeholder"></textarea>
     </label>
 
@@ -179,6 +189,13 @@ async function save() {
     transform: translateY(-50%);
     color: $ink-muted;
     pointer-events: none;
+  }
+
+  &__need {
+    padding: 0.6rem;
+    border-radius: $radius-md;
+    background: $danger-bg;
+    box-shadow: inset 0 0 0 1.5px $danger;
   }
 
   &__people {

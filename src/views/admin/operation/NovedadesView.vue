@@ -176,7 +176,7 @@ async function remove() {
         </div>
         <ServiceNovedadComposer v-else-if="mode === 'service'" @saved="onSaved" @cancel="adding = false" />
         <StaffIncidentForm v-else-if="mode === 'person'" :people="people" @saved="onSaved" @cancel="adding = false" />
-        <StaffIncidentForm v-else general @saved="onSaved" @cancel="adding = false" />
+        <StaffIncidentForm v-else general :people="people" @saved="onSaved" @cancel="adding = false" />
       </section>
     </Transition>
 
