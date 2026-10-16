@@ -1,27 +1,58 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import DateNav from '@/components/admin/agenda/DateNav.vue'
-import AgendaCard from '@/components/admin/agenda/AgendaCard.vue'
+import AgendaDayGrid from '@/components/admin/agenda/AgendaDayGrid.vue'
 import AgendaWeek from '@/components/admin/agenda/AgendaWeek.vue'
 import AgendaMonth from '@/components/admin/agenda/AgendaMonth.vue'
 import BookingQuickSheet from '@/components/admin/agenda/BookingQuickSheet.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { useAgenda, type AgendaView } from '@/composables/admin/useAgenda'
+import { UNASSIGNED, useAgenda, type AgendaView } from '@/composables/admin/useAgenda'
+import { useAgendaShot } from '@/composables/admin/useAgendaShot'
 import { useAdminScope } from '@/stores/adminScope'
+import { longDate, monthLabel } from '@/utils/format'
 import type { Booking } from '@/types/api'
 
 const scope = useAdminScope()
-const { date, view, range, loading, error, load, bookings, cancelled, byDate, byTime, columns, replace, openDay } = useAgenda()
+const { date, view, range, loading, error, load, operatorFilter, team, bookings, cancelled, byDate, columns, replace, openDay } = useAgenda()
+const selected = ref<Booking | null>(null)
+const shotEl = ref<HTMLElement | null>(null)
+const shot = useAgendaShot(shotEl)
+
 const VIEWS: { value: AgendaView; label: string }[] = [
   { value: 'day', label: 'Día' },
   { value: 'week', label: 'Semana' },
   { value: 'month', label: 'Mes' },
 ]
-const selected = ref<Booking | null>(null)
 
 function onUpdated(b: Booking) {
   replace(b)
   selected.value = null
+}
+
+function toggleOperator(id: string) {
+  const list = operatorFilter.value
+  operatorFilter.value = list.includes(id) ? list.filter((x) => x !== id) : [...list, id]
+}
+
+const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('es-EC', { ...opts, timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`)).replace(/\./g, '')
+
+/** Título que sale en la imagen: período, sucursal y filtro. */
+const period = computed(() => {
+  if (view.value === 'day') return longDate(date.value)
+  if (view.value === 'month') return monthLabel(date.value.slice(0, 7))
+  return `Semana del ${fmt(range.value.from, { day: 'numeric', month: 'short' })} al ${fmt(range.value.to, { day: 'numeric', month: 'short', year: 'numeric' })}`
+})
+const branchLabel = computed(() => (scope.branch ? scope.branchName(scope.branch) : 'Todas las sucursales'))
+const filterLabel = computed(() =>
+  operatorFilter.value.length
+    ? operatorFilter.value.map((id) => (id === UNASSIGNED ? 'Sin asignar' : team.value.find((o) => o._id === id)?.name || '')).join(', ')
+    : '',
+)
+
+function download() {
+  const name = `agenda-${view.value === 'day' ? date.value : view.value === 'week' ? `semana-${range.value.from}` : date.value.slice(0, 7)}.png`
+  shot.capture(name)
 }
 </script>
 
@@ -29,21 +60,52 @@ function onUpdated(b: Booking) {
   <div class="agenda">
     <div class="agenda__bar">
       <DateNav v-model="date" :view="view" />
-      <div class="agenda__views" role="tablist" aria-label="Vista de la agenda">
-        <button
-          v-for="v in VIEWS"
-          :key="v.value"
-          type="button"
-          role="tab"
-          class="agenda__view"
-          :class="{ 'is-on': view === v.value }"
-          :aria-selected="view === v.value"
-          @click="view = v.value"
-        >
-          {{ v.label }}
+      <div class="agenda__actions">
+        <div class="agenda__views" role="tablist" aria-label="Vista de la agenda">
+          <button
+            v-for="v in VIEWS"
+            :key="v.value"
+            type="button"
+            role="tab"
+            class="agenda__view"
+            :class="{ 'is-on': view === v.value }"
+            :aria-selected="view === v.value"
+            @click="view = v.value"
+          >
+            {{ v.label }}
+          </button>
+        </div>
+        <button type="button" class="btn btn--ghost btn--sm" :disabled="shot.busy.value || loading" @click="download">
+          <AppIcon name="image" :size="16" /> {{ shot.busy.value ? 'Creando imagen…' : 'Descargar imagen' }}
         </button>
+        <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary btn--sm"><AppIcon name="plus" :size="16" /> Agendar</RouterLink>
       </div>
-      <RouterLink to="/admin/pedidos/nuevo" class="btn btn--primary btn--sm"><AppIcon name="plus" :size="16" /> Agendar</RouterLink>
+    </div>
+
+    <div v-if="team.length" class="agenda__filters" aria-label="Filtrar por operador">
+      <span class="agenda__filters-label">Equipo:</span>
+      <button type="button" class="agenda__chip" :class="{ 'is-on': !operatorFilter.length }" @click="operatorFilter = []">Todos</button>
+      <button
+        v-for="o in team"
+        :key="o._id"
+        type="button"
+        class="agenda__chip"
+        :class="{ 'is-on': operatorFilter.includes(o._id) }"
+        :style="{ '--op': o.color || '#1E2D3A' }"
+        :aria-pressed="operatorFilter.includes(o._id)"
+        @click="toggleOperator(o._id)"
+      >
+        <span class="agenda__dot"></span>{{ o.name }}
+      </button>
+      <button
+        type="button"
+        class="agenda__chip"
+        :class="{ 'is-on': operatorFilter.includes(UNASSIGNED) }"
+        :aria-pressed="operatorFilter.includes(UNASSIGNED)"
+        @click="toggleOperator(UNASSIGNED)"
+      >
+        Sin asignar
+      </button>
     </div>
 
     <p v-if="!scope.branch && scope.canSeeAll" class="agenda__hint"><AppIcon name="info" :size="16" /> Viendo todas las sucursales. Elige una arriba para ver solo su agenda.</p>
@@ -53,42 +115,29 @@ function onUpdated(b: Booking) {
       <button type="button" class="btn btn--ghost btn--sm" @click="load">Reintentar</button>
     </div>
 
-    <template v-else-if="view !== 'day'">
-      <AgendaWeek v-if="view === 'week'" :from="range.from" :by-date="byDate" :class="{ 'is-loading': loading }" @open="selected = $event" @day="openDay" />
-      <AgendaMonth v-else :from="range.from" :month="date.slice(0, 7)" :by-date="byDate" :class="{ 'is-loading': loading }" @open="selected = $event" @day="openDay" />
-    </template>
-
-    <div v-else-if="loading && !bookings.length" class="agenda__list">
+    <div v-else-if="loading && !bookings.length && !team.length" class="agenda__list">
       <span v-for="n in 3" :key="n" class="skeleton" style="height: 96px"></span>
     </div>
 
-    <div v-else-if="!bookings.length" class="card empty">
-      <AppIcon name="calendar" :size="28" style="margin: 0 auto 0.5rem" />
-      No hay servicios agendados para este día.
-    </div>
+    <!-- Todo lo de este bloque sale en la imagen descargada. -->
+    <div v-else ref="shotEl" class="agenda__shot" :class="{ 'is-loading': loading }">
+      <header class="agenda__title">
+        <div>
+          <strong>Agenda Nemo Cleaning · {{ period }}</strong>
+          <small>{{ branchLabel }}<template v-if="filterLabel"> · {{ filterLabel }}</template> · {{ bookings.length }} servicio{{ bookings.length === 1 ? '' : 's' }}</small>
+        </div>
+      </header>
 
-    <template v-else>
-      <p class="agenda__count">{{ bookings.length }} servicio{{ bookings.length === 1 ? '' : 's' }}</p>
-      <!-- Móvil/tablet: agrupado por hora -->
-      <div class="agenda__list agenda__mobile">
-        <section v-for="g in byTime" :key="g.time" class="agenda__group">
-          <h2 class="agenda__time">{{ g.time }}</h2>
-          <div class="agenda__stack">
-            <AgendaCard v-for="b in g.items" :key="b._id" :booking="b" @open="selected = $event" />
-          </div>
-        </section>
-      </div>
-      <!-- Escritorio: columnas por operador -->
-      <div class="agenda__cols">
-        <section v-for="c in columns" :key="c.id" class="agenda__col">
-          <h2 class="agenda__colhead"><span class="agenda__dot" :style="{ background: c.color }"></span>{{ c.name }} <small>{{ c.items.length }}</small></h2>
-          <div class="agenda__stack">
-            <AgendaCard v-for="b in c.items" :key="b._id" :booking="b" show-time @open="selected = $event" />
-            <p v-if="!c.items.length" class="agenda__free">Libre</p>
-          </div>
-        </section>
-      </div>
-    </template>
+      <template v-if="view === 'day'">
+        <AgendaDayGrid v-if="columns.length" :date="date" :columns="columns" @open="selected = $event" />
+        <div v-else class="card empty">
+          <AppIcon name="calendar" :size="28" style="margin: 0 auto 0.5rem" />
+          No hay servicios agendados para este día.
+        </div>
+      </template>
+      <AgendaWeek v-else-if="view === 'week'" :from="range.from" :by-date="byDate" @open="selected = $event" @day="openDay" />
+      <AgendaMonth v-else :from="range.from" :month="date.slice(0, 7)" :by-date="byDate" @open="selected = $event" @day="openDay" />
+    </div>
 
     <p v-if="cancelled.length" class="agenda__cancelled">{{ cancelled.length }} cancelado{{ cancelled.length === 1 ? '' : 's' }} {{ view === 'day' ? 'este día' : view === 'week' ? 'esta semana' : 'en estas fechas' }}.</p>
 
@@ -114,6 +163,13 @@ function onUpdated(b: Booking) {
     }
   }
 
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
   &__views {
     display: inline-flex;
     padding: 3px;
@@ -136,9 +192,45 @@ function onUpdated(b: Booking) {
     }
   }
 
-  .is-loading {
-    opacity: 0.6;
-    transition: opacity 0.2s;
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__filters-label {
+    font-size: $text-xs;
+    font-weight: 700;
+    color: $ink-muted;
+    text-transform: uppercase;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 36px;
+    padding: 0 0.8rem;
+    border-radius: $radius-pill;
+    border: 1.5px solid $line;
+    background: $surface;
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $ink-soft;
+
+    &.is-on {
+      border-color: $navy;
+      background: $navy-soft;
+      color: $navy;
+    }
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--op);
   }
 
   &__hint {
@@ -161,87 +253,59 @@ function onUpdated(b: Booking) {
     }
   }
 
-  &__count {
-    font-size: $text-sm;
-    font-weight: 700;
-    color: $ink-muted;
-  }
-
-  &__list,
-  &__stack {
+  &__list {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
   }
 
-  &__mobile {
-    @include from('lg') {
-      display: none;
-    }
-  }
-
-  &__group {
+  &__shot {
     display: flex;
+    flex-direction: column;
     gap: 0.75rem;
-  }
+    background: $paper;
+    transition: opacity 0.2s;
 
-  &__time {
-    width: 52px;
-    flex-shrink: 0;
-    font-size: $text-sm;
-    color: $navy;
-    padding-top: 0.75rem;
-    font-variant-numeric: tabular-nums;
-  }
+    &.is-loading {
+      opacity: 0.6;
+    }
 
-  &__group &__stack {
-    flex: 1;
-    min-width: 0;
-  }
+    // Durante la captura: sin scroll interno, para que salgan todas las columnas.
+    &.is-capturing {
+      width: max-content;
+      min-width: 100%;
+      padding: 1rem;
+      background: #fff;
 
-  &__cols {
-    display: none;
-
-    @include from('lg') {
-      display: flex;
-      gap: 0.85rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
+      :deep(.dg) {
+        overflow: visible;
+      }
     }
   }
 
-  &__col {
-    flex: 0 0 260px;
-    background: $sky;
-    border: 1px solid $line;
-    border-radius: $radius-md;
-    padding: 0.75rem;
-  }
-
-  &__colhead {
+  &__title {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    font-size: $text-sm;
-    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+
+    div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    strong {
+      font-size: $text-base;
+      color: $navy;
+
+      &::first-letter {
+        text-transform: uppercase;
+      }
+    }
 
     small {
-      margin-left: auto;
+      font-size: $text-xs;
       color: $ink-muted;
     }
-  }
-
-  &__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-
-  &__free {
-    font-size: $text-xs;
-    color: $ink-muted;
-    text-align: center;
-    padding: 1rem 0;
   }
 
   &__cancelled {

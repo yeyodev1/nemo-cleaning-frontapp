@@ -33,6 +33,8 @@ export function useAgenda() {
   const error = ref('')
 
   const range = computed(() => agendaRange(view.value, date.value))
+  /** Filtro por operador ([] = todos). UNASSIGNED filtra los que no tienen a nadie. */
+  const operatorFilter = ref<string[]>([])
 
   let seq = 0
   async function load() {
@@ -51,9 +53,13 @@ export function useAgenda() {
     }
   }
 
+  const matchesFilter = (b: Booking) =>
+    !operatorFilter.value.length ||
+    operatorFilter.value.some((id) => (id === UNASSIGNED ? !b.operators.length : b.operators.some((o) => o._id === id)))
+
   const bookings = computed(() =>
     [...(data.value?.bookings || [])]
-      .filter((b) => b.status !== 'cancelled')
+      .filter((b) => b.status !== 'cancelled' && matchesFilter(b))
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)),
   )
   const cancelled = computed(() => (data.value?.bookings || []).filter((b) => b.status === 'cancelled'))
@@ -69,25 +75,20 @@ export function useAgenda() {
     return map
   })
 
-  /** Agrupa por hora para la vista móvil. */
-  const byTime = computed(() => {
-    const groups = new Map<string, Booking[]>()
-    for (const b of bookings.value) {
-      const list = groups.get(b.time) || []
-      list.push(b)
-      groups.set(b.time, list)
-    }
-    return [...groups.entries()].map(([time, items]) => ({ time, items }))
+  /** Todo el equipo del día/rango (para las columnas y los filtros). */
+  const team = computed(() => {
+    const ops: OperatorRef[] = (data.value?.operators || []).map((o) => ({ _id: o._id, name: o.name, color: o.color }))
+    // Operadores asignados que no vinieron en la lista (otra sucursal) igual aparecen.
+    for (const b of data.value?.bookings || []) for (const o of b.operators) if (!ops.some((x) => x._id === o._id)) ops.push(o)
+    return ops
   })
 
-  /** Columnas por operador (+ "Sin asignar") para escritorio. */
+  /** Columnas por operador (+ "Sin asignar" solo si hay alguno sin asignar). */
   const columns = computed(() => {
-    const ops: OperatorRef[] = (data.value?.operators || []).map((o) => ({ _id: o._id, name: o.name, color: o.color }))
-    // Operadores asignados que no vinieron en la lista (otra sucursal) igual tienen columna.
-    for (const b of bookings.value) for (const o of b.operators) if (!ops.some((x) => x._id === o._id)) ops.push(o)
-    const cols = ops.map((o) => ({ id: o._id, name: o.name, color: o.color || '#1E2D3A', items: bookings.value.filter((b) => b.operators.some((x) => x._id === o._id)) }))
+    const visible = operatorFilter.value.length ? team.value.filter((o) => operatorFilter.value.includes(o._id)) : team.value
+    const cols = visible.map((o) => ({ id: o._id, name: o.name, color: o.color || '#1E2D3A', items: bookings.value.filter((b) => b.operators.some((x) => x._id === o._id)) }))
     const none = bookings.value.filter((b) => !b.operators.length)
-    return [{ id: UNASSIGNED, name: 'Sin asignar', color: '#5F6B77', items: none }, ...cols]
+    return none.length ? [{ id: UNASSIGNED, name: 'Sin asignar', color: '#5F6B77', items: none }, ...cols] : cols
   })
 
   function replace(b: Booking) {
@@ -108,5 +109,5 @@ export function useAgenda() {
     load,
     { immediate: true },
   )
-  return { date, view, range, data, loading, error, load, bookings, cancelled, byDate, byTime, columns, replace, openDay }
+  return { date, view, range, data, loading, error, load, operatorFilter, team, bookings, cancelled, byDate, columns, replace, openDay }
 }
